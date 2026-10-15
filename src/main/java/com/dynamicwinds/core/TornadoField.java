@@ -33,7 +33,7 @@ public final class TornadoField {
 
     /**
      * Returns the wind contribution of any active tornado at (x,y,z).
-     * Deterministic: same seed, time, position => same result.
+     * Deterministic: same seed, time, position produces same result.
      */
     public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
         long phase = timeTicks % CYCLE;
