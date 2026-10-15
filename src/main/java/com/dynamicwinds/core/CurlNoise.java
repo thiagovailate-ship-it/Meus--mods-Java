@@ -40,17 +40,17 @@ public final class CurlNoise {
 
     private double potentialX(double tx, double ty, double tz) {
         double v=0, amp=1.0, freq=1.0;
-        for (int o=0;o<3;o++){ v += px.noise(tx*freq, ty*freq, tz*freq)*amp; amp*=0.5; freq*=2.0; }
+        for (int o=0;o<1;o++){ v += px.noise(tx*freq, ty*freq, tz*freq)*amp; amp*=0.5; freq*=2.0; }
         return v;
     }
     private double potentialY(double tx, double ty, double tz) {
         double v=0, amp=1.0, freq=1.0;
-        for (int o=0;o<3;o++){ v += py.noise(tx*freq, ty*freq, tz*freq)*amp; amp*=0.5; freq*=2.0; }
+        for (int o=0;o<1;o++){ v += py.noise(tx*freq, ty*freq, tz*freq)*amp; amp*=0.5; freq*=2.0; }
         return v;
     }
     private double potentialZ(double tx, double ty, double tz) {
         double v=0, amp=1.0, freq=1.0;
-        for (int o=0;o<3;o++){ v += pz.noise(tx*freq, ty*freq, tz*freq)*amp; amp*=0.5; freq*=2.0; }
+        for (int o=0;o<1;o++){ v += pz.noise(tx*freq, ty*freq, tz*freq)*amp; amp*=0.5; freq*=2.0; }
         return v;
     }
 
