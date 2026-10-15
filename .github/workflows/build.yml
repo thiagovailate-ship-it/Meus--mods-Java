@@ -35,7 +35,7 @@ jobs:
         run: |
           git config user.name "ci"
           git config user.email "ci@local"
-          head -120 build.log > build_head.log
+          head -200 build.log > build_head.log
           git add -f build_head.log
           git commit -m "ci: build head log" || true
           git push origin HEAD:arena/696b4eb5-meus-mods-java || true
