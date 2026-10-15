@@ -2,7 +2,6 @@ package com.dynamicwinds.integration.commands;
 
 import com.dynamicwinds.api.Wind;
 import com.dynamicwinds.core.WindSample;
-import com.dynamicwinds.core.WorldContext;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
@@ -28,9 +27,16 @@ public class WindCommand extends CommandBase {
         String sub = args.length > 0 ? args[0] : "get";
 
         if ("get".equals(sub)) {
-            double x = args.length > 1 ? parseDouble(args[1], sender) : p.posX;
-            double y = args.length > 2 ? parseDouble(args[2], sender) : p.posY;
-            double z = args.length > 3 ? parseDouble(args[3], sender) : p.posZ;
+            double x = p.posX, y = p.posY, z = p.posZ;
+            if (args.length > 1) {
+                try { x = Double.parseDouble(args[1]); } catch (NumberFormatException e) { sender.addChatMessage(new ChatComponentText("Invalid x")); return; }
+            }
+            if (args.length > 2) {
+                try { y = Double.parseDouble(args[2]); } catch (NumberFormatException e) { sender.addChatMessage(new ChatComponentText("Invalid y")); return; }
+            }
+            if (args.length > 3) {
+                try { z = Double.parseDouble(args[3]); } catch (NumberFormatException e) { sender.addChatMessage(new ChatComponentText("Invalid z")); return; }
+            }
             WindSample s = Wind.getWindAt(p.worldObj, x, y, z);
             p.addChatMessage(new ChatComponentText(
                 String.format("Wind at (%.1f,%.1f,%.1f): vec=(%.3f,%.3f,%.3f) speed=%.3f gust=%.3f",

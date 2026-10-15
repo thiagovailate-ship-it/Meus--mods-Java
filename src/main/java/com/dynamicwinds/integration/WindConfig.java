@@ -27,11 +27,16 @@ public final class WindConfig {
         enableParticles = cfg.getBoolean("enableParticles", "client", true, "Enable wind particles");
         enablePush = cfg.getBoolean("enablePush", "gameplay", true, "Enable entity/item push");
         enableAudio = cfg.getBoolean("enableAudio", "client", true, "Enable wind audio");
-        baseSpeedMultiplier = cfg.getDouble("baseSpeedMultiplier", "general", 1.0, 0.0, 5.0, "Base speed multiplier");
+        Property pSpeed = cfg.get("general", "baseSpeedMultiplier", 1.0, "Base speed multiplier");
+        if (pSpeed.getDouble() < 0.0 || pSpeed.getDouble() > 5.0) pSpeed.set(1.0);
+        baseSpeedMultiplier = pSpeed.getDouble();
         debugHud = cfg.getBoolean("debugHud", "client", false, "Show debug HUD");
         tornadoParticleRate = cfg.getInt("tornadoParticleRate", "tornado", 8, 1, 32, "Particles per tick near tornado");
         tornadoDebrisRate = cfg.getInt("tornadoDebrisRate", "tornado", 1, 0, 4, "Debris spawn chance multiplier");
-        tornadoMaxViewDistance = cfg.getDouble("tornadoMaxViewDistance", "tornado", 120.0, 20.0, 300.0, "Max distance to render tornado");
+        Property pDist = cfg.get("tornado", "tornadoMaxViewDistance", 120.0, "Max distance to render tornado");
+        double d = pDist.getDouble();
+        if (d < 20.0 || d > 300.0) pDist.set(120.0);
+        tornadoMaxViewDistance = pDist.getDouble();
         cfg.save();
     }
 
