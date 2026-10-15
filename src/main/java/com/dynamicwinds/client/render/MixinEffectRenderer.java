@@ -1,8 +1,6 @@
 package com.dynamicwinds.client.render;
 
-import org.spongepowered.asm.mixin.Mixin;
-
-@Mixin(targets = "net.minecraft.client.particle.EffectRenderer")
+// Placeholder for precipitation render hooks. Real mixin application requires
+// the SpongePowered Mixin library on the classpath.
 public class MixinEffectRenderer {
-    // precipitation deviation handled in particle spawn hooks (placeholder)
 }
