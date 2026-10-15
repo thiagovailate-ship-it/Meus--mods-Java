@@ -23,7 +23,7 @@ public final class CurlNoise {
 
         // spatial derivatives via finite differences on the multi-octave potential
         // using the same octave structure.
-        double dPzDy = (potentialZ(tx, ty+eps, tz, time) - potentialZ(tx, ty-eps, tz, time)) / (2*eps);
+        double dPzDy = (potentialZ(tx, ty+eps, tz) - potentialZ(tx, ty-eps, tz)) / (2*eps);
         double dPyDz = (potentialY(tx, ty, tz+eps) - potentialY(tx, ty, tz-eps)) / (2*eps);
         double dPxDz = (potentialX(tx, ty, tz+eps) - potentialX(tx, ty, tz-eps)) / (2*eps);
         double dPzDx = (potentialZ(tx+eps, ty, tz) - potentialZ(tx-eps, ty, tz)) / (2*eps);
