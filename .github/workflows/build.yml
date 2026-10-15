@@ -25,14 +25,9 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: "9.2.0"
-
       - name: Build
         run: |
-          gradle build --no-daemon --stacktrace 2>&1 | tee build.log
+          ./gradlew build --no-daemon --stacktrace 2>&1 | tee build.log
           exit ${PIPESTATUS[0]}
 
       - name: Commit build log on failure
