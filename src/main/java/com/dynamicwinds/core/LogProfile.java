@@ -1,7 +1,7 @@
 package com.dynamicwinds.core;
 
 /**
- * Logarithmic wind profile: u(z) = (u*/kappa) * ln(z / z0).
+ * Logarithmic wind profile: u(z) = (u-star/kappa) * ln(z / z0).
  */
 public final class LogProfile {
     public static final double KAPPA = 0.41;
