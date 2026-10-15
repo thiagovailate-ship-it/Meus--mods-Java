@@ -18,17 +18,17 @@ public class WindAudio {
 
         // ambience loop
         if (ambience == null || !mc.getSoundHandler().isSoundPlaying(ambience)) {
-            ambience = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:wind_ambience"));
+            ambience = new PositionedSoundRecord(new ResourceLocation("dynamicwinds:wind_ambience"), 1.0F, 1.0F, (float)mc.thePlayer.posX, (float)mc.thePlayer.posY, (float)mc.thePlayer.posZ);
             mc.getSoundHandler().playSound(ambience);
         }
         // adjust volume by speed (best-effort; re-trigger not continuous in 1.7.10)
         if (s.speed > 6.0 && mc.theWorld.getTotalWorldTime() - lastGustTick > 40) {
             lastGustTick = mc.theWorld.getTotalWorldTime();
-            PositionedSoundRecord gust = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:wind_gust"));
+            PositionedSoundRecord gust = new PositionedSoundRecord(new ResourceLocation("dynamicwinds:wind_gust"), 1.0F, 1.0F, (float)mc.thePlayer.posX, (float)mc.thePlayer.posY, (float)mc.thePlayer.posZ);
             mc.getSoundHandler().playSound(gust);
         }
         if (s.gust > 2.0 && mc.theWorld.getTotalWorldTime() - lastGustTick > 60) {
-            PositionedSoundRecord rustle = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:leaf_rustle"));
+            PositionedSoundRecord rustle = new PositionedSoundRecord(new ResourceLocation("dynamicwinds:leaf_rustle"), 1.0F, 1.0F, (float)mc.thePlayer.posX, (float)mc.thePlayer.posY, (float)mc.thePlayer.posZ);
             mc.getSoundHandler().playSound(rustle);
         }
     }
