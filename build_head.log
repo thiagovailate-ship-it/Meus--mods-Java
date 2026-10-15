@@ -47,13 +47,11 @@ Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftfor
 Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/unpacked/src/main/resources/forge_at.cfg
 INFO: merging AccessMap net/minecraft/item/ItemBlock/field_150939_a from AccessChange(clear=0, set=0, vis=1) with AccessChange(clear=0, set=0, vis=1)
 Renamed 0 AT entries
+Applying Exceptor
+Cleaning up generated debuginfo
 
 > Task :compileInjectedTagsJava
 > Task :injectedTagsClasses
-
-> Task :deobfuscateMergedJarToSrg
-Applying Exceptor
-Cleaning up generated debuginfo
 
 > Task :decompileSrgJar
 Didn't find cached decompiled jar, decompiling and saving to /home/runner/.gradle/caches/retro_futura_gradle/fernflower-cache/f857d0a5dc440e9576a099ffe2dcf0f57f62ec6a9a90cdd7e8a27d4573e0504b-d253f2106b6c42cd09e68e3eb271a05bffc1063ab065ac1a7425f1586d3b5891.jar
@@ -64,15 +62,15 @@ Decompiling the srg jar with fernflower
 > Task :packageMcLauncher
 
 > Task :decompileSrgJar
-  Decompiling took 34056 ms
+  Decompiling took 27552 ms
 
 > Task :cleanupDecompSrgJar
 Fixup stage 1 - applying FF patches
-  Stage 1 took 3311 ms
+  Stage 1 took 2704 ms
 Fixup stage 2 - applying MCP patches
-  Stage 2 took 66 ms
+  Stage 2 took 54 ms
 Fixup stage 3 - applying MCP cleanup
-  Stage 3 took 5299 ms
+  Stage 3 took 3855 ms
 Saving the fixed-up jar
 
 > Task :patchDecompiledJar
@@ -96,25 +94,27 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :patchedMcClasses
 > Task :compileApiJava NO-SOURCE
 > Task :apiClasses UP-TO-DATE
-
-> Task :compileJava FAILED
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:4: error: class, interface, or enum expected
- * Logarithmic wind profile: u(z) = (u*/kappa) * ln(z / z0).
-                                        ^
-1 error
-
 > Task :packagePatchedMc
 
-[Incubating] Problems report is available at: file:///home/runner/work/Meus--mods-Java/Meus--mods-Java/build/reports/problems/problems-report.html
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':compileJava'.
-> Compilation failed; see the compiler output below.
-  /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:4: error: class, interface, or enum expected
-   * Logarithmic wind profile: u(z) = (u*/kappa) * ln(z / z0).
-                                          ^
-  1 error
-
-* Try:
+> Task :compileJava FAILED
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/MixinEffectRenderer.java:3: error: package org.spongepowered.asm.mixin does not exist
+import org.spongepowered.asm.mixin.Mixin;
+                                  ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/MixinEffectRenderer.java:5: error: cannot find symbol
+@Mixin(targets = "net.minecraft.client.particle.EffectRenderer")
+ ^
+  symbol: class Mixin
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:19: error: cannot find symbol
+            TornadoVFX.tick();
+            ^
+  symbol:   variable TornadoVFX
+  location: class com.dynamicwinds.client.ClientEvents
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/audio/WindAudio.java:21: error: cannot find symbol
+            ambience = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:wind_ambience"), (float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
+                                            ^
+  symbol:   method create(net.minecraft.util.ResourceLocation,float,float,float)
+  location: class net.minecraft.client.audio.PositionedSoundRecord
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/audio/WindAudio.java:27: error: cannot find symbol
+            PositionedSoundRecord gust = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:wind_gust"), (float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
+                                                              ^
+  symbol:   method create(net.minecraft.util.ResourceLocation,float,float,float)
