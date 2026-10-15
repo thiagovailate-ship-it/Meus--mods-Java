@@ -7,6 +7,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  issues: write
+
 jobs:
   build:
     name: Build mod jar
@@ -31,14 +35,15 @@ jobs:
           gradle build --no-daemon --stacktrace 2>&1 | tee build.log
           exit ${PIPESTATUS[0]}
 
-      - name: Create issue with build log on failure
+      - name: Commit build log on failure
         if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ERR=$(grep -i -E "error:|exception|cannot find|not found|FAILED" build.log | head -20)
-          BODY="Build failed.\n\n\`\`\`\n$(head -80 build.log)\n\`\`\`"
-          gh issue create --title "CI build failure" --body "$BODY" || true
+          git config user.name "ci"
+          git config user.email "ci@local"
+          head -120 build.log > build_head.log
+          git add -f build_head.log
+          git commit -m "ci: build head log" || true
+          git push origin HEAD:arena/696b4eb5-meus-mods-java || true
 
       - name: Upload build log
         uses: actions/upload-artifact@v4
