@@ -61,15 +61,15 @@ Decompiling the srg jar with fernflower
 > Task :packageMcLauncher
 
 > Task :decompileSrgJar
-  Decompiling took 38539 ms
+  Decompiling took 29593 ms
 
 > Task :cleanupDecompSrgJar
 Fixup stage 1 - applying FF patches
-  Stage 1 took 3161 ms
+  Stage 1 took 2603 ms
 Fixup stage 2 - applying MCP patches
-  Stage 2 took 104 ms
+  Stage 2 took 57 ms
 Fixup stage 3 - applying MCP cleanup
-  Stage 3 took 4558 ms
+  Stage 3 took 4343 ms
 Saving the fixed-up jar
 
 > Task :patchDecompiledJar
