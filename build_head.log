@@ -30,8 +30,8 @@ Download https://files.minecraftforge.net/fernflower-fix-1.0.zip
 > Task :processMcLauncherResources NO-SOURCE
 
 > Task :downloadVanillaJars
-Download https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar
 Download https://launcher.mojang.com/v1/objects/e80d9b3bf5085002218d4be59e668bac718abbc6/client.jar
+Download https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar
 
 > Task :generateForgeSrgMappings
 > Task :createMcLauncherFiles
@@ -64,15 +64,15 @@ Decompiling the srg jar with fernflower
 > Task :packageMcLauncher
 
 > Task :decompileSrgJar
-  Decompiling took 31932 ms
+  Decompiling took 31877 ms
 
 > Task :cleanupDecompSrgJar
 Fixup stage 1 - applying FF patches
-  Stage 1 took 3934 ms
+  Stage 1 took 3420 ms
 Fixup stage 2 - applying MCP patches
-  Stage 2 took 71 ms
+  Stage 2 took 84 ms
 Fixup stage 3 - applying MCP cleanup
-  Stage 3 took 4664 ms
+  Stage 3 took 5592 ms
 Saving the fixed-up jar
 
 > Task :patchDecompiledJar
@@ -165,36 +165,36 @@ Note: Recompile with -Xlint:unchecked for details.
 /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:102: warning: no @return
     public double[] activeCenter(long seed, long timeTicks) {
                     ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:5: error: bad use of '>'
- * Lifecycle: spawn -> form -> mature -> dissipate -> gone.
-                     ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:5: error: bad use of '>'
- * Lifecycle: spawn -> form -> mature -> dissipate -> gone.
-                             ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:5: error: bad use of '>'
- * Lifecycle: spawn -> form -> mature -> dissipate -> gone.
-                                       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:5: error: bad use of '>'
- * Lifecycle: spawn -> form -> mature -> dissipate -> gone.
-                                                    ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:59: warning: no @param for w
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for w
     public void refreshNear(World w, double px, double pz, int radius) {
                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:59: warning: no @param for px
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for px
     public void refreshNear(World w, double px, double pz, int radius) {
                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:59: warning: no @param for pz
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for pz
     public void refreshNear(World w, double px, double pz, int radius) {
                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:59: warning: no @param for radius
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for radius
     public void refreshNear(World w, double px, double pz, int radius) {
                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/WindEngine.java:53: warning: no @param for world
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/WindEngine.java:54: warning: no @param for world
     public void unloadWorld(World world) {
                 ^
-5 errors
+1 error
 22 warnings
 
 > Task :javadoc FAILED
 
 [Incubating] Problems report is available at: file:///home/runner/work/Meus--mods-Java/Meus--mods-Java/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':javadoc'.
+> Javadoc generation failed. Generated Javadoc options file (useful for troubleshooting): '/home/runner/work/Meus--mods-Java/Meus--mods-Java/build/tmp/javadoc/javadoc.options'
+
+* Try:
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
