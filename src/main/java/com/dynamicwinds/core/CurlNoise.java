@@ -19,7 +19,7 @@ public final class CurlNoise {
         double tx = x * 0.05 + time * 0.001;
         double ty = y * 0.05;
         double tz = z * 0.05 + time * 0.0007;
-        double eps = 0.01;
+        double eps = 0.1;
 
         // spatial derivatives via finite differences on the multi-octave potential
         // using the same octave structure.
