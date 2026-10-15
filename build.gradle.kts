@@ -16,7 +16,6 @@ version = "1.0.0"
 java {
   toolchain {
     languageVersion.set(JavaLanguageVersion.of(8))
-    vendor.set(org.gradle.jvm.toolchain.JvmVendorSpec.AZUL)
   }
   withSourcesJar()
   withJavadocJar()
