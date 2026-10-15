@@ -1,6 +1,5 @@
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.7/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build 
-Calculating task graph as no cached configuration is available for tasks: build
 
 FAILURE: Build failed with an exception.
 
@@ -9,7 +8,7 @@ A problem occurred configuring root project 'DynamicWinds'.
 > Could not resolve all artifacts for configuration ':classpath'.
    > Failed to transform retrofuturagradle-2.0.2.jar (com.gtnewhorizons:retrofuturagradle:2.0.2) to match attributes {artifactType=jar, org.gradle.category=library, org.gradle.internal.hierarchy-collected=false, org.gradle.internal.instrumented=instrumented-external-dependency, org.gradle.libraryelements=jar, org.gradle.status=release, org.gradle.usage=java-runtime}.
       > Execution failed for ExternalDependencyInstrumentingArtifactTransform: /home/runner/.gradle/caches/modules-2/files-2.1/com.gtnewhorizons/retrofuturagradle/2.0.2/1437a5a3e7d1b731ba64a090364f330b7441302b/retrofuturagradle-2.0.2.jar.
-         > Failed to create Jar file /home/runner/.gradle/caches/transforms-4/29784076063724acdf7e2c7100250a06-b53e1484-1b62-4d73-a403-78309d5b07aa/transformed/instrumented/instrumented-retrofuturagradle-2.0.2.jar.
+         > Failed to create Jar file /home/runner/.gradle/caches/transforms-4/29784076063724acdf7e2c7100250a06-10424eae-cb74-40bb-bc68-20052f33f440/transformed/instrumented/instrumented-retrofuturagradle-2.0.2.jar.
 
 * Try:
 > Run with --info or --debug option to get more log output.
@@ -71,7 +70,6 @@ org.gradle.api.ProjectConfigurationException: A problem occurred configuring roo
 	at org.gradle.internal.model.StateTransitionController.transitionIfNotPreviously(StateTransitionController.java:209)
 	at org.gradle.initialization.VintageBuildModelController.prepareProjects(VintageBuildModelController.java:84)
 	at org.gradle.initialization.VintageBuildModelController.prepareToScheduleTasks(VintageBuildModelController.java:71)
-	at org.gradle.configurationcache.ConfigurationCacheAwareBuildModelController.prepareToScheduleTasks(ConfigurationCacheAwareBuildModelController.kt:49)
 	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$prepareToScheduleTasks$6(DefaultBuildLifecycleController.java:175)
 	at org.gradle.internal.model.StateTransitionController.lambda$doTransition$14(StateTransitionController.java:255)
 	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:266)
@@ -81,16 +79,10 @@ org.gradle.api.ProjectConfigurationException: A problem occurred configuring roo
 	at org.gradle.internal.model.StateTransitionController.maybeTransition(StateTransitionController.java:186)
 	at org.gradle.internal.build.DefaultBuildLifecycleController.prepareToScheduleTasks(DefaultBuildLifecycleController.java:173)
 	at org.gradle.internal.buildtree.DefaultBuildTreeWorkPreparer.scheduleRequestedTasks(DefaultBuildTreeWorkPreparer.java:36)
-	at org.gradle.configurationcache.ConfigurationCacheAwareBuildTreeWorkController$scheduleAndRunRequestedTasks$executionResult$1$result$1.invoke(ConfigurationCacheAwareBuildTreeWorkController.kt:48)
-	at org.gradle.configurationcache.ConfigurationCacheAwareBuildTreeWorkController$scheduleAndRunRequestedTasks$executionResult$1$result$1.invoke(ConfigurationCacheAwareBuildTreeWorkController.kt:45)
-	at org.gradle.configurationcache.DefaultConfigurationCache$loadOrScheduleRequestedTasks$1.invoke(DefaultConfigurationCache.kt:143)
-	at org.gradle.configurationcache.DefaultConfigurationCache$loadOrScheduleRequestedTasks$1.invoke(DefaultConfigurationCache.kt:142)
-	at org.gradle.configurationcache.DefaultConfigurationCache.runWorkThatContributesToCacheEntry(DefaultConfigurationCache.kt:310)
-	at org.gradle.configurationcache.DefaultConfigurationCache.loadOrScheduleRequestedTasks(DefaultConfigurationCache.kt:142)
-	at org.gradle.configurationcache.ConfigurationCacheAwareBuildTreeWorkController$scheduleAndRunRequestedTasks$executionResult$1.apply(ConfigurationCacheAwareBuildTreeWorkController.kt:45)
-	at org.gradle.configurationcache.ConfigurationCacheAwareBuildTreeWorkController$scheduleAndRunRequestedTasks$executionResult$1.apply(ConfigurationCacheAwareBuildTreeWorkController.kt:44)
+	at org.gradle.configurationcache.VintageBuildTreeWorkController$scheduleAndRunRequestedTasks$1.apply(VintageBuildTreeWorkController.kt:36)
+	at org.gradle.configurationcache.VintageBuildTreeWorkController$scheduleAndRunRequestedTasks$1.apply(VintageBuildTreeWorkController.kt:35)
 	at org.gradle.composite.internal.DefaultIncludedBuildTaskGraph.withNewWorkGraph(DefaultIncludedBuildTaskGraph.java:112)
-	at org.gradle.configurationcache.ConfigurationCacheAwareBuildTreeWorkController.scheduleAndRunRequestedTasks(ConfigurationCacheAwareBuildTreeWorkController.kt:44)
+	at org.gradle.configurationcache.VintageBuildTreeWorkController.scheduleAndRunRequestedTasks(VintageBuildTreeWorkController.kt:35)
 	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.lambda$scheduleAndRunTasks$1(DefaultBuildTreeLifecycleController.java:77)
 	at org.gradle.internal.buildtree.DefaultBuildTreeLifecycleController.lambda$runBuild$4(DefaultBuildTreeLifecycleController.java:120)
 	at org.gradle.internal.model.StateTransitionController.lambda$transition$6(StateTransitionController.java:169)
@@ -118,3 +110,11 @@ org.gradle.api.ProjectConfigurationException: A problem occurred configuring roo
 	at org.gradle.launcher.exec.BuildTreeLifecycleBuildActionExecutor.execute(BuildTreeLifecycleBuildActionExecutor.java:71)
 	at org.gradle.launcher.exec.RunAsBuildOperationBuildActionExecutor$3.call(RunAsBuildOperationBuildActionExecutor.java:61)
 	at org.gradle.launcher.exec.RunAsBuildOperationBuildActionExecutor$3.call(RunAsBuildOperationBuildActionExecutor.java:57)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:200)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:195)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:157)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.operations.DefaultBuildOperationExecutor.call(DefaultBuildOperationExecutor.java:73)
