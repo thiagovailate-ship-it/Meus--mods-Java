@@ -18,17 +18,17 @@ public class WindAudio {
 
         // ambience loop
         if (ambience == null || !mc.getSoundHandler().isSoundPlaying(ambience)) {
-            ambience = PositionedSoundRecord.func_147674_a(new ResourceLocation("dynamicwinds:wind_ambience"), (float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
+            ambience = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:wind_ambience"), (float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
             mc.getSoundHandler().playSound(ambience);
         }
         // adjust volume by speed (best-effort; re-trigger not continuous in 1.7.10)
         if (s.speed > 6.0 && mc.theWorld.getTotalWorldTime() - lastGustTick > 40) {
             lastGustTick = mc.theWorld.getTotalWorldTime();
-            PositionedSoundRecord gust = PositionedSoundRecord.func_147674_a(new ResourceLocation("dynamicwinds:wind_gust"), (float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
+            PositionedSoundRecord gust = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:wind_gust"), (float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
             mc.getSoundHandler().playSound(gust);
         }
         if (s.gust > 2.0 && mc.theWorld.getTotalWorldTime() - lastGustTick > 60) {
-            PositionedSoundRecord rustle = PositionedSoundRecord.func_147674_a(new ResourceLocation("dynamicwinds:leaf_rustle"), (float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
+            PositionedSoundRecord rustle = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:leaf_rustle"), (float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
             mc.getSoundHandler().playSound(rustle);
         }
     }
