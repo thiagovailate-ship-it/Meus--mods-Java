@@ -20,19 +20,20 @@ class CoreTests {
     void divergenceApproxZero() {
         WindModel m = new WindModel(999L);
         WorldContext ctx = new WorldContext(999L, 500L, 64, 0.0, SurfaceClass.GRASS);
-        double eps = 1e-3;
-        double x = 12.3, y = 70.0, z = 34.5;
-        WindSample xp = m.compute(ctx, x + eps, y, z);
-        WindSample xm = m.compute(ctx, x - eps, y, z);
-        WindSample yp = m.compute(ctx, x, y + eps, z);
-        WindSample ym = m.compute(ctx, x, y - eps, z);
-        WindSample zp = m.compute(ctx, x, y, z + eps);
-        WindSample zm = m.compute(ctx, x, y, z - eps);
-        double div = (xp.vector.x - xm.vector.x) / (2 * eps)
-                   + (yp.vector.y - ym.vector.y) / (2 * eps)
-                   + (zp.vector.z - zm.vector.z) / (2 * eps);
-        // curl of a field is divergence-free; finite differences should be small
-        assertTrue(Math.abs(div) < 50.0, "divergence too large: " + div);
+        double eps = 1e-2;
+        for (double[] pt : new double[][]{{12.3,70.0,34.5},{-5.7,65.0,10.2},{0.0,64.0,0.0},{100.5,80.0,-50.3}}) {
+            double x=pt[0], y=pt[1], z=pt[2];
+            WindSample xp = m.compute(ctx, x + eps, y, z);
+            WindSample xm = m.compute(ctx, x - eps, y, z);
+            WindSample yp = m.compute(ctx, x, y + eps, z);
+            WindSample ym = m.compute(ctx, x, y - eps, z);
+            WindSample zp = m.compute(ctx, x, y, z + eps);
+            WindSample zm = m.compute(ctx, x, y, z - eps);
+            double div = (xp.vector.x - xm.vector.x) / (2 * eps)
+                       + (yp.vector.y - ym.vector.y) / (2 * eps)
+                       + (zp.vector.z - zm.vector.z) / (2 * eps);
+            assertTrue(Math.abs(div) < 5.0, "divergence too large at " + x + "," + y + "," + z + ": " + div);
+        }
     }
 
     @Test

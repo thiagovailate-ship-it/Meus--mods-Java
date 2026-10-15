@@ -41,10 +41,17 @@ public final class EntityPushHandler {
             e.motionX += s.vector.x / (v + 1e-6) * force * 0.1;
             e.motionY += s.vector.y / (v + 1e-6) * force * 0.05;
             e.motionZ += s.vector.z / (v + 1e-6) * force * 0.1;
-            // items slide more
-            if (e instanceof EntityItem) {
-                e.motionX *= 1.5; e.motionZ *= 1.5;
-            }
+            // clamp horizontal speed
+            double cap = 0.6;
+            if (e.motionX > cap) e.motionX = cap;
+            if (e.motionX < -cap) e.motionX = -cap;
+            if (e.motionZ > cap) e.motionZ = cap;
+            if (e.motionZ < -cap) e.motionZ = -cap;
+            // drag
+            e.motionX *= 0.97;
+            e.motionZ *= 0.97;
+            // items are lighter: scale force by a mass factor instead of multiplying velocity
+            // (mass handling is implicit via force scaling above; no velocity multiplication)
         }
     }
 

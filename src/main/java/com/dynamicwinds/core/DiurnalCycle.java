@@ -10,7 +10,7 @@ public final class DiurnalCycle {
         // Minecraft day = 24000 ticks
         double phase = (timeTicks % 24000L) / 24000.0 * 2.0 * Math.PI;
         // peak midday, calmer at night
-        double f = 1.0 + 0.25 * Math.sin(phase - Math.PI / 2.0);
+        double f = 1.0 + 0.25 * Math.sin(phase);
         if (f < 0.5) f = 0.5;
         return f;
     }
