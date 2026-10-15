@@ -8,7 +8,7 @@ class CoreTests {
     @Test
     void determinism() {
         WindModel m = new WindModel(12345L);
-        WorldContext ctx = new WorldContext(12345L, 1000L, 64, 0.3, SurfaceClass.GRASS);
+        WorldContext ctx = new WorldContext(12345L, 1000L, 64, 0.3, SurfaceClass.GRASS, 1.0);
         WindSample a = m.compute(ctx, 10.5, 70.0, 20.5);
         WindSample b = m.compute(ctx, 10.5, 70.0, 20.5);
         assertEquals(a.vector, b.vector);
@@ -19,7 +19,7 @@ class CoreTests {
     @Test
     void divergenceApproxZero() {
         WindModel m = new WindModel(999L);
-        WorldContext ctx = new WorldContext(999L, 500L, 64, 0.0, SurfaceClass.GRASS);
+        WorldContext ctx = new WorldContext(999L, 500L, 64, 0.0, SurfaceClass.GRASS, 1.0);
         double eps = 0.5;
         for (double[] pt : new double[][]{{12.3,70.0,34.5},{-5.7,65.0,10.2},{0.0,64.0,0.0},{100.5,80.0,-50.3}}) {
             double x=pt[0], y=pt[1], z=pt[2];
@@ -52,7 +52,7 @@ class CoreTests {
     @Test
     void speedNonNegative() {
         WindModel m = new WindModel(7L);
-        WorldContext ctx = new WorldContext(7L, 0L, 64, 0.0, SurfaceClass.GRASS);
+        WorldContext ctx = new WorldContext(7L, 0L, 64, 0.0, SurfaceClass.GRASS, 1.0);
         WindSample s = m.compute(ctx, 0, 65, 0);
         assertTrue(s.speed >= 0);
         assertTrue(s.gust > 0);
@@ -97,8 +97,8 @@ class CoreTests {
     @Test
     void stormIncreasesSpeed() {
         WindModel m = new WindModel(1L);
-        WorldContext calm = new WorldContext(1L, 1000L, 64, 0.0, SurfaceClass.GRASS);
-        WorldContext storm = new WorldContext(1L, 1000L, 64, 1.0, SurfaceClass.GRASS);
+        WorldContext calm = new WorldContext(1L, 1000L, 64, 0.0, SurfaceClass.GRASS, 1.0);
+        WorldContext storm = new WorldContext(1L, 1000L, 64, 1.0, SurfaceClass.GRASS, 1.0);
         WindSample a = m.compute(calm, 5, 70, 5);
         WindSample b = m.compute(storm, 5, 70, 5);
         assertTrue(b.speed >= a.speed);
@@ -113,7 +113,6 @@ class CoreTests {
     @Test
     void tornadoActiveCenterLifecycle() {
         TornadoField tf = new TornadoField(1L);
-        // find a time with active tornado
         boolean found = false;
         for (long t = 0; t < 12000; t += 100) {
             if (tf.activeCenter(1L, t) != null) { found = true; break; }
