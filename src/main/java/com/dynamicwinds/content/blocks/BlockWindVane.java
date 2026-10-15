@@ -8,6 +8,7 @@ import net.minecraft.world.World;
 public class BlockWindVane extends Block {
     public BlockWindVane() {
         super(Material.wood);
+        setTextureName("dynamicwinds:blocks/wind_vane");
         setBlockName("windVane");
         setHardness(1.0f);
     }

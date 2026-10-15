@@ -1,0 +1,20 @@
+{
+  "textures": {
+    "texture": "dynamicwinds:blocks/anemometer"
+  },
+  "elements": [
+    {
+      "name": "base",
+      "from": [14, 0, 14],
+      "to": [18, 16, 18],
+      "faces": {
+        "north": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "east": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "south": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "west": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "up": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "down": {"texture": "#texture", "tintindex": 0, "lightmap": false}
+      }
+    }
+  ]
+}

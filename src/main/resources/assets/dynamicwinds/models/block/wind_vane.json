@@ -1,0 +1,20 @@
+{
+  "textures": {
+    "texture": "dynamicwinds:blocks/wind_vane"
+  },
+  "elements": [
+    {
+      "name": "base",
+      "from": [8, 0, 8],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "east": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "south": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "west": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "up": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "down": {"texture": "#texture", "tintindex": 0, "lightmap": false}
+      }
+    }
+  ]
+}

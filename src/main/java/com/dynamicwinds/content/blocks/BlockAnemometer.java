@@ -10,6 +10,7 @@ import net.minecraft.world.World;
 public class BlockAnemometer extends Block {
     public BlockAnemometer() {
         super(Material.iron);
+        setTextureName("dynamicwinds:blocks/anemometer");
         setBlockName("anemometer");
         setHardness(2.0f);
         setTickRandomly(true);

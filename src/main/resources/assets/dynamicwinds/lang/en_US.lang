@@ -1,3 +1,9 @@
 tile.windVane.name=Wind Vane
 tile.windsock.name=Windsock
 tile.anemometer.name=Anemometer
+block.windVane.name=Wind Vane
+block.windsock.name=Windsock
+block.anemometer.name=Anemometer
+item.windVane.name=Wind Vane
+item.windsock.name=Windsock
+item.anemometer.name=Anemometer

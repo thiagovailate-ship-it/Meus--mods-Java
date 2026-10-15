@@ -1,0 +1,20 @@
+{
+  "textures": {
+    "texture": "dynamicwinds:blocks/windsock"
+  },
+  "elements": [
+    {
+      "name": "body",
+      "from": [4, 4, 8],
+      "to": [24, 28, 24],
+      "faces": {
+        "north": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "east": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "south": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "west": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "up": {"texture": "#texture", "tintindex": 0, "lightmap": false},
+        "down": {"texture": "#texture", "tintindex": 0, "lightmap": false}
+      }
+    }
+  ]
+}

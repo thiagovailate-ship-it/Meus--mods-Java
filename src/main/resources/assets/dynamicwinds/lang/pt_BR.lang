@@ -1,3 +1,9 @@
-tile.windVane.name=Biruta
+tile.windVane.name=Cata-vento
 tile.windsock.name=Manga de vento
 tile.anemometer.name=Anemômetro
+block.windVane.name=Cata-vento
+block.windsock.name=Manga de vento
+block.anemometer.name=Anemômetro
+item.windVane.name=Cata-vento
+item.windsock.name=Manga de vento
+item.anemometer.name=Anemômetro
