@@ -32,7 +32,7 @@ class CoreTests {
             double div = (xp.vector.x - xm.vector.x) / (2 * eps)
                        + (yp.vector.y - ym.vector.y) / (2 * eps)
                        + (zp.vector.z - zm.vector.z) / (2 * eps);
-            assertTrue(Double.isFinite(div), "divergence not finite at " + x + "," + y + "," + z);
+            if (!Double.isFinite(div)) throw new RuntimeException("NONFINITE div=" + div + " at " + x + "," + y + "," + z);
             // divergence of a curl is analytically zero; numerical residual is bounded by finite-diff error
         }
     }
