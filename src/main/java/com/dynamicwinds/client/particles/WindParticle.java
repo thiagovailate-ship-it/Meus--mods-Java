@@ -19,8 +19,5 @@ public class WindParticle extends EntityFX {
         motionX = s.vector.x * 0.05;
         motionY = s.vector.y * 0.05;
         motionZ = s.vector.z * 0.05;
-        posX += motionX;
-        posY += motionY;
-        posZ += motionZ;
     }
 }

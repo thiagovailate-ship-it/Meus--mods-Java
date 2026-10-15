@@ -18,8 +18,6 @@ public class GustParticle extends EntityFX {
         motionX = s.vector.x * 0.05;
         motionY = 0.02;
         motionZ = s.vector.z * 0.05;
-        posX += motionX; posY += motionY; posZ += motionZ;
-        if (particleAge++ >= particleMaxAge) setDead();
     }
     @Override
     public int getFXLayer() { return 1; }

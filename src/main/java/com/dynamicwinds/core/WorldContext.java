@@ -7,17 +7,19 @@ package com.dynamicwinds.core;
  */
 public final class WorldContext {
     public final long seed;
-    public final long timeTicks;       // world time in ticks
-    public final int surfaceY;        // cached heightmap at the cell
-    public final double storm;        // 0..1 storm intensity
-    public final int surfaceClass;    // index into SurfaceClass roughness table
+    public final long timeTicks;
+    public final int surfaceY;
+    public final double storm;
+    public final int surfaceClass;
+    public final double baseSpeedMul;
 
-    public WorldContext(long seed, long timeTicks, int surfaceY, double storm, int surfaceClass) {
+    public WorldContext(long seed, long timeTicks, int surfaceY, double storm, int surfaceClass, double baseSpeedMul) {
         this.seed = seed;
         this.timeTicks = timeTicks;
         this.surfaceY = surfaceY;
         this.storm = clamp01(storm);
         this.surfaceClass = surfaceClass;
+        this.baseSpeedMul = baseSpeedMul;
     }
 
     private static double clamp01(double v) {

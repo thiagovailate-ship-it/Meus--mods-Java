@@ -20,6 +20,7 @@ public class BlockAnemometer extends Block {
 
     @Override
     public int isProvidingWeakPower(IBlockAccess world, int x, int y, int z, int side) {
+        if (!(world instanceof World)) return 0;
         WindSample s = Wind.getWindAt((World) world, x + 0.5, y + 0.5, z + 0.5);
         int sig = (int) Math.round(Math.min(15, s.speed));
         return sig;

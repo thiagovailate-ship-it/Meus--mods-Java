@@ -15,6 +15,7 @@ public class DebugHud {
     public void onRender(RenderGameOverlayEvent.Text e) {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null) return;
+        if (!com.dynamicwinds.integration.WindConfig.debugHud) return;
         WindSample s = Wind.getWindAt(mc.theWorld, mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
         ScaledResolution r = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
         e.left.add("Wind: " + String.format("%.2f m/s", s.speed));

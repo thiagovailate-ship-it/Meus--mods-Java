@@ -48,7 +48,7 @@ public final class WindModel {
         double gust = ou.gust(seed, x, z, ctx.timeTicks);
         double stormMul = 1.0 + ctx.storm * 2.5;
 
-        double speed = profileSpeed * diurnal * gust * stormMul;
+        double speed = profileSpeed * diurnal * gust * stormMul * ctx.baseSpeedMul;
         // dampen near ground already handled by log profile (z0)
         Vec3 vector = dir.mul(speed);
 

@@ -2,6 +2,7 @@ package com.dynamicwinds.integration.commands;
 
 import com.dynamicwinds.api.Wind;
 import com.dynamicwinds.core.WindSample;
+import com.dynamicwinds.core.WorldContext;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,7 +16,7 @@ public class WindCommand extends CommandBase {
     public String getCommandName() { return "wind"; }
 
     @Override
-    public String getCommandUsage(ICommandSender sender) { return "/wind <get|profile|debug>"; }
+    public String getCommandUsage(ICommandSender sender) { return "/wind <get|profile|debug|storm> [x] [y] [z]"; }
 
     @Override
     public List getCommandAliases() { return Arrays.asList("w"); }
@@ -25,14 +26,29 @@ public class WindCommand extends CommandBase {
         if (!(sender instanceof EntityPlayer)) return;
         EntityPlayer p = (EntityPlayer) sender;
         String sub = args.length > 0 ? args[0] : "get";
+
         if ("get".equals(sub)) {
-            WindSample s = Wind.getWindAt(p.worldObj, p.posX, p.posY, p.posZ);
-            p.addChatMessage(new ChatComponentText(String.format("Wind: (%.2f,%.2f,%.2f) speed=%.2f gust=%.2f",
-                    s.vector.x, s.vector.y, s.vector.z, s.speed, s.gust)));
+            double x = args.length > 1 ? parseDouble(args[1], sender) : p.posX;
+            double y = args.length > 2 ? parseDouble(args[2], sender) : p.posY;
+            double z = args.length > 3 ? parseDouble(args[3], sender) : p.posZ;
+            WindSample s = Wind.getWindAt(p.worldObj, x, y, z);
+            p.addChatMessage(new ChatComponentText(
+                String.format("Wind at (%.1f,%.1f,%.1f): vec=(%.3f,%.3f,%.3f) speed=%.3f gust=%.3f",
+                    x, y, z, s.vector.x, s.vector.y, s.vector.z, s.speed, s.gust)));
         } else if ("profile".equals(sub)) {
-            p.addChatMessage(new ChatComponentText("Profile: log-law active"));
+            p.addChatMessage(new ChatComponentText(
+                "Wind profile: logarithmic law u(z)=u*/kappa*ln(z/z0). " +
+                "Diurnal cycle: peak at noon (phase=0). Storm factor: 1+2.5*storm."));
         } else if ("debug".equals(sub)) {
-            p.addChatMessage(new ChatComponentText("Debug: on"));
+            p.addChatMessage(new ChatComponentText(
+                "Debug mode: enable via config (debugHud=true) to see HUD overlay."));
+        } else if ("storm".equals(sub)) {
+            boolean raining = p.worldObj.isRaining();
+            boolean thundering = p.worldObj.isThundering();
+            float rainStr = p.worldObj.rainingStrength;
+            p.addChatMessage(new ChatComponentText(
+                String.format("Weather: raining=%b thundering=%b rainStrength=%.2f",
+                    raining, thundering, rainStr)));
         } else {
             p.addChatMessage(new ChatComponentText(getCommandUsage(sender)));
         }

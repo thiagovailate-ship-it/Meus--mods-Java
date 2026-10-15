@@ -17,6 +17,7 @@ public final class WindVFX {
     public static void tick() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null || mc.theWorld == null) return;
+        if (!com.dynamicwinds.integration.WindConfig.enableParticles) return;
         World w = mc.theWorld;
         WindSample s = Wind.getWindAt(w, mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
         if (s.speed < 1.0) return;

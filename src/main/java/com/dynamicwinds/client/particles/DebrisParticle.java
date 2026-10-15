@@ -15,8 +15,6 @@ public class DebrisParticle extends EntityFX {
         super.onUpdate();
         motionX += (Math.random()-0.5)*0.05;
         motionZ += (Math.random()-0.5)*0.05;
-        posX += motionX; posY += motionY; posZ += motionZ;
-        if (particleAge++ >= particleMaxAge) setDead();
     }
     @Override
     public int getFXLayer() { return 1; }

@@ -18,8 +18,6 @@ public class PollenParticle extends EntityFX {
         motionX = s.vector.x * 0.01;
         motionY = s.vector.y * 0.01 + 0.005;
         motionZ = s.vector.z * 0.01;
-        posX += motionX; posY += motionY; posZ += motionZ;
-        if (particleAge++ >= particleMaxAge) setDead();
     }
     @Override
     public int getFXLayer() { return 1; }

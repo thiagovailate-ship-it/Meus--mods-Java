@@ -21,9 +21,6 @@ public class LeafParticle extends EntityFX {
         motionX = s.vector.x * 0.02;
         motionZ = s.vector.z * 0.02;
         motionY += 0.001 * (s.vector.y);
-        posX += motionX; posY += motionY; posZ += motionZ;
-        particleAge++;
-        if (particleAge >= particleMaxAge) setDead();
     }
     @Override
     public int getFXLayer() { return 1; }

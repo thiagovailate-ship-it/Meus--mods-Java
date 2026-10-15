@@ -14,6 +14,7 @@ public class WindAudio {
     public static void update() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null || mc.theWorld == null) return;
+        if (!com.dynamicwinds.integration.WindConfig.enableAudio) return;
         WindSample s = Wind.getWindAt(mc.theWorld, mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
 
         // ambience loop

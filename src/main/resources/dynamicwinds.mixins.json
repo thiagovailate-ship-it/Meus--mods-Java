@@ -1,14 +1,9 @@
 {
-  "required": true,
+  "required": false,
   "minVersion": "0.8",
   "package": "com.dynamicwinds.client.render",
   "compatibilityLevel": "JAVA_8",
   "mixins": [],
-  "client": [
-    "MixinRenderGlobal",
-    "MixinEffectRenderer",
-    "MixinEntityRainFX",
-    "MixinEntitySnowShovelFX"
-  ],
+  "client": [],
   "server": []
 }

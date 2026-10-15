@@ -4,6 +4,7 @@ import com.dynamicwinds.core.SurfaceClass;
 import com.dynamicwinds.core.WindModel;
 import com.dynamicwinds.core.WindSample;
 import com.dynamicwinds.core.WorldContext;
+import com.dynamicwinds.integration.WindConfig;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 
@@ -22,8 +23,19 @@ public final class Wind {
         int sz = (int) Math.floor(z);
         int surfaceY = world.getHeightValue(sx, sz);
         int surfaceClass = surfaceClassFor(world.getBiomeGenForCoords(sx, sz));
-        double storm = 0.0; // integration layer may override via WindEngine
-        WorldContext ctx = new WorldContext(seed, world.getTotalWorldTime(), surfaceY, storm, surfaceClass);
+        // storm intensity from world weather state (0..1)
+        double storm = 0.0;
+        if (world.isThundering()) {
+            storm = 1.0;
+        } else if (world.isRaining()) {
+            // interpolate rain strength for smoothness
+            float rs = world.rainingStrength;
+            float prs = world.prevRainingStrength;
+            float frac = (world.getTotalWorldTime() % 20) / 20.0f;
+            float cur = prs + (rs - prs) * frac;
+            storm = (cur > 0.05) ? (cur / 1.0f) : 0.0;
+        }
+        WorldContext ctx = new WorldContext(seed, world.getTotalWorldTime(), surfaceY, storm, surfaceClass, WindConfig.baseSpeedMultiplier);
         return model.compute(ctx, x, y, z);
     }
 

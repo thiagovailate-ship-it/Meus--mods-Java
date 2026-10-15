@@ -20,8 +20,6 @@ public class SwirlParticle extends EntityFX {
         motionX = Math.cos(ang) * s.speed * 0.02;
         motionZ = Math.sin(ang) * s.speed * 0.02;
         motionY = 0.01;
-        posX += motionX; posY += motionY; posZ += motionZ;
-        if (particleAge++ >= particleMaxAge) setDead();
     }
     @Override
     public int getFXLayer() { return 1; }

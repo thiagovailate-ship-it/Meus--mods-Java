@@ -1,70 +1,131 @@
 package com.dynamicwinds.core;
 
 /**
- * Deterministic tornado (Rankine vortex) field. Tornadoes spawn/move/dissipate
- * based on seed and time; both client and server compute identical positions.
+ * Deterministic tornado (Rankine vortex) field.
+ * Lifecycle: spawn -> form -> mature -> dissipate -> gone.
+ * Spatial distribution: tornadoes are seeded across the world using per-cycle
+ * pseudo-random positions derived from seed + cycle index. Both client and server
+ * compute identical positions.
  */
 public final class TornadoField {
-    private final PerlinNoise noise;
+    private final PerlinNoise spawnNoise;
 
     public TornadoField(long seed) {
-        this.noise = new PerlinNoise(seed + 99991L);
+        // separate noise stream for spawn positions
+        this.spawnNoise = new PerlinNoise(seed + 99991L);
     }
 
-    /** Returns the wind contribution of any active tornado at (x,y,z). */
-    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
-        // tornado lifecycle: one active every ~10 minutes (12000 ticks), lasting ~3 min
-        long cycle = 12000L;
-        long phase = timeTicks % cycle;
-        if (phase > 3600L) return Vec3.ZERO; // inactive most of the time
+    /**
+     * Tornado lifecycle parameters (in ticks):
+     * - spawn window: 0..400 (formation)
+     * - mature window: 400..3600 (full intensity)
+     * - dissipate: 3600..4000 (fading)
+     * - total life: 4000 ticks (~200 seconds = 3.3 minutes)
+     * - spawn interval: ~15 minutes (30000 ticks) between tornado cycles
+     */
+    private static final long CYCLE = 30000L;
+    private static final long FORMATION_END = 400L;
+    private static final long DISSIPATE_START = 3600L;
+    private static final long LIFETIME = 4000L;
+    private static final double MAX_RADIUS = 120.0;  // world distribution radius
+    private static final double CORE_R = 8.0;
+    private static final double VMAX = 28.0;
 
-        // center position derived from seed + cycle index
-        long idx = timeTicks / cycle;
-        PerlinNoise cnoise = new PerlinNoise(seed + idx * 31L);
-        double cx = cnoise.noise(idx * 0.7, 0, 0) * 200.0;
-        double cz = cnoise.noise(0, idx * 0.7, 1) * 200.0;
+    /**
+     * Returns the wind contribution of any active tornado at (x,y,z).
+     * Deterministic: same seed, time, position => same result.
+     */
+    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
+        long phase = timeTicks % CYCLE;
+        if (phase >= LIFETIME) return Vec3.ZERO;
+
+        // Determine which tornado cycle we're in
+        long cycleIndex = timeTicks / CYCLE;
+        // spawn position deterministic from seed + cycle
+        double cx = spawnPosition(seed, cycleIndex, 0) * MAX_RADIUS;
+        double cz = spawnPosition(seed, cycleIndex, 1) * MAX_RADIUS;
+        // center y varies with terrain height, but we approximate at 64 for now
+        // (real implementation would query world heightmap)
         double cy = 64.0;
 
         double dx = x - cx;
         double dz = z - cz;
         double r = Math.sqrt(dx*dx + dz*dz);
-        if (r > 80.0) return Vec3.ZERO;
+        if (r > 100.0) return Vec3.ZERO;
 
-        double R = 8.0;          // core radius
-        double vmax = 25.0;      // max tangential speed
+        double lifeFactor = lifecycleFactor(phase);
+        if (lifeFactor <= 0.0) return Vec3.ZERO;
+
+        // Rankine vortex: solid body rotation inside core, 1/r outside
         double vtheta;
-        if (r < R) vtheta = vmax * (r / R);
-        else vtheta = vmax * (R / r);
+        if (r < CORE_R) {
+            vtheta = VMAX * (r / CORE_R);
+        } else {
+            vtheta = VMAX * (CORE_R / r);
+        }
 
-        // tangential direction (perpendicular to radial)
+        // tangential direction (perpendicular to radial, CCW)
         double tx = -dz / (r + 1e-6);
         double tz = dx / (r + 1e-6);
 
-        // updraft in core
-        double up = (r < R) ? 6.0 * (1.0 - r / R) : 0.0;
+        // updraft: strongest in core, decreases with radius
+        double up = (r < CORE_R) ? 8.0 * (1.0 - r / CORE_R) : 0.0;
+        // also updraft in outer region during mature phase
+        if (phase > FORMATION_END && phase < DISSIPATE_START && r < 40.0) {
+            up += 2.0 * (1.0 - r / 40.0);
+        }
 
-        // radial inflow near ground
-        double radial = -1.5 * (r < 40 ? (1.0 - r/40.0) : 0.0);
+        // radial inflow near ground (converges toward center)
+        double radial = 0.0;
+        if (r < 50.0) {
+            radial = -2.0 * (1.0 - r / 50.0);
+        }
 
-        double vx = tx * vtheta + dx/(r+1e-6) * radial;
-        double vy = up;
-        double vz = tz * vtheta + dz/(r+1e-6) * radial;
+        // Intensity varies with lifecycle: ramps up during formation, steady mature, fades
+        double intensity = lifeFactor;
+        if (phase < FORMATION_END) {
+            intensity = phase / (double) FORMATION_END; // 0..1 ramp
+        } else if (phase > DISSIPATE_START) {
+            intensity = (LIFETIME - phase) / (double) (LIFETIME - DISSIPATE_START); // 1..0 fade
+        }
 
-        // fade in/out by lifecycle
-        double life = 1.0;
-        if (phase < 200) life = phase / 200.0;
-        if (phase > 3400) life = (3600 - phase) / 200.0;
-        return new Vec3(vx*life, vy*life, vz*life);
+        double vx = tx * vtheta * intensity + dx / (r + 1e-6) * radial * intensity;
+        double vy = up * intensity;
+        double vz = tz * vtheta * intensity + dz / (r + 1e-6) * radial * intensity;
+
+        return new Vec3(vx, vy, vz);
     }
-    /** Returns active tornado center (x,y,z) or null if none. */
+
+    /**
+     * Returns active tornado center (x,y,z) or null if none active.
+     */
     public double[] activeCenter(long seed, long timeTicks) {
-        long cycle = 12000L;
-        long phase = timeTicks % cycle;
-        if (phase > 3600L) return null;
-        long idx = timeTicks / cycle;
-        PerlinNoise cnoise = new PerlinNoise(seed + idx * 31L);
-        double cx = cnoise.noise(idx * 0.7, 0, 0) * 200.0;
-        double cz = cnoise.noise(0, idx * 0.7, 1) * 200.0;
-        return new double[]{cx, 64.0, cz};
+        long phase = timeTicks % CYCLE;
+        if (phase >= LIFETIME) return null;
+
+        long cycleIndex = timeTicks / CYCLE;
+        double cx = spawnPosition(seed, cycleIndex, 0) * MAX_RADIUS;
+        double cz = spawnPosition(seed, cycleIndex, 1) * MAX_RADIUS;
+        double cy = 64.0;
+
+        double lifeFactor = lifecycleFactor(phase);
+        if (lifeFactor <= 0.0) return null;
+
+        return new double[]{cx, cy, cz};
+    }
+
+    /** Deterministic random position from seed + component. */
+    private double spawnPosition(long seed, long cycleIndex, int component) {
+        return spawnNoise.noise(cycleIndex * 0.7, component, 0) * 0.5 + 0.5;
+    }
+
+    /** Lifecycle factor: 0 outside active window, 0..1 during lifecycle. */
+    private double lifecycleFactor(long phase) {
+        if (phase < 100) return phase / 100.0; // formation ramp 0..1
+        if (phase > DISSIPATE_START && phase < LIFETIME) {
+            return (LIFETIME - phase) / (double) (LIFETIME - DISSIPATE_START);
+        }
+        if (phase >= LIFETIME) return 0.0;
+        return 1.0; // mature phase
     }
 }
