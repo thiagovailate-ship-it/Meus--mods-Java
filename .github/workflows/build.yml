@@ -31,6 +31,15 @@ jobs:
           gradle build --no-daemon --stacktrace 2>&1 | tee build.log
           exit ${PIPESTATUS[0]}
 
+      - name: Commit build log on failure
+        if: failure()
+        run: |
+          git config user.name "ci"
+          git config user.email "ci@local"
+          git add -f build.log || true
+          git commit -m "ci: build log" || true
+          git push || true
+
       - name: Upload build log
         uses: actions/upload-artifact@v4
         if: always()
