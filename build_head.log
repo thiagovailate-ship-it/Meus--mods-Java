@@ -25,20 +25,21 @@ Download https://piston-meta.mojang.com/v1/packages/ed5d8789ed29872ea2ef1c348302
 > Task :downloadFernflower
 Download https://files.minecraftforge.net/fernflower-fix-1.0.zip
 
+> Task :downloadVanillaJars
+Download https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar
+Download https://launcher.mojang.com/v1/objects/e80d9b3bf5085002218d4be59e668bac718abbc6/client.jar
+
 > Task :extractNatives2
 > Task :processInjectedTagsResources NO-SOURCE
 > Task :processMcLauncherResources NO-SOURCE
-
-> Task :downloadVanillaJars
-Download https://launcher.mojang.com/v1/objects/e80d9b3bf5085002218d4be59e668bac718abbc6/client.jar
-Download https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar
-
 > Task :generateForgeSrgMappings
 > Task :createMcLauncherFiles
 > Task :processResources
 > Task :sourcesJar
 > Task :processTestResources NO-SOURCE
 > Task :mergeVanillaSidedJars
+> Task :compileInjectedTagsJava
+> Task :injectedTagsClasses
 
 > Task :deobfuscateMergedJarToSrg
 Applying SpecialSource
@@ -47,11 +48,6 @@ Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftfor
 Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/unpacked/src/main/resources/forge_at.cfg
 INFO: merging AccessMap net/minecraft/item/ItemBlock/field_150939_a from AccessChange(clear=0, set=0, vis=1) with AccessChange(clear=0, set=0, vis=1)
 Renamed 0 AT entries
-
-> Task :compileInjectedTagsJava
-> Task :injectedTagsClasses
-
-> Task :deobfuscateMergedJarToSrg
 Applying Exceptor
 Cleaning up generated debuginfo
 
@@ -64,15 +60,15 @@ Decompiling the srg jar with fernflower
 > Task :packageMcLauncher
 
 > Task :decompileSrgJar
-  Decompiling took 36019 ms
+  Decompiling took 31856 ms
 
 > Task :cleanupDecompSrgJar
 Fixup stage 1 - applying FF patches
-  Stage 1 took 3532 ms
+  Stage 1 took 3410 ms
 Fixup stage 2 - applying MCP patches
-  Stage 2 took 82 ms
+  Stage 2 took 70 ms
 Fixup stage 3 - applying MCP cleanup
-  Stage 3 took 5855 ms
+  Stage 3 took 4885 ms
 Saving the fixed-up jar
 
 > Task :patchDecompiledJar
@@ -98,103 +94,107 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :apiClasses UP-TO-DATE
 > Task :packagePatchedMc
 
-> Task :compileJava FAILED
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/WindConfig.java:30: error: cannot find symbol
-        baseSpeedMultiplier = cfg.getDouble("baseSpeedMultiplier", "general", 1.0, 0.0, 5.0, "Base speed multiplier");
-                                 ^
-  symbol:   method getDouble(java.lang.String,java.lang.String,double,double,double,java.lang.String)
-  location: variable cfg of type net.minecraftforge.common.config.Configuration
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/WindConfig.java:34: error: cannot find symbol
-        tornadoMaxViewDistance = cfg.getDouble("tornadoMaxViewDistance", "tornado", 120.0, 20.0, 300.0, "Max distance to render tornado");
-                                    ^
-  symbol:   method getDouble(java.lang.String,java.lang.String,double,double,double,java.lang.String)
-  location: variable cfg of type net.minecraftforge.common.config.Configuration
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/commands/WindCommand.java:31: error: incompatible types: java.lang.String cannot be converted to net.minecraft.command.ICommandSender
-            double x = args.length > 1 ? parseDouble(args[1], sender) : p.posX;
-                                                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/commands/WindCommand.java:32: error: incompatible types: java.lang.String cannot be converted to net.minecraft.command.ICommandSender
-            double y = args.length > 2 ? parseDouble(args[2], sender) : p.posY;
-                                                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/commands/WindCommand.java:33: error: incompatible types: java.lang.String cannot be converted to net.minecraft.command.ICommandSender
-            double z = args.length > 3 ? parseDouble(args[3], sender) : p.posZ;
-                                                         ^
+> Task :compileJava
 Note: /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/gui/WindConfigGui.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+
+> Task :classes
+> Task :jar
+
+> Task :compileTestJava FAILED
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/test/java/com/dynamicwinds/core/CoreTests.java:11: error: constructor WorldContext in class com.dynamicwinds.core.WorldContext cannot be applied to given types;
+        WorldContext ctx = new WorldContext(12345L, 1000L, 64, 0.3, SurfaceClass.GRASS);
+                           ^
+  required: long,long,int,double,int,double
+  found: long,long,int,double,int
+  reason: actual and formal argument lists differ in length
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/test/java/com/dynamicwinds/core/CoreTests.java:22: error: constructor WorldContext in class com.dynamicwinds.core.WorldContext cannot be applied to given types;
+        WorldContext ctx = new WorldContext(999L, 500L, 64, 0.0, SurfaceClass.GRASS);
+                           ^
+  required: long,long,int,double,int,double
+  found: long,long,int,double,int
+  reason: actual and formal argument lists differ in length
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/test/java/com/dynamicwinds/core/CoreTests.java:55: error: constructor WorldContext in class com.dynamicwinds.core.WorldContext cannot be applied to given types;
+        WorldContext ctx = new WorldContext(7L, 0L, 64, 0.0, SurfaceClass.GRASS);
+                           ^
+  required: long,long,int,double,int,double
+  found: long,long,int,double,int
+  reason: actual and formal argument lists differ in length
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/test/java/com/dynamicwinds/core/CoreTests.java:100: error: constructor WorldContext in class com.dynamicwinds.core.WorldContext cannot be applied to given types;
+        WorldContext calm = new WorldContext(1L, 1000L, 64, 0.0, SurfaceClass.GRASS);
+                            ^
+  required: long,long,int,double,int,double
+  found: long,long,int,double,int
+  reason: actual and formal argument lists differ in length
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/test/java/com/dynamicwinds/core/CoreTests.java:101: error: constructor WorldContext in class com.dynamicwinds.core.WorldContext cannot be applied to given types;
+        WorldContext storm = new WorldContext(1L, 1000L, 64, 1.0, SurfaceClass.GRASS);
+                             ^
+  required: long,long,int,double,int,double
+  found: long,long,int,double,int
+  reason: actual and formal argument lists differ in length
 5 errors
 
-[Incubating] Problems report is available at: file:///home/runner/work/Meus--mods-Java/Meus--mods-Java/build/reports/problems/problems-report.html
+> Task :reobfJar
 
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':compileJava'.
-> Compilation failed; see the compiler output below.
-  /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/WindConfig.java:30: error: cannot find symbol
-          baseSpeedMultiplier = cfg.getDouble("baseSpeedMultiplier", "general", 1.0, 0.0, 5.0, "Base speed multiplier");
-                                   ^
-    symbol:   method getDouble(java.lang.String,java.lang.String,double,double,double,java.lang.String)
-    location: variable cfg of type net.minecraftforge.common.config.Configuration
-  5 errors
-
-* Try:
-> Check your code and dependencies to fix the compilation error(s)
-> Run with --scan to generate a Build Scan (powered by Develocity).
-
-* Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava'.
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
-	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:121)
-	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
-	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
-	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-	at org.gradle.execution.plan.DefaultNodeExecutor.executeLocalTaskNode(DefaultNodeExecutor.java:55)
-	at org.gradle.execution.plan.DefaultNodeExecutor.execute(DefaultNodeExecutor.java:34)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:355)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:343)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:339)
-	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:339)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:328)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
-	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:111)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:146)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.execute(DefaultTaskExecutionGraph.java:131)
-	at org.gradle.execution.SelectedTaskExecutionAction.execute(SelectedTaskExecutionAction.java:35)
-	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:54)
-	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:43)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor.execute(BuildOperationFiringBuildWorkerExecutor.java:40)
-	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$executeTasks$10(DefaultBuildLifecycleController.java:313)
-	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:266)
-	at org.gradle.internal.model.StateTransitionController.lambda$tryTransition$8(StateTransitionController.java:177)
-	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:45)
-	at org.gradle.internal.model.StateTransitionController.tryTransition(StateTransitionController.java:177)
-	at org.gradle.internal.build.DefaultBuildLifecycleController.executeTasks(DefaultBuildLifecycleController.java:304)
-	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGraphController.java:220)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$withLocksAcquired$0(DefaultWorkerLeaseService.java:269)
-	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:42)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocksAcquired(DefaultWorkerLeaseService.java:267)
+> Task :javadoc
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @param for uStar
+    public static double speed(double uStar, double z, double z0) {
+                         ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @param for z
+    public static double speed(double uStar, double z, double z0) {
+                         ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @param for z0
+    public static double speed(double uStar, double z, double z0) {
+                         ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @return
+    public static double speed(double uStar, double z, double z0) {
+                         ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @param for x
+    public Vec3 direction(double x, double z, long timeTicks) {
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @param for z
+    public Vec3 direction(double x, double z, long timeTicks) {
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @param for timeTicks
+    public Vec3 direction(double x, double z, long timeTicks) {
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @return
+    public Vec3 direction(double x, double z, long timeTicks) {
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:36: error: bad use of '>'
+     * Deterministic: same seed, time, position => same result.
+                                                 ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @param for seed
+    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @param for x
+    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @param for y
+    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @param for z
+    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @param for timeTicks
+    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @return
+    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:102: warning: no @param for seed
+    public double[] activeCenter(long seed, long timeTicks) {
+                    ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:102: warning: no @param for timeTicks
+    public double[] activeCenter(long seed, long timeTicks) {
+                    ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:102: warning: no @return
+    public double[] activeCenter(long seed, long timeTicks) {
+                    ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:5: error: bad use of '>'
+ * Lifecycle: spawn -> form -> mature -> dissipate -> gone.
+                     ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:5: error: bad use of '>'
+ * Lifecycle: spawn -> form -> mature -> dissipate -> gone.
+                             ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:5: error: bad use of '>'
