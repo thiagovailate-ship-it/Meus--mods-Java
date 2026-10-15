@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "dynamicwinds",
+    "name": "DynamicWinds",
+    "description": "Deterministic analytical wind field for Minecraft 1.7.10",
+    "version": "${modVersion}",
+    "mcversion": "1.7.10",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["thiagovailate"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
