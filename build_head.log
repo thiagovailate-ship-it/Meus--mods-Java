@@ -30,8 +30,8 @@ Download https://files.minecraftforge.net/fernflower-fix-1.0.zip
 > Task :processMcLauncherResources NO-SOURCE
 
 > Task :downloadVanillaJars
-Download https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar
 Download https://launcher.mojang.com/v1/objects/e80d9b3bf5085002218d4be59e668bac718abbc6/client.jar
+Download https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar
 
 > Task :generateForgeSrgMappings
 > Task :createMcLauncherFiles
@@ -47,11 +47,13 @@ Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftfor
 Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/unpacked/src/main/resources/forge_at.cfg
 INFO: merging AccessMap net/minecraft/item/ItemBlock/field_150939_a from AccessChange(clear=0, set=0, vis=1) with AccessChange(clear=0, set=0, vis=1)
 Renamed 0 AT entries
-Applying Exceptor
-Cleaning up generated debuginfo
 
 > Task :compileInjectedTagsJava
 > Task :injectedTagsClasses
+
+> Task :deobfuscateMergedJarToSrg
+Applying Exceptor
+Cleaning up generated debuginfo
 
 > Task :decompileSrgJar
 Didn't find cached decompiled jar, decompiling and saving to /home/runner/.gradle/caches/retro_futura_gradle/fernflower-cache/f857d0a5dc440e9576a099ffe2dcf0f57f62ec6a9a90cdd7e8a27d4573e0504b-d253f2106b6c42cd09e68e3eb271a05bffc1063ab065ac1a7425f1586d3b5891.jar
@@ -62,15 +64,15 @@ Decompiling the srg jar with fernflower
 > Task :packageMcLauncher
 
 > Task :decompileSrgJar
-  Decompiling took 27552 ms
+  Decompiling took 37263 ms
 
 > Task :cleanupDecompSrgJar
 Fixup stage 1 - applying FF patches
-  Stage 1 took 2704 ms
+  Stage 1 took 3697 ms
 Fixup stage 2 - applying MCP patches
-  Stage 2 took 54 ms
+  Stage 2 took 65 ms
 Fixup stage 3 - applying MCP cleanup
-  Stage 3 took 3855 ms
+  Stage 3 took 5468 ms
 Saving the fixed-up jar
 
 > Task :patchDecompiledJar
@@ -97,24 +99,22 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :packagePatchedMc
 
 > Task :compileJava FAILED
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/MixinEffectRenderer.java:3: error: package org.spongepowered.asm.mixin does not exist
-import org.spongepowered.asm.mixin.Mixin;
-                                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/MixinEffectRenderer.java:5: error: cannot find symbol
-@Mixin(targets = "net.minecraft.client.particle.EffectRenderer")
- ^
-  symbol: class Mixin
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:19: error: cannot find symbol
-            TornadoVFX.tick();
-            ^
-  symbol:   variable TornadoVFX
-  location: class com.dynamicwinds.client.ClientEvents
 /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/audio/WindAudio.java:21: error: cannot find symbol
-            ambience = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:wind_ambience"), (float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
+            ambience = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:wind_ambience"));
                                             ^
-  symbol:   method create(net.minecraft.util.ResourceLocation,float,float,float)
+  symbol:   method create(net.minecraft.util.ResourceLocation)
   location: class net.minecraft.client.audio.PositionedSoundRecord
 /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/audio/WindAudio.java:27: error: cannot find symbol
-            PositionedSoundRecord gust = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:wind_gust"), (float) mc.thePlayer.posX, (float) mc.thePlayer.posY, (float) mc.thePlayer.posZ);
+            PositionedSoundRecord gust = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:wind_gust"));
                                                               ^
-  symbol:   method create(net.minecraft.util.ResourceLocation,float,float,float)
+  symbol:   method create(net.minecraft.util.ResourceLocation)
+  location: class net.minecraft.client.audio.PositionedSoundRecord
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/audio/WindAudio.java:31: error: cannot find symbol
+            PositionedSoundRecord rustle = PositionedSoundRecord.create(new ResourceLocation("dynamicwinds:leaf_rustle"));
+                                                                ^
+  symbol:   method create(net.minecraft.util.ResourceLocation)
+  location: class net.minecraft.client.audio.PositionedSoundRecord
+Note: /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/gui/WindConfigGui.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+3 errors
+
