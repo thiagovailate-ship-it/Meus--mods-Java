@@ -56,6 +56,7 @@ public final class HeightmapCache {
      * Incrementally refresh: only recompute cells near the player.
      * Does NOT clear the entire cache.
      */
+    /** Refresh cache near a position. */
     public void refreshNear(World w, double px, double pz, int radius) {
         int minCx = WindEngine.cellOf((int) (px - radius));
         int maxCx = WindEngine.cellOf((int) (px + radius));

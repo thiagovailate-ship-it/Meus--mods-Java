@@ -2,7 +2,7 @@ package com.dynamicwinds.core;
 
 /**
  * Deterministic tornado (Rankine vortex) field.
- * Lifecycle: spawn -> form -> mature -> dissipate -> gone.
+ * Lifecycle: spawn then form then mature then dissipate then gone.
  * Spatial distribution: tornadoes are seeded across the world using per-cycle
  * pseudo-random positions derived from seed + cycle index. Both client and server
  * compute identical positions.

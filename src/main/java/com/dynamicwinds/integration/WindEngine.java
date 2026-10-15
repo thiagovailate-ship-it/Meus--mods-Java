@@ -50,6 +50,7 @@ public final class WindEngine {
     }
 
     /** Called when a world is unloaded to free resources. */
+    /** Unload a world and free its cache. */
     public void unloadWorld(World world) {
         caches.remove((long) world.provider.dimensionId);
         lastRefresh.remove((long) world.provider.dimensionId);
