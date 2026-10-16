@@ -11,7 +11,7 @@ public class TESRWindsock extends TileEntitySpecialRenderer {
         new ResourceLocation("dynamicwinds", "blocks/windsock");
 
     @Override
-    public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
+    public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks) {
         TileEntityWindsock ws = (TileEntityWindsock) te;
         float inflation = Math.min(1.0f, ws.inflation);
         

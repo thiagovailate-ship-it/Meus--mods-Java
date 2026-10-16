@@ -11,7 +11,7 @@ public class TESRWindVane extends TileEntitySpecialRenderer {
         new ResourceLocation("dynamicwinds", "blocks/wind_vane");
 
     @Override
-    public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
+    public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks) {
         TileEntityWindVane vane = (TileEntityWindVane) te;
         GL11.glPushMatrix();
         GL11.glTranslated(x + 0.5, y + 0.5, z + 0.5);
@@ -33,7 +33,6 @@ public class TESRWindVane extends TileEntitySpecialRenderer {
                            float r, float g, float b) {
         GL11.glColor3f(r, g, b);
         GL11.glBegin(GL11.GL_QUADS);
-        // Front face
         GL11.glVertex3f(x1, y1, z2);
         GL11.glVertex3f(x2, y1, z2);
         GL11.glVertex3f(x2, y2, z2);
