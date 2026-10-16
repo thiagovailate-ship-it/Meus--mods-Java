@@ -107,7 +107,9 @@ public final class DestructionHandler {
             if (!world.blockExists(x, 64, z)) continue;
             if (WindConfig.destructionProtectSpawn && nearSpawn(world, x, z)) continue;
 
-            int surface = world.getHeightValue(x, z);
+            // a mesma altura que o modelo de vento usa (celula de 8x8, vinda do
+            // cache do servidor em vez de uma leitura de mundo por bloco candidato)
+            int surface = Wind.surfaceHeightAt(world, x, z);
             int y = surface - REACH_DOWN + rand.nextInt(REACH_DOWN + REACH_UP);
             tryBreak(world, x, y, z, rand);
         }

@@ -65,7 +65,8 @@ public final class EntityPushHandler {
             double v = sample.speed;
             if (v < MIN_SPEED) continue;
 
-            int surfaceY = world.getHeightValue((int) Math.floor(e.posX), (int) Math.floor(e.posZ));
+            int surfaceY = Wind.surfaceHeightAt(world, (int) Math.floor(e.posX),
+                    (int) Math.floor(e.posZ));
             Vec3 stormVec = storms == null ? Vec3.ZERO
                     : storms.sampleWind(time, e.posX, e.posY, e.posZ, surfaceY, energy);
             double stormSpeed = stormVec.length();

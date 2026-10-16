@@ -22,15 +22,120 @@ public final class Wind {
     private static final java.util.Map<Long, WindModel> MODELS =
             new java.util.concurrent.ConcurrentHashMap<>();
 
+    /**
+     * Lado da celula de relevo, em blocos. O vento le o solo <i>pelo centro da
+     * celula</i>, e nao pela coluna exata do ponto consultado: assim o valor e
+     * sempre o mesmo em qualquer ponto da celula, e o cache do servidor pode
+     * guardar exatamente o numero que o modelo usaria.
+     */
+    public static final int SURFACE_CELL = 8;
+
     private Wind() {}
+
+    /**
+     * Fornecedor de relevo. A camada de integracao registra um para que as
+     * consultas do servidor venham do cache de celulas em vez de irem ao mundo
+     * a cada amostra - o empurrao de entidades e a varredura de destruicao
+     * chamam isto centenas de vezes por tick.
+     */
+    public interface SurfaceProvider {
+        /**
+         * Altura do relevo na celula que contem a coluna dada.
+         *
+         * @param world mundo consultado
+         * @param x coordenada X do bloco
+         * @param z coordenada Z do bloco
+         * @return altura considerada pelo modelo
+         */
+        int heightAt(World world, int x, int z);
+
+        /**
+         * Classe de superficie (agua, areia, floresta...) na celula dada.
+         *
+         * @param world mundo consultado
+         * @param x coordenada X do bloco
+         * @param z coordenada Z do bloco
+         * @return identificador da classe de superficie
+         */
+        int surfaceClassAt(World world, int x, int z);
+    }
+
+    private static volatile SurfaceProvider surfaceProvider;
+
+    /**
+     * Registra o fornecedor de relevo do servidor.
+     *
+     * @param provider fornecedor, ou nulo para voltar a ler o mundo direto
+     */
+    public static void setSurfaceProvider(SurfaceProvider provider) {
+        surfaceProvider = provider;
+    }
+
+    /**
+     * Indice da celula de relevo que contem a coordenada dada.
+     *
+     * @param coord coordenada de bloco
+     * @return indice da celula
+     */
+    public static int cellOf(int coord) {
+        return Math.floorDiv(coord, SURFACE_CELL);
+    }
+
+    /**
+     * Coordenada do centro da celula de relevo.
+     *
+     * @param cell indice da celula
+     * @return coordenada de bloco do centro da celula
+     */
+    public static int cellCenter(int cell) {
+        return cell * SURFACE_CELL + SURFACE_CELL / 2;
+    }
+
+    /**
+     * Altura do relevo que o modelo de vento usa neste ponto.
+     *
+     * <p>No cliente (mundo remoto) a leitura vai direto ao mundo, pelo centro
+     * da celula: o cache do servidor pertence a outra thread e nao pode ser
+     * lido daqui. Como a celula e a mesma dos dois lados, servidor e cliente
+     * chegam ao mesmo numero.</p>
+     *
+     * @param world mundo consultado
+     * @param x coordenada X do bloco
+     * @param z coordenada Z do bloco
+     * @return altura do relevo considerada pelo modelo
+     */
+    public static int surfaceHeightAt(World world, int x, int z) {
+        SurfaceProvider provider = surfaceProvider;
+        if (provider != null && !world.isRemote) {
+            return provider.heightAt(world, x, z);
+        }
+        return world.getHeightValue(cellCenter(cellOf(x)), cellCenter(cellOf(z)));
+    }
+
+    /**
+     * Classe de superficie que o modelo de vento usa neste ponto.
+     *
+     * @param world mundo consultado
+     * @param x coordenada X do bloco
+     * @param z coordenada Z do bloco
+     * @return identificador da classe de superficie
+     */
+    public static int surfaceClassAt(World world, int x, int z) {
+        SurfaceProvider provider = surfaceProvider;
+        if (provider != null && !world.isRemote) {
+            return provider.surfaceClassAt(world, x, z);
+        }
+        return surfaceClassFor(world.getBiomeGenForCoords(cellCenter(cellOf(x)),
+                cellCenter(cellOf(z))));
+    }
 
     public static WindSample getWindAt(World world, double x, double y, double z) {
         long seed = world.getSeed();
         WindModel model = modelFor(world);
         int sx = (int) Math.floor(x);
         int sz = (int) Math.floor(z);
-        int surfaceY = world.getHeightValue(sx, sz);
-        int surfaceClass = surfaceClassFor(world.getBiomeGenForCoords(sx, sz));
+        int surfaceY = surfaceHeightAt(world, sx, sz);
+        int surfaceClass = surfaceClassAt(world, sx, sz);
         // storm intensity from world weather state (0..1)
         double storm = 0.0;
         if (world.isThundering()) {
