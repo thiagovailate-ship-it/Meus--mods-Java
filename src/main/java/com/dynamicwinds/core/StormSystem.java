@@ -48,7 +48,7 @@ public final class StormSystem {
     /** Curvatura da trajetoria, em radianos por tick. */
     public final double turnRate;
     public final boolean north;
-    /** Multiplicador de intensidade (1.0 = natural, o Cajado usa > 1). */
+    /** Multiplicador de intensidade (1.0 = natural; o Cajado da Catastrofe usa valores acima de 1). */
     public final double intensityMul;
     /** Marca se foi criado por jogador, para permitir remocao em lote. */
     public final boolean playerSpawned;
@@ -308,7 +308,12 @@ public final class StormSystem {
         return t * t * (3.0 - 2.0 * t);
     }
 
-    /** Resumo de uma linha, para comandos e HUD. */
+    /**
+     * Resumo de uma linha, para comandos e HUD.
+     *
+     * @param time tick do mundo
+     * @return descricao legivel do estado atual do sistema
+     */
     public String describe(long time) {
         if (!isAlive(time)) {
             return StormKind.name(kind) + " (inativo)";
