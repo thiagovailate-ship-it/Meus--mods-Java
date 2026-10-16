@@ -10,6 +10,8 @@ public class SwirlParticle extends EntityFX {
         super(world, x, y, z);
         this.particleMaxAge = 40;
         this.particleScale = 0.8f;
+    
+        ParticleIcons.apply(this, "swirl");
     }
     @Override
     public void onUpdate() {

@@ -13,6 +13,8 @@ public class LeafParticle extends EntityFX {
         this.particleMaxAge = 80;
         this.particleScale = 0.6f;
         this.motionY = 0.02;
+    
+        ParticleIcons.apply(this, "leaf");
     }
     @Override
     public void onUpdate() {

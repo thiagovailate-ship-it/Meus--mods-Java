@@ -24,6 +24,47 @@ import zlib
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BLOCKS = os.path.join(ROOT, "src/main/resources/assets/dynamicwinds/textures/blocks")
 PARTICLES = os.path.join(ROOT, "src/main/resources/assets/dynamicwinds/textures/particle")
+ITEMS = os.path.join(ROOT, "src/main/resources/assets/dynamicwinds/textures/items")
+ENVIRONMENT = os.path.join(ROOT, "src/main/resources/assets/dynamicwinds/textures/environment")
+
+
+def _tileable_noise(cv, x, y, scale, period, s=0):
+    """Value noise periodico: a textura repete sem costura visivel.
+
+    O ruido comum de value noise nao repete, e o teto de nuvem e desenhado como
+    varias repeticoes da mesma textura - sem periodicidade apareceriam emendas
+    retas atravessando o ceu.
+    """
+    fx, fy = x / scale, y / scale
+    x0, y0 = int(fx // 1), int(fy // 1)
+    tx, ty = fx - x0, fy - y0
+    tx = tx * tx * (3 - 2 * tx)
+    ty = ty * ty * (3 - 2 * ty)
+
+    def h(ix, iy):
+        return cv.hash01(ix % period, iy % period, s)
+
+    a = h(x0, y0)
+    b = h(x0 + 1, y0)
+    c = h(x0, y0 + 1)
+    d = h(x0 + 1, y0 + 1)
+    return (a * (1 - tx) + b * tx) * (1 - ty) + (c * (1 - tx) + d * tx) * ty
+
+
+def _fbm(cv, x, y, base_scale, size, octaves=4, s=0):
+    """Soma de oitavas de ruido periodico (fractal brownian motion)."""
+    total = 0.0
+    norm = 0.0
+    amp = 1.0
+    scale = base_scale
+    for o in range(octaves):
+        period = max(1, int(round(size / scale)))
+        total += amp * _tileable_noise(cv, x, y, scale, period, s + o * 17)
+        norm += amp
+        amp *= 0.5
+        scale *= 0.5
+    return total / norm
+
 
 
 # --------------------------------------------------------------------------
@@ -788,8 +829,140 @@ def gen_particles():
 
 
 # --------------------------------------------------------------------------
+def gen_storm_particles():
+    """Particulas novas: chuva inclinada e respingo da parede do olho."""
+    out = {}
+
+    # chuva: raja fina e alongada na vertical (a inclinacao vem da fisica)
+    cv = Canvas(8, 16)
+    for y in range(16):
+        # mais estreita nas pontas, cheia no meio: le como gota em movimento
+        t = y / 15.0
+        half = 1.15 * math.sin(math.pi * t) ** 0.6 + 0.35
+        for x in range(8):
+            dx = abs(x + 0.5 - 4.0)
+            if dx > half + 0.6:
+                continue
+            a = 1.0 - max(0.0, (dx - half) / 0.7)
+            # corpo azul-claro com nucleo branco
+            c = mix((120, 168, 224), (232, 244, 255), 1.0 - dx / max(1.0, half))
+            cv.put(x, y, (c[0], c[1], c[2], int(210 * a)))
+    out["storm_rain.png"] = cv
+
+    # respingo: espuma levantada onde o vento bate na agua ou no chao
+    cv = Canvas(8, 8)
+    cv.disc(4.0, 5.2, 3.0, (206, 226, 244, 190), soft=0.9)
+    cv.disc(4.0, 5.6, 2.1, (238, 246, 255, 225), soft=0.9)
+    for (sx, sy, r) in ((2.2, 2.6, 1.1), (5.6, 2.2, 1.3), (4.0, 1.6, 0.9)):
+        cv.disc(sx, sy, r, (246, 250, 255, 170), soft=1.0)
+    out["spray.png"] = cv
+
+    return out
+
+
+def gen_staff_and_environment():
+    """Icone do Cajado da Catastrofe e as texturas de ceu da tempestade."""
+    out = ([], [])
+
+    # ---- cajado: haste de obsidiana + orbe com vortice ---------------------
+    cv = Canvas(16, 16)
+    OBS = (26, 20, 38, 255)
+    OBS_HI = (66, 54, 92, 255)
+    VIOLET = (96, 62, 148, 255)
+    VIOLET_HI = (158, 128, 226, 255)
+    CYAN = (126, 224, 236, 255)
+    EYE = (12, 10, 20, 255)
+    SPARK = (250, 238, 172, 255)
+
+    cv.line(3.0, 14.6, 10.2, 6.4, OBS, thick=2.8)          # haste
+    cv.line(3.8, 14.0, 10.6, 6.0, OBS_HI, thick=0.9)       # faceta iluminada
+    for k in range(4):                                     # enrolado do cabo
+        t = 0.16 + k * 0.17
+        wx = 3.0 + (10.2 - 3.0) * t
+        wy = 14.6 + (6.4 - 14.6) * t
+        cv.line(wx + 1.0, wy - 1.0, wx - 1.0, wy + 1.0, OBS_HI, thick=0.7)
+    cv.disc(2.5, 15.3, 1.5, OBS, soft=0.9)                 # pomo da base
+    cv.disc(2.5, 15.3, 0.9, OBS_HI, soft=0.8)
+
+    cx, cy = 11.2, 4.0                                     # orbe
+    cv.disc(cx, cy, 4.4, (18, 12, 32, 255), soft=0.8)      # contorno escuro
+    cv.disc(cx, cy, 3.9, mix(VIOLET, EYE, 0.45), soft=1.0)  # base profunda
+    cv.disc(cx, cy, 3.9, (34, 16, 62, 120), soft=1.0)
+    # espiral: arcos com raio crescente, que e o que le como vortice em 16x16
+    steps = 34
+    for i in range(steps + 1):
+        t = i / float(steps)
+        ang = t * 3.4 * math.pi
+        r = 0.9 + t * 2.6
+        glow = mix(CYAN, (236, 240, 255, 255), t * 0.55)
+        cv.disc(cx + math.cos(ang) * r, cy + math.sin(ang) * r, 0.7, glow, soft=0.95)
+    cv.disc(cx, cy, 1.2, EYE, soft=1.0)                    # olho do furacao
+    cv.disc(cx - 2.0, cy - 2.2, 0.5, (244, 250, 255, 255), soft=1.0)
+    out[0].append(("catastrophe_staff.png", cv))
+
+    # ---- teto de nuvem: massa escura, repetivel ---------------------------
+    size = 128
+    cv = Canvas(size, size)
+    DEEP = (12, 15, 24)
+    MID = (78, 88, 110)
+    TOP = (198, 206, 220)
+    for y in range(size):
+        for x in range(size):
+            big = _fbm(cv, x, y, 64.0, size, 3, s=5)
+            mid = _fbm(cv, x, y, 24.0, size, 3, s=41)
+            fine = _fbm(cv, x, y, 8.0, size, 3, s=97)
+            v = big * 0.52 + mid * 0.33 + fine * 0.15
+            alpha = (v - 0.42) / 0.18
+            if alpha <= 0.06:
+                continue
+            if alpha > 1.0:
+                alpha = 1.0
+            alpha = alpha ** 0.7
+            t = min(1.0, max(0.0, (v - 0.40) / 0.42))
+            c = mix(DEEP, MID, t)
+            # as bordas superiores das celulas pegam luz; a base fica chumbo
+            lum = 0.72 + 0.42 * (1.0 - y / float(size - 1))
+            c = mix(c, TOP, min(1.0, max(0.0, (v - 0.58) / 0.42)) * 0.72 * lum)
+            cv.put(x, y, (c[0], c[1], c[2], int(alpha * 236)))
+    out[1].append(("storm_clouds.png", cv))
+
+    # ---- parede do olho / cortina de chuva --------------------------------
+    w, h = 64, 64
+    cv = Canvas(w, h)
+    W_DARK = (30, 36, 50)
+    W_LIGHT = (144, 154, 172)
+    for y in range(h):
+        for x in range(w):
+            # ruido esticado na vertical: as rajas de chuva saem alongadas
+            streak = _fbm(cv, x, y * 0.22, 8.0, w, 3, s=131)
+            mass = _fbm(cv, x, y, 20.0, w, 3, s=77)
+            v = streak * 0.62 + mass * 0.38
+            bottom = y / float(h - 1)          # 0 no topo, 1 no chao
+            alpha = (v - 0.34) / 0.30 * (0.26 + 0.9 * bottom)
+            if alpha <= 0.04:
+                continue
+            if alpha > 1.0:
+                alpha = 1.0
+            alpha = alpha ** 0.85
+            t = min(1.0, max(0.0, (v - 0.32) / 0.5))
+            c = mix(W_DARK, W_LIGHT, t)
+            cv.put(x, y, (c[0], c[1], c[2], int(alpha * 224)))
+    out[1].append(("storm_wall.png", cv))
+
+    return out
+
+
 def main():
     total = 0
+    icons, environment = gen_staff_and_environment()
+    for name, cv in icons:
+        n = cv.to_png(os.path.join(ITEMS, name))
+        print("items/%-16s %3dx%-3d %6d bytes" % (name, cv.w, cv.h, n))
+        total += n
+    for name, cv in environment:
+        n = cv.to_png(os.path.join(ENVIRONMENT, name))
+        print("environment/%-12s %3dx%-3d %6d bytes" % (name, cv.w, cv.h, n))
+        total += n
     for name, cv in (("wind_vane.png", gen_wind_vane()),
                      ("windsock.png", gen_windsock()),
                      ("anemometer.png", gen_anemometer())):
@@ -800,7 +973,9 @@ def main():
         n = cv.to_png(os.path.join(BLOCKS, name))
         print("blocks/%-16s %3dx%-3d %6d bytes" % (name, cv.w, cv.h, n))
         total += n
-    for name, cv in sorted(gen_particles().items()):
+    all_particles = gen_particles()
+    all_particles.update(gen_storm_particles())
+    for name, cv in sorted(all_particles.items()):
         n = cv.to_png(os.path.join(PARTICLES, name))
         print("particle/%-16s %3dx%-3d %6d bytes" % (name, cv.w, cv.h, n))
         total += n

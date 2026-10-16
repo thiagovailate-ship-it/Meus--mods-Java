@@ -4,8 +4,10 @@ import com.dynamicwinds.api.Wind;
 import com.dynamicwinds.core.StormField;
 import com.dynamicwinds.core.StormKind;
 import com.dynamicwinds.core.StormSystem;
+import com.dynamicwinds.core.WindSample;
 import com.dynamicwinds.integration.WindConfig;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.List;
 import java.util.Random;
@@ -13,14 +15,28 @@ import java.util.Random;
 /**
  * Emissao de particulas dos sistemas de tempo severo.
  *
- * <p>Os parametros vem do proprio sistema (raio do vento maximo, intensidade,
- * posicao do olho), e nao de numeros fixos: a particula nasce onde o modelo diz
- * que o vento e forte. Assim, quando o sistema se intensifica ou se desloca, o
- * efeito acompanha sem nenhum ajuste manual.</p>
+ * <p>Nada aqui tem numero fixo de raio ou altura: tudo vem do sistema (raio do
+ * vento maximo, intensidade, tipo, centro), de modo que a particula nasce onde o
+ * modelo diz que o vento e forte. Quando o sistema se intensifica, se expande ou
+ * perde forca em terra, o efeito acompanha sozinho.</p>
+ *
+ * <p>Tres camadas de efeito:</p>
+ * <ul>
+ *   <li><b>Poeira e destrocos</b> - giram na parede do olho (no vortice, formam
+ *       o funil estreito; no ciclone, o anel largo).</li>
+ *   <li><b>Chuva inclinada</b> - a velocidade vem do campo de vento no ponto de
+ *       nascimento, entao a chuva inclina e gira junto com o sistema; no olho,
+ *       onde o vento e fraco, ela sai quase vertical e some.</li>
+ *   <li><b>Respingo</b> - a agua levantada onde a parede do olho toca o chao.</li>
+ * </ul>
  */
 public final class TornadoVFX {
 
     private static final Random RND = new Random();
+    /** Distancia, em blocos, em que a chuva e emitida em volta da camera. */
+    private static final double RAIN_RADIUS = 46.0;
+    /** Distancia maxima para emitir respingo. */
+    private static final double SPRAY_RADIUS = 64.0;
 
     private TornadoVFX() {}
 
@@ -31,10 +47,11 @@ public final class TornadoVFX {
 
         long time = mc.theWorld.getTotalWorldTime();
         StormField field = Wind.stormsFor(mc.theWorld);
+        if (field == null) return;
         List<StormSystem> active = field.activeAt(time);
         if (active.isEmpty()) return;
 
-        double maxDist = WindConfig.tornadoMaxViewDistance();
+        double maxDist = WindConfig.stormMaxViewDistance();
         for (int i = 0; i < active.size(); i++) {
             StormSystem system = active.get(i);
             double cx = system.centerX(time);
@@ -42,8 +59,13 @@ public final class TornadoVFX {
             double dist = Math.hypot(cx - mc.thePlayer.posX, cz - mc.thePlayer.posZ);
             if (dist > maxDist + system.outerRadius()) continue;
             emit(mc, system, time, cx, cz, dist, maxDist);
+            emitRain(mc, system, time, cx, cz);
         }
     }
+
+    // ------------------------------------------------------------------
+    // parede do olho / funil
+    // ------------------------------------------------------------------
 
     private static void emit(Minecraft mc, StormSystem system, long time,
                              double cx, double cz, double dist, double maxDist) {
@@ -66,10 +88,17 @@ public final class TornadoVFX {
         double wallRadius = narrow ? rmax * 1.6 : rmax;
         double spread = narrow ? 6.0 : rmax * 0.45;
         double height = narrow ? 24.0 : StormKind.columnTop(system.kind) * 0.35;
+        double spin = system.north ? 1.0 : -1.0;
 
         for (int i = 0; i < rate; i++) {
+            // espalhamento em espiral: as particulas nao ficam num anel perfeito,
+            // seguem a mesma espiral das bandas de chuva
+            double t = RND.nextDouble();
             double angle = (2.0 * Math.PI * i) / rate + RND.nextDouble() * 0.3;
             double radius = wallRadius + RND.nextDouble() * spread;
+            if (!narrow) {
+                angle += spin * Math.log(1.0 + t) * 1.2;
+            }
             double x = cx + Math.cos(angle) * radius;
             double z = cz + Math.sin(angle) * radius;
             double y = groundY + RND.nextDouble() * height;
@@ -84,6 +113,66 @@ public final class TornadoVFX {
             double z = cz + Math.sin(angle) * radius;
             double y = groundY + RND.nextDouble() * 10.0;
             mc.effectRenderer.addEffect(new DebrisParticle(mc.theWorld, x, y, z));
+        }
+
+        // respingo na parede do olho, perto o bastante para ser visto
+        EntityPlayer player = mc.thePlayer;
+        double playerDist = Math.hypot(cx - player.posX, cz - player.posZ);
+        if (playerDist < SPRAY_RADIUS && intensity > 0.25) {
+            int sprayRate = (int) Math.round(6.0 * intensity);
+            for (int i = 0; i < sprayRate; i++) {
+                double angle = RND.nextDouble() * 2.0 * Math.PI;
+                double radius = rmax * (0.85 + RND.nextDouble() * 0.5);
+                double x = cx + Math.cos(angle) * radius;
+                double z = cz + Math.sin(angle) * radius;
+                if (Math.hypot(x - player.posX, z - player.posZ) > SPRAY_RADIUS) continue;
+                int ground = mc.theWorld.getHeightValue((int) Math.floor(x), (int) Math.floor(z));
+                mc.effectRenderer.addEffect(
+                        new SprayParticle(mc.theWorld, x, ground + 0.4, z));
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // chuva inclinada pelo campo de vento
+    // ------------------------------------------------------------------
+
+    /**
+     * Emite chuva em volta da camera, dentro do sistema.
+     *
+     * <p>So emite quando o jogador esta dentro do alcance do sistema: chuva a
+     * centenas de blocos de distancia nao seria vista e custaria tick de
+     * renderizacao de particula sem motivo.</p>
+     */
+    private static void emitRain(Minecraft mc, StormSystem system, long time,
+                                 double cx, double cz) {
+        int baseRate = WindConfig.stormRainRate();
+        if (baseRate <= 0) return;
+
+        EntityPlayer player = mc.thePlayer;
+        double intensity = system.intensityAt(time);
+        if (intensity <= 0.05) return;
+        double outer = system.outerRadius();
+        double distToCenter = Math.hypot(cx - player.posX, cz - player.posZ);
+        if (distToCenter > outer) return;
+
+        // dentro do olho a chuva para: o ar desce e as nuvens abrem
+        double rmax = system.rmaxAt(time);
+        if (distToCenter < rmax * 0.55) return;
+
+        double band = 1.0 - distToCenter / outer;      // 1 no centro, 0 na borda
+        int rate = (int) Math.round(baseRate * intensity * (0.35 + 0.65 * band));
+        if (rate <= 0) return;
+
+        for (int i = 0; i < rate; i++) {
+            double angle = RND.nextDouble() * Math.PI * 2.0;
+            double radius = Math.sqrt(RND.nextDouble()) * RAIN_RADIUS;
+            double x = player.posX + Math.cos(angle) * radius;
+            double y = player.posY + 8.0 + RND.nextDouble() * 14.0;
+            double z = player.posZ + Math.sin(angle) * radius;
+            WindSample s = Wind.getWindAt(mc.theWorld, x, y, z);
+            mc.effectRenderer.addEffect(new RainStreakParticle(mc.theWorld, x, y, z,
+                    s.vector.x, s.vector.y, s.vector.z));
         }
     }
 }

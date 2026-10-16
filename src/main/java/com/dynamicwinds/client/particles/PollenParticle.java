@@ -10,6 +10,8 @@ public class PollenParticle extends EntityFX {
         super(world, x, y, z);
         this.particleMaxAge = 100;
         this.particleScale = 0.3f;
+    
+        ParticleIcons.apply(this, "pollen");
     }
     @Override
     public void onUpdate() {

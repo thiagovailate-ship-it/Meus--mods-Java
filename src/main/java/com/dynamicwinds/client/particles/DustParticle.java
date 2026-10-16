@@ -10,6 +10,8 @@ public class DustParticle extends EntityFX {
         super(world, x, y, z);
         this.particleMaxAge = 60;
         this.particleScale = 0.4f;
+    
+        ParticleIcons.apply(this, "dust");
     }
     @Override
     public void onUpdate() {

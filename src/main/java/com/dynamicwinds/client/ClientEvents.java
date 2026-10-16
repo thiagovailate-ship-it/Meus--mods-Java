@@ -1,6 +1,11 @@
 package com.dynamicwinds.client;
 
+import com.dynamicwinds.client.audio.StormAudio;
 import com.dynamicwinds.client.audio.WindAudio;
+import com.dynamicwinds.client.particles.ParticleIcons;
+import com.dynamicwinds.client.storm.StormClientState;
+import com.dynamicwinds.client.storm.StormFogHandler;
+import com.dynamicwinds.client.storm.StormRenderer;
 import com.dynamicwinds.client.hud.DebugHud;
 import com.dynamicwinds.client.particles.WindVFX;
 import com.dynamicwinds.client.particles.TornadoVFX;
@@ -30,8 +35,17 @@ public class ClientEvents {
 
     public static void register() {
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new ClientEvents());
+        // nevoa, nuvens e sprites das particulas proprias
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new StormFogHandler());
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new ParticleIcons());
         DebugHud.register();
         registerRenderers();
+    }
+
+    /** Nuvens, parede do olho e bandas de chuva, desenhadas depois do mundo. */
+    @SubscribeEvent
+    public void onRenderWorldLast(net.minecraftforge.client.event.RenderWorldLastEvent e) {
+        StormRenderer.render(e.partialTicks);
     }
 
     /**
@@ -91,9 +105,13 @@ public class ClientEvents {
             // no tick do cliente, eles sao aplicados no mundo
             com.dynamicwinds.integration.network.StormNetwork.drainClient(
                     net.minecraft.client.Minecraft.getMinecraft().theWorld);
+            // o estado do sistema dominante e recalculado uma vez por tick; o
+            // render, a nevoa e o audio consomem este mesmo resultado
+            StormClientState.tick();
             WindVFX.tick();
             TornadoVFX.tick();
             WindAudio.update();
+            StormAudio.update();
         }
     }
 }

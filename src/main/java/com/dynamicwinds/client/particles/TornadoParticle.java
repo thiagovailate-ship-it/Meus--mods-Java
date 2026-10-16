@@ -25,6 +25,8 @@ public class TornadoParticle extends EntityFX {
         this.motionX = 0;
         this.motionY = 0;
         this.motionZ = 0;
+    
+        ParticleIcons.apply(this, "tornado");
     }
 
     @Override

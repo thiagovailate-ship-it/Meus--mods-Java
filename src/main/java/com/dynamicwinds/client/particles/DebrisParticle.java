@@ -9,6 +9,8 @@ public class DebrisParticle extends EntityFX {
         this.particleMaxAge = 80;
         this.particleScale = 0.5f;
         this.motionY = -0.02;
+    
+        ParticleIcons.apply(this, "debris");
     }
     @Override
     public void onUpdate() {

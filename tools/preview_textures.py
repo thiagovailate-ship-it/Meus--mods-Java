@@ -128,6 +128,11 @@ def save_png(path, px, w, h):
 def main():
     blocks = ["wind_vane", "windsock", "anemometer"]
     items = ["wind_vane_item", "windsock_item", "anemometer_item"]
+    # cajado e uma textura de item de verdade (nao um ItemBlock), por isso mora
+    # em textures/items
+    staff = load_png(os.path.join(TEX, "items", "catastrophe_staff.png"))
+    clouds = load_png(os.path.join(TEX, "environment", "storm_clouds.png"))
+    wall = load_png(os.path.join(TEX, "environment", "storm_wall.png"))
 
     pad = 16
     block_imgs = [load_png(os.path.join(TEX, "blocks", name + ".png")) for name in blocks]
@@ -166,7 +171,16 @@ def main():
         shelves.append((shelf, shelf_h))
 
     particle_h = sum(h + pad for (_s, h) in shelves) + pad
-    height = row2_y + particle_h
+
+    # faixa do ceu: o cajado ampliado, o teto de nuvem e a parede do olho em
+    # escala real de uso (as texturas de ambiente sao desenhadas esticadas)
+    sky_y = row2_y + particle_h + pad
+    sky_scale = 4
+    staff_w = staff[0] * 16
+    staff_h = staff[1] * 16
+    sky_h = max(max(clouds[1], wall[1]) * sky_scale, staff_h + pad * 2)
+    width = max(width, pad * 4 + staff_w + clouds[0] * sky_scale + wall[0] * sky_scale)
+    height = sky_y + sky_h + pad
     canvas = checkerboard(width, height)
 
     for (bw, bh, brows, iw, ih, irows, x) in first_row:
@@ -175,6 +189,13 @@ def main():
         # icone do ItemBlock ao lado do atlas, na mesma escala
         blit(canvas, width, height, irows, iw, ih,
              x + bw * unit + 8, pad, unit)
+
+    # faixa do ceu
+    blit(canvas, width, height, staff[2], staff[0], staff[1], pad, sky_y, 16)
+    sky_x = pad + staff_w + pad * 2
+    blit(canvas, width, height, clouds[2], clouds[0], clouds[1], sky_x, sky_y, sky_scale)
+    sky_x += clouds[0] * sky_scale + pad * 2
+    blit(canvas, width, height, wall[2], wall[0], wall[1], sky_x, sky_y, sky_scale)
 
     y = row2_y
     for (shelf, shelf_h) in shelves:

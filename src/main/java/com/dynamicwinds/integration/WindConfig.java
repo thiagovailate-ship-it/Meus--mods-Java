@@ -24,6 +24,10 @@ public final class WindConfig {
     public static boolean northernHemisphere = true;
     public static boolean stormForceWeather = true;
     public static boolean stormLightning = true;
+    /** Distancia maxima de renderizacao das nuvens da tempestade, em blocos. */
+    public static double stormMaxViewDistance = 420.0;
+    /** Chuva inclinada pelo vento, em particulas por tick. */
+    public static int stormRainRate = 16;
 
     // destruicao causada por tempestades
     public static boolean enableDestruction = true;
@@ -63,6 +67,12 @@ public final class WindConfig {
                 "Hemisferio norte: define o sentido de rotação dos ciclones");
         stormForceWeather = cfg.getBoolean("stormForceWeather", "storms", true,
                 "Forçar chuva/trovoada enquanto um ciclone estiver ativo por perto");
+        Property pView = cfg.get("storms", "stormMaxViewDistance", 420.0,
+                "Distancia maxima, em blocos, para desenhar as nuvens da tempestade");
+        if (pView.getDouble() < 64.0 || pView.getDouble() > 2048.0) pView.set(420.0);
+        stormMaxViewDistance = pView.getDouble();
+        stormRainRate = cfg.getInt("stormRainRate", "storms", 16, 0, 64,
+                "Particulas de chuva inclinada por tick dentro de uma tempestade");
         stormLightning = cfg.getBoolean("stormLightning", "storms", true,
                 "Relâmpagos na parede do olho dos furacões");
 
@@ -89,4 +99,10 @@ public final class WindConfig {
     public static int tornadoParticleRate() { return tornadoParticleRate; }
     public static int tornadoDebrisRate() { return tornadoDebrisRate; }
     public static double tornadoMaxViewDistance() { return tornadoMaxViewDistance; }
+
+    /** Distancia de renderizacao das nuvens de tempestade, em blocos. */
+    public static double stormMaxViewDistance() { return stormMaxViewDistance; }
+
+    /** Chuva inclinada pelo vento, particulas por tick. */
+    public static int stormRainRate() { return stormRainRate; }
 }

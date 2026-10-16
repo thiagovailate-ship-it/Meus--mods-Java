@@ -10,6 +10,8 @@ public class GustParticle extends EntityFX {
         super(world, x, y, z);
         this.particleMaxAge = 30;
         this.particleScale = 1.0f;
+    
+        ParticleIcons.apply(this, "gust");
     }
     @Override
     public void onUpdate() {
