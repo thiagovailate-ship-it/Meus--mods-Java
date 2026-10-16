@@ -22,12 +22,12 @@ Download https://piston-meta.mojang.com/v1/packages/ed5d8789ed29872ea2ef1c348302
 > Task :processApiResources NO-SOURCE
 > Task :injectTags
 
-> Task :downloadFernflower
-Download https://files.minecraftforge.net/fernflower-fix-1.0.zip
-
 > Task :downloadVanillaJars
 Download https://launcher.mojang.com/v1/objects/e80d9b3bf5085002218d4be59e668bac718abbc6/client.jar
 Download https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar
+
+> Task :downloadFernflower
+Download https://files.minecraftforge.net/fernflower-fix-1.0.zip
 
 > Task :extractNatives2
 > Task :processInjectedTagsResources NO-SOURCE
@@ -46,12 +46,12 @@ Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftfor
 Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/unpacked/src/main/resources/forge_at.cfg
 INFO: merging AccessMap net/minecraft/item/ItemBlock/field_150939_a from AccessChange(clear=0, set=0, vis=1) with AccessChange(clear=0, set=0, vis=1)
 Renamed 0 AT entries
+Applying Exceptor
 
 > Task :compileInjectedTagsJava
 > Task :injectedTagsClasses
 
 > Task :deobfuscateMergedJarToSrg
-Applying Exceptor
 Cleaning up generated debuginfo
 
 > Task :decompileSrgJar
@@ -63,15 +63,15 @@ Decompiling the srg jar with fernflower
 > Task :packageMcLauncher
 
 > Task :decompileSrgJar
-  Decompiling took 36473 ms
+  Decompiling took 22143 ms
 
 > Task :cleanupDecompSrgJar
 Fixup stage 1 - applying FF patches
-  Stage 1 took 3031 ms
+  Stage 1 took 1858 ms
 Fixup stage 2 - applying MCP patches
-  Stage 2 took 70 ms
+  Stage 2 took 36 ms
 Fixup stage 3 - applying MCP cleanup
-  Stage 3 took 4910 ms
+  Stage 3 took 3139 ms
 Saving the fixed-up jar
 
 > Task :patchDecompiledJar
@@ -98,19 +98,7 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :packagePatchedMc
 
 > Task :compileJava FAILED
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:9: error: com.dynamicwinds.client.render.tesr.TESRWindVane is not abstract and does not override abstract method renderTileEntityAt(net.minecraft.tileentity.TileEntity,double,double,double,float) in net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
-public class TESRWindVane extends TileEntitySpecialRenderer {
-       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:13: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:44: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:9: error: com.dynamicwinds.client.render.tesr.TESRWindsock is not abstract and does not override abstract method renderTileEntityAt(net.minecraft.tileentity.TileEntity,double,double,double,float) in net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
-public class TESRWindsock extends TileEntitySpecialRenderer {
-       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:13: error: method does not override or implement a method from a supertype
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:43: error: method does not override or implement a method from a supertype
     @Override
     ^
 /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:56: error: method does not override or implement a method from a supertype
@@ -118,7 +106,7 @@ public class TESRWindsock extends TileEntitySpecialRenderer {
     ^
 Note: /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/gui/WindConfigGui.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-6 errors
+2 errors
 
 [Incubating] Problems report is available at: file:///home/runner/work/Meus--mods-Java/Meus--mods-Java/build/reports/problems/problems-report.html
 
@@ -127,10 +115,10 @@ FAILURE: Build failed with an exception.
 * What went wrong:
 Execution failed for task ':compileJava'.
 > Compilation failed; see the compiler output below.
-  /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:9: error: com.dynamicwinds.client.render.tesr.TESRWindVane is not abstract and does not override abstract method renderTileEntityAt(net.minecraft.tileentity.TileEntity,double,double,double,float) in net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
-  public class TESRWindVane extends TileEntitySpecialRenderer {
-         ^
-  6 errors
+  /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:43: error: method does not override or implement a method from a supertype
+      @Override
+      ^
+  2 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -172,29 +160,41 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:9: error: com.dynamicwinds.client.render.tesr.TESRWindVane is not abstract and does not override abstract method renderTileEntityAt(net.minecraft.tileentity.TileEntity,double,double,double,float) in net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
-public class TESRWindVane extends TileEntitySpecialRenderer {
-       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:9: error: com.dynamicwinds.client.render.tesr.TESRWindsock is not abstract and does not override abstract method renderTileEntityAt(net.minecraft.tileentity.TileEntity,double,double,double,float) in net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
-public class TESRWindsock extends TileEntitySpecialRenderer {
-       ^
 Note: /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/gui/WindConfigGui.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:13: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:44: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:13: error: method does not override or implement a method from a supertype
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:43: error: method does not override or implement a method from a supertype
     @Override
     ^
 /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:56: error: method does not override or implement a method from a supertype
     @Override
     ^
-6 errors
+2 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.daemon.AbstractIsolatedCompilerWorkerExecutor$CompilerWorkAction.execute(AbstractIsolatedCompilerWorkerExecutor.java:79)
 	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:68)
 	at org.gradle.workers.internal.AbstractClassLoaderWorker$1.create(AbstractClassLoaderWorker.java:54)
+	at org.gradle.workers.internal.AbstractClassLoaderWorker$1.create(AbstractClassLoaderWorker.java:48)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.AbstractClassLoaderWorker.executeInClassLoader(AbstractClassLoaderWorker.java:48)
+	at org.gradle.workers.internal.FlatClassLoaderWorker.run(FlatClassLoaderWorker.java:32)
+	at org.gradle.workers.internal.FlatClassLoaderWorker.run(FlatClassLoaderWorker.java:22)
+	at org.gradle.workers.internal.WorkerDaemonServer.run(WorkerDaemonServer.java:109)
+	at org.gradle.workers.internal.WorkerDaemonServer.run(WorkerDaemonServer.java:78)
+	at org.gradle.process.internal.worker.request.WorkerAction.lambda$run$1(WorkerAction.java:150)
+	at org.gradle.process.internal.worker.child.WorkerLogEventListener.withWorkerLoggingProtocol(WorkerLogEventListener.java:41)
+	at org.gradle.process.internal.worker.request.WorkerAction.lambda$run$2(WorkerAction.java:150)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
+	at org.gradle.process.internal.worker.request.WorkerAction.run(WorkerAction.java:142)
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+	at org.gradle.internal.remote.internal.hub.MessageHubBackedObjectConnection$DispatchWrapper.dispatch(MessageHubBackedObjectConnection.java:182)
+	at org.gradle.internal.remote.internal.hub.MessageHubBackedObjectConnection$DispatchWrapper.dispatch(MessageHubBackedObjectConnection.java:164)
+	at org.gradle.internal.remote.internal.hub.MessageHub$Handler.run(MessageHub.java:414)
+	... 2 more
+
+
+BUILD FAILED in 1m 38s
+23 actionable tasks: 23 executed
+Configuration cache entry stored.
