@@ -86,16 +86,4 @@ public abstract class AbstractBlockTESR extends TileEntitySpecialRenderer {
         float f = level / 15.0f;
         return 0.35f + 0.65f * (f * f);
     }
-
-    /** Rotacao suave entre duas amostras angulares, tratando o wrap de 360. */
-    protected static float lerpAngle(float previous, float current, float partialTicks) {
-        float delta = current - previous;
-        while (delta > 180.0f) {
-            delta -= 360.0f;
-        }
-        while (delta < -180.0f) {
-            delta += 360.0f;
-        }
-        return previous + delta * partialTicks;
-    }
 }

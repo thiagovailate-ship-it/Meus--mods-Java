@@ -87,10 +87,10 @@ public class TESRWindsock extends AbstractBlockTESR {
         // visual de "manga murcha" sem precisar de modelo deformavel.
         float section = 0.40f + 0.60f * inflation;
 
-        segment(0.34, 0.56, 1.00f, section, droop * 0.20f, light, FRINGE, BAND_ORANGE);
-        segment(0.56, 0.76, 0.90f, section, droop * 0.45f, light, SEAM, BAND_WHITE);
-        segment(0.76, 0.94, 0.76f, section, droop * 0.75f, light, SEAM, BAND_ORANGE_2);
-        segment(0.94, 1.06, 0.58f, section, droop, light, SEAM, BAND_DARK);
+        segment(0.34f, 0.56f, 1.00f, section, droop * 0.20f, light, FRINGE, BAND_ORANGE);
+        segment(0.56f, 0.76f, 0.90f, section, droop * 0.45f, light, SEAM, BAND_WHITE);
+        segment(0.76f, 0.94f, 0.76f, section, droop * 0.75f, light, SEAM, BAND_ORANGE_2);
+        segment(0.94f, 1.06f, 0.58f, section, droop, light, SEAM, BAND_DARK);
 
         GL11.glPopMatrix();
     }

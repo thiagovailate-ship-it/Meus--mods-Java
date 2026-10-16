@@ -1,3 +1,8 @@
+##############################################################################
+# build_head.log - inicio do log da ULTIMA falha de CI (gravado automaticamente
+# pelo workflow, passo "Commit build log on failure"). Se o CI estiver verde,
+# este arquivo pode conter a ultima falha corrigida.
+##############################################################################
 Downloading https://services.gradle.org/distributions/gradle-9.2.0-all.zip
 ......................10%......................20%......................30%.......................40%......................50%......................60%......................70%.......................80%......................90%......................100%
 WARNING: A restricted method in java.lang.System has been called
