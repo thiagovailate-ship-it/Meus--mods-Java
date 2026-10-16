@@ -160,11 +160,11 @@ Relatório histórico: os resultados acima descrevem a fase anterior e não repr
 
 ## 9. Fase 1.3.0 em andamento — 2026-10-16
 
-- Branch fixa desta sessão: `arena/3ea9d885-meus-mods-java`.
-- O CI `38888710290` passou para o commit `97ea6ed`, mas não inclui as alterações posteriores atualmente no workspace.
-- Esta rodada acrescenta teste de persistência NBT, checker CSV fechado, documentação de release, contador/perfil de desempenho, limite de partículas configurável, ciclo de vida de rede no disconnect e validação de propriedades numéricas. O workspace contém 59 métodos `@Test`; ainda aguardam execução.
-- Os checks locais Python (`check_mirror.py`, `check_seams.py`, `py_compile`) e `git diff --check` passaram nesta rodada.
-- `./gradlew build` não pôde ser executado localmente: o ambiente não tem `java` nem `JAVA_HOME`. O novo CI deverá validar compilação/testes.
-- **Playtest real ainda pendente:** Minecraft 1.7.10/Forge, nove cenários, capturas e veredictos requerem execução no cliente e não foram realizados neste ambiente. Ver `docs/PLAYTEST.md`.
-- Portanto, não declarar a release 1.3.0 concluída até CI verde do estado atual e evidências do playtest anexadas.
+- Branch fixa: `arena/3ea9d885-meus-mods-java`; commit verificado: `3d951c0`.
+- GitHub Actions run `38892649192` concluiu **success** para o head `3d951c003aa468f2e4a1ac76ecb74a76e5d849a0`: parity/seams, self-test do CSV, build, reobf e suíte Gradle passaram. Há 71 métodos `@Test` no workspace. Link: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38892649192
+- Verificações locais Python (`py_compile`, `check_mirror.py`, `check_seams.py`, `preview_storm.py --check`, `test_check_field.py`) e `git diff --check` passaram.
+- `./gradlew build` continua indisponível localmente: não há `java` nem `JAVA_HOME`; a validação compilável foi feita pelo runner JDK 25.
+- Implementados desde o último estado: amostra cliente/servidor lado a lado em `/wind get`, snapshots naturais/invocados persistidos, limite e telemetria de partículas, cap de cache, métricas de destruição por sistema, comparação CSV e documentos.
+- **Playtest real segue pendente:** os nove cenários Minecraft 1.7.10/Forge, capturas em `docs/playtest/` e veredictos não foram executados nem simulados. Ver `docs/PLAYTEST.md`.
+- A versão ainda permanece `1.2.0`; não alterar para `1.3.0` nem declarar release pronta sem evidência real de jogo e aceite de todos os nove ensaios.
 

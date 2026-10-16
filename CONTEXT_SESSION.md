@@ -2,12 +2,13 @@
 
 ## Visão Geral
 
-DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa um sistema de vento dinâmico determinístico. O mod calcula vetores de vento baseados em seed, tempo e posição, sem necessidade de sincronização cliente-servidor.
+DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa vento determinístico e sistemas de tempo severo. A fase 1.3.0 corrige a consistência com autoridade do servidor: seed/configuração e snapshots são sincronizados, e `/wind get` inclui comparação cliente/servidor no mesmo tick. O cliente não gera tempestades naturais localmente.
 
 ## Branch e Commit Atual
 
-- **Branch**: `arena/98cf32d5-meus-mods-java`
-- **Commit mais recente**: `ef26df6` - fix: construtor de ParticleIcons publico (+ HUD de tempestade e README)
+- **Branch**: `arena/3ea9d885-meus-mods-java`
+- **Commit verificado pelo CI**: `3d951c0` - fix: correct parity packet chat formatting
+- **Estado do workspace**: alterações de documentação e relatório de estado ainda não commitadas.
 - **Repo**: https://github.com/thiagovailate-ship-it/Meus--mods-Java
 
 ## Build e CI
@@ -16,8 +17,10 @@ DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa
 - **JDK**: 25 (necessário para RFG 2.0.2)
 - **Gradle**: 9.2.0 (via wrapper incluído no repo)
 - **Build**: `./gradlew build --no-daemon --stacktrace`
-- **Status CI**: ✅ BUILD SUCCESSFUL (run 38838801206, com toda a expansão de tempestades)
-- **Link CI**: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38838801206
+- **Status CI**: ✅ run `38892649192` success no head `3d951c0`; build/reobf e 71 testes passaram junto com parity/seams e self-test do CSV.
+- **Link CI**: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38892649192
+- **Checks locais**: `py_compile`, `check_mirror.py`, `check_seams.py`, `preview_storm.py --check`, `test_check_field.py` e `git diff --check` passam.
+- **Playtest**: pendente; nove cenários e capturas reais ainda não existem. Não declarar release concluída.
 - **Leitura de falhas**: em run que falha, o workflow commita `build_head.log` na própria
   branch (commit `ci: build head log [skip ci]`). Antes de ler o log, confira o status do
   run: ele fica desatualizado depois do próximo build verde. Baixar o log pelo `gh` retorna
@@ -259,17 +262,19 @@ README, em `## Receitas`).
 
 ## O que Precisa de Validação no Jogo
 
-- Renderização visual das texturas (não testável aqui)
-- Céu das tempestades: forma, cor, ordem de desenho e clarão do relâmpago. A geometria foi
-  verificada por espelho em Python (`tools/preview_storm.py --check`, ver
-  `docs/storm_shape.png`), mas OpenGL não existe neste ambiente: o que falta é olhar
-  (`stormRenderSky=false` desliga sem remover o resto do VFX)
-- Girando do wind vane no jogo
-- Inflação visual da manga
-- Partículas aparecendo corretamente
-- Áudio funcionando
-- HUD de depuração
-- Anemômetro emitindo sinal redstone
+Estado atualizado: nenhum dos nove itens abaixo tem veredicto nem captura real nesta sandbox. As ferramentas estáticas e os testes não substituem a execução com Minecraft 1.7.10/Forge. Roteiro objetivo: `docs/PLAYTEST.md`.
+
+1. Céu: forma/olho/bandas, relâmpago e desenho sem erro OpenGL (`01-sky.png`).
+2. Vórtice: funil tocando o solo, largura e inclinação (`02-vortex.png`).
+3. Névoa: fechamento na parede e abertura no olho (`03-fog.png`).
+4. Chuva: quase vertical no olho e inclinada na parede (`04-rain.png`).
+5. Oito sprites próprios de partículas e degradação do teto (`05-particles.png`).
+6. Áudio: transições sem emenda e trovão após clarão (`06-audio.png` + nota).
+7. Catavento, manga, anemômetro e redstone (`07-instruments.png`).
+8. Comparação `/wind get`, HUD/alerta e idiomas (`08-hud.png`).
+9. `/wind perf`, modo warn-only e blocos protegidos (`09-performance-protection.png`).
+
+Também faltam CSV exportado em jogo comparado por `tools/check_field.py` e os nove veredictos anotados.
 
 ## O que Precisa de Implementação/Revisão
 
@@ -429,20 +434,32 @@ tem `BlockPos`/`ITickableSound`/`SoundCategory` que enganam.
 
 ## Ferramentas de verificação (sem o jogo)
 
-Não há toolchain local nesta sandbox: nem compilador Java, nem OpenGL. O que existe é o CI
-(que compila e roda os 39 testes) e estas ferramentas em Python puro, que medem o que o CI
-não vê. Elas fazem parte da entrega, não são scripts descartáveis:
+Não há toolchain Java nem OpenGL nesta sandbox. O CI usa JDK 25, compila e roda os 71 testes; as ferramentas Python medem itens que o build não vê. Elas fazem parte da entrega, não são scripts descartáveis:
 
 | ferramenta | o que confere | resultado registrado |
 | --- | --- | --- |
 | `tools/preview_textures.py` | monta `docs/textures_preview.png` com a grade do atlas, para olhar a textura sem abrir o jogo | — |
 | `tools/check_seams.py` | salto na emenda das texturas de ambiente (elas repetem na malha) | razão ≤ 0,74 depois da correção; antes, 1,97/2,85 nas nuvens e 11,93 na parede |
 | `tools/preview_storm.py` | geometria do céu espelhada do `StormRenderer`, mais a varredura `--check` de 252 combinações | nenhum problema de geometria; só a guarda do funil dispara, em solo acima de y≈200 |
+| `tools/check_mirror.py` | constantes Java ↔ Python para tempestades, céu, áudio e limite das texturas | passou no CI `38892649192` |
+| `tools/check_field.py` | CSV do `/wind dump` contra o campo fechado, com tolerância relativa `1e-6` | self-test aprovado; CSV real aguarda playtest |
 | `tools/gen_sounds.py` | gera o banco de 14 sons e mede espectro por banda e RMS para escolher filtros e níveis | 1.017.308 bytes, valores na seção de áudio |
 | `tools/gen_textures.py` | gera texturas de bloco, item, partícula e ambiente (determinístico: os mesmos bytes se repetem) | total atual 97.772 bytes |
 
 ## Links Úteis
 
 - CI: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions
-- Run mais recente (áudio): https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38842089801
+- Run mais recente validado (1.3.0 em desenvolvimento): https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38892649192
 - Repo: https://github.com/thiagovailate-ship-it/Meus--mods-Java
+
+## Estado da fase 1.3.0 — 2026-10-16
+
+- CI run `38892649192` passou para `3d951c0` (build/reobf, 71 testes, verificadores Python e self-test do CSV). Os avisos restantes são Javadoc/actions, não falhas.
+- D1: sincronização e comando de comparação no mesmo tick implementados; falta observar `rounded@0.1=MATCH` em execução real.
+- D2/D3: persistência de sistemas vivos, autoridade server-side, snapshots completos e escopo por dimensão implementados; o restart e o Nether precisam de playtest.
+- D4/D5: espelho/paridade no CI; configuração agrupada, documentada, limitada e revalidada.
+- D6: comandos e checker fechados prontos; ainda falta gerar e comparar o CSV de um save real.
+- D7/D8: proteção, warn-only, métricas de destruição, alerta/HUD, barômetro e localização implementados; critérios visuais/comportamentais sem veredicto.
+- D9: cache e orçamento de partículas com contadores instrumentados; limites de ms/tick e ms/frame ainda não medidos em jogo.
+- D10: manual, changelog e documentação atualizados. Versão continua 1.2.0 de propósito até concluir o playtest.
+- Bloqueio material: sem cliente Minecraft 1.7.10/Forge/OpenGL neste ambiente. Nove capturas/veredictos em `docs/playtest/` não existem; não inventar evidência nem marcar a fase como concluída.
