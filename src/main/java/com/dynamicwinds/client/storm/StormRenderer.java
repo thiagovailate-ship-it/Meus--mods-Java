@@ -273,6 +273,11 @@ public final class StormRenderer {
                 double a1 = ((seg + 1) / (double) segs) * TWO_PI + phase;
                 double ca0 = Math.cos(a0), sa0 = Math.sin(a0);
                 double ca1 = Math.cos(a1), sa1 = Math.sin(a1);
+                // U vem do indice do segmento (3 voltas na circunferencia), e nao
+                // do comprimento de arco: assim os 5 aneis concentricos ficam
+                // alinhados em u e a textura nao estica no raio. V repete 2,4x
+                // no raio; e por isso que a imagem nao pode ter gradiente
+                // assado - ele se repetiria 3x no anel e 2,4x no raio.
                 double u0 = seg / (double) segs * 3.0;
                 double u1 = (seg + 1) / (double) segs * 3.0;
 

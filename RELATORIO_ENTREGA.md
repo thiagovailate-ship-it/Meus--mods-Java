@@ -113,10 +113,15 @@ O mod DynamicWinds para Minecraft 1.7.10 foi auditado, corrigido e evoluído par
 
 ## 5. CI Mais Recente
 
-- Run ID: `38825322876`
-- Status: `success`
-- Branch: `arena/696b4eb5-meus-mods-java`
-- Commit: `932c5df fix: javadoc deterministic comment`
+- Branch: `arena/98cf32d5-meus-mods-java` (o desenvolvimento continuou nesta branch; as
+  execuções citadas antes eram da branch `arena/696b4eb5-meus-mods-java`)
+- Execuções verdes desta rodada:
+  - `38843925393` — `847c237` (relevo do vento: cache como fornecedor do modelo) — `success`
+  - `38843637488` — `3ae384e` (céu das tempestades) — `success`
+  - `38842089801` — `dd8962f` (áudio dos instrumentos) — `success`
+  - `38841771574` — `159b322` (leitos de áudio com loop real) — `success`
+- Todas compilam com JDK 25 + Gradle 9.2.0 + RFG 2.0.2 e rodam os 39 testes
+  (`CoreTests`, `StormPhysicsTest`, `BoxMeshTest`) antes de gerar o jar com reobf.
 
 ## 6. Recursos Verificados no Código
 

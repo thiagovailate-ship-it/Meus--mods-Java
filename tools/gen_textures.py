@@ -52,18 +52,52 @@ def _tileable_noise(cv, x, y, scale, period, s=0):
 
 
 def _fbm(cv, x, y, base_scale, size, octaves=4, s=0):
-    """Soma de oitavas de ruido periodico (fractal brownian motion)."""
+    """
+    Soma de oitavas de ruido periodico (fractal brownian motion).
+
+    A escala de cada oitava e ajustada para que o periodo caia num numero
+    inteiro de celulas dentro de `size`. Sem isso o ruido nao fecha o tile: um
+    periodo de 3 celulas de 20 px cobre 60 px de uma textura de 64, e a emenda
+    aparece como uma linha reta atravessando o ceu ou a parede. O ajuste move o
+    tamanho da celula em poucos por cento (24 px viram 25,6) e em troca garante
+    que a primeira e a ultima coluna (e linha) sejam vizinhas de verdade.
+    """
     total = 0.0
     norm = 0.0
     amp = 1.0
     scale = base_scale
     for o in range(octaves):
         period = max(1, int(round(size / scale)))
-        total += amp * _tileable_noise(cv, x, y, scale, period, s + o * 17)
+        snapped = size / float(period)
+        total += amp * _tileable_noise(cv, x, y, snapped, period, s + o * 17)
         norm += amp
         amp *= 0.5
         scale *= 0.5
     return total / norm
+
+
+def _streak_noise(cv, x, y, cells_x, cells_y, s=0):
+    """
+    Ruido periodico anisotropico: `cells_x` celulas na horizontal e `cells_y` na
+    vertical, cobrindo a textura inteira.
+
+    E o que produz rajas alongadas verticalmente (poucas celulas em y) que ainda
+    fecham o tile nas duas direcoes. Comprimir o eixo y de um ruido quadrado -
+    o que era feito antes, com `y * 0.22` - alonga a raja, mas a distancia entre
+    as celulas deixa de dividir a altura da textura, e a parede ganha uma
+    costura horizontal a cada repeticao.
+    """
+    fx = x * cells_x / float(cv.w)
+    fy = y * cells_y / float(cv.h)
+    x0, y0 = int(fx // 1), int(fy // 1)
+    tx, ty = fx - x0, fy - y0
+    tx = tx * tx * (3 - 2 * tx)
+    ty = ty * ty * (3 - 2 * ty)
+    a = cv.hash01(x0 % cells_x, y0 % cells_y, s)
+    b = cv.hash01((x0 + 1) % cells_x, y0 % cells_y, s)
+    c = cv.hash01(x0 % cells_x, (y0 + 1) % cells_y, s)
+    d = cv.hash01((x0 + 1) % cells_x, (y0 + 1) % cells_y, s)
+    return (a * (1 - tx) + b * tx) * (1 - ty) + (c * (1 - tx) + d * tx) * ty
 
 
 
@@ -938,8 +972,12 @@ def gen_staff_and_environment():
     W_LIGHT = (144, 154, 172)
     for y in range(h):
         for x in range(w):
-            # ruido esticado na vertical: as rajas de chuva saem alongadas
-            streak = _fbm(cv, x, y * 0.22, 8.0, w, 3, s=131)
+            # Duas escalas de raja, ambas fechando o tile: 12x3 celulas (raja de
+            # ~5 px de largura por ~21 px de altura) e 24x6 (detalhe fino). O
+            # alongamento vem de haver poucas celulas em y, nao de comprimir o
+            # eixo - comprimir quebrava a costura.
+            streak = (_streak_noise(cv, x, y, 12, 3, s=131) * 0.62
+                      + _streak_noise(cv, x, y, 24, 6, s=241) * 0.38)
             mass = _fbm(cv, x, y, 20.0, w, 3, s=77)
             v = streak * 0.62 + mass * 0.38
             # So estrutura: a densidade que cai com a altura e do renderizador

@@ -81,7 +81,11 @@ hemisfério, landfall, determinismo e ciclo de vida dos sistemas invocados.
   desaparecimento gradual por distância, clarão do relâmpago por vértice e desenho de trás
   para frente. Todas as condições de degeneração são checadas **antes** de
   `startDrawingQuads` (nenhum return com lote aberto) e a unidade de textura é salva e
-  devolvida em volta do `bindTexture`.
+  devolvida em volta do `bindTexture`. U angular (3 voltas no anel, alinhado entre os aneis
+  concentricos) e V 2,4x no raio, e a razao de existir U por indice de segmento: com U por
+  comprimento de arco cada anel ficaria desalinhado do seguinte.
+  A geometria é conferida fora do jogo por `tools/preview_storm.py` (ver Ferramentas de
+  verificação).
 - `client/storm/StormClientState` - sistema dominante recalculado uma vez por tick, para
   névoa, nuvem, som e partícula não pegarem instantes diferentes e tremerem entre si.
 - `client/storm/StormFogHandler` - névoa escurece e fecha dentro da tempestade, e o olho
@@ -176,6 +180,17 @@ hemisfério, landfall, determinismo e ciclo de vida dos sistemas invocados.
   ganhou value noise periódico e fbm, porque ruído comum não repete e apareceriam emendas
   retas atravessando o céu)
 - `textures/environment/storm_wall.png` (64x64, parede do olho / cortina de chuva)
+- **O ruído tem de fechar o tile, e isso é medido, não presumido.** O gerador prometia
+  "value noise periódico", mas o período era `round(size / escala)` células — quando essa
+  divisão não é inteira, o período não cobre a textura (3 células de 20 px em 64 px = 60 px)
+  e a emenda aparece como linha reta: era ×1,97/×2,85 nas nuvens e **×11,93 na parede**
+  (28,5 de salto contra 2,4 interno). `_fbm` agora ajusta a escala para o período cair em
+  número inteiro de células, e as rajas da parede usam `_streak_noise` (ruído periódico
+  anisotrópico: 12x3 e 24x6 células) em vez de comprimir o eixo y com `y * 0.22`, que
+  alongava a raja mas esticava o período. Depois: ×0,27/×0,74 e ×0,39/×0,17.
+- `tools/check_seams.py` mede isso: numa textura que fecha, a última coluna é vizinha da
+  primeira quando ela repete, então o salto na emenda deve ter o tamanho da diferença
+  entre colunas vizinhas comuns. A razão entre os dois é o número; acima de 1,6 é visível.
 - **As duas são isentas de gradiente vertical, de propósito.** Elas repetem sobre a malha
   (o teto repete ~3x no anel e ~2,4x no raio), então qualquer rampa de luminância ou de
   alpha embutida na imagem vira faixa visível no céu — foi o caso até esta sessão. O
@@ -407,6 +422,20 @@ tem `BlockPos`/`ITickableSound`/`SoundCategory` que enganam.
   "ronco" do sistema. O rugido sai da faixa forte do vento, com a altura amarrada ao déficit central.
 - O clique do anemômetro tem intervalo mínimo de 5 ticks: acima de ~4 voltas por segundo os cliques reais
   se fundem num zumbido, e um motor de som não faz essa fusão.
+
+## Ferramentas de verificação (sem o jogo)
+
+Não há toolchain local nesta sandbox: nem compilador Java, nem OpenGL. O que existe é o CI
+(que compila e roda os 39 testes) e estas ferramentas em Python puro, que medem o que o CI
+não vê. Elas fazem parte da entrega, não são scripts descartáveis:
+
+| ferramenta | o que confere | resultado registrado |
+| --- | --- | --- |
+| `tools/preview_textures.py` | monta `docs/textures_preview.png` com a grade do atlas, para olhar a textura sem abrir o jogo | — |
+| `tools/check_seams.py` | salto na emenda das texturas de ambiente (elas repetem na malha) | razão ≤ 0,74 depois da correção; antes, 1,97/2,85 nas nuvens e 11,93 na parede |
+| `tools/preview_storm.py` | geometria do céu espelhada do `StormRenderer`, mais a varredura `--check` de 252 combinações | nenhum problema de geometria; só a guarda do funil dispara, em solo acima de y≈200 |
+| `tools/gen_sounds.py` | gera o banco de 14 sons e mede espectro por banda e RMS para escolher filtros e níveis | 1.017.308 bytes, valores na seção de áudio |
+| `tools/gen_textures.py` | gera texturas de bloco, item, partícula e ambiente (determinístico: os mesmos bytes se repetem) | total atual 97.772 bytes |
 
 ## Links Úteis
 

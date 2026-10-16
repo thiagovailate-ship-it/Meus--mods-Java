@@ -176,6 +176,56 @@ invocados.
 - Minecraft Java Edition 1.7.10 com Forge.
 - Para compilar localmente: JDK 25 (para RFG 2.0.2), Gradle 9.2.0 (ou usar o wrapper incluído).
 
+## Céu da tempestade (renderizador)
+
+O céu da tempestade não é um overlay: é geometria desenhada no mundo, no
+`RenderWorldLastEvent`, toda ela derivada do sistema (`client/storm/StormRenderer`).
+São cinco peças, do centro para fora:
+
+| peça | o que é | de onde saem os números |
+| --- | --- | --- |
+| teto de nuvem | anel de 5 faixas entre `rmax·0,9` (vórtice: `rmax·1,35`) e `outer·1,04` | `rmax` do vento e o raio externo do tipo; o alpha zera em `r < rmax`, que é o olho aberto |
+| rodapé | cortina pendurada na borda interna do teto, descendo `24·(0,55 + 0,45·intensidade)` blocos | dá volume ao teto visto de baixo |
+| parede do olho | dois cilindros (alpha 0,60 e 0,26) do solo até o teto | raios `rmax·1,02` e `rmax·1,45`; no vórtice viram um funil cônico que se inclina contra a direção do deslocamento |
+| bandas espirais | 3 braços em espiral logarítmica (`s(r) = s0 + spin·ln(r/rIn)·1,6`) | giram no mesmo sentido do campo (o `spin` do hemisfério) |
+| camada alta | concha mais clara acima do teto, só com intensidade maior que 0,35 | `rmax·1,05` a `outer·1,16`, no topo da coluna do tipo |
+
+- **Desenho de trás para frente** e escrita de profundidade desligada: o sistema mais
+  distante é desenhado primeiro, senão duas tempestades sobrepostas apareceriam com a de
+  trás por cima.
+- **Nível de detalhe** por distância: 72 / 48 / 24 segmentos a 160 / 420 blocos, com o
+  conjunto desaparecendo suavemente em vez de cortar seco.
+- **O clarão do relâmpago** entra por vértice: a cor da nuvem é lavada para o branco no
+  mesmo disparo que agenda o trovão (que chega depois, a 343 m/s), e a névoa clareia junto.
+- **A altura do teto é limitada pelo mundo** (`min(solo + 0,55·topo, 214)`): em terreno
+  muito alto não sobra altura para o funil, e aí a peça é simplesmente pulada.
+- **`stormRenderSky`** desliga o céu sem remover o resto do VFX.
+
+### Duas armadilhas do Tessellator que custam caro
+
+1. `startDrawingQuads()` **lança exceção** (`Already tesselating!`) se já houver um lote
+   aberto, e o lote só fecha no `draw()`. Por isso **nenhum método daqui retorna entre
+   abrir e fechar**: toda condição de degeneração (raio nulo, altura nula, alpha zero) é
+   checada antes de abrir o lote. Era exatamente esse o defeito da versão anterior.
+2. O formato do vértice é fixado por flags de estado: `setNormal` vale do ponto em que é
+   chamado até o fim do lote, então normal, cor e textura são definidos antes do primeiro
+   vértice (a cor é por vértice e é definida antes de cada um).
+
+E uma do lado do OpenGL: **`bindTexture` liga na unidade de textura ativa**, e durante o
+render do mundo a unidade ativa é a do lightmap (`GL_TEXTURE1`). Sem salvar a unidade,
+trocar para a padrão e devolver no fim, a nuvem sai texturizada com o mapa de luz.
+
+### Conferindo sem abrir o jogo
+
+`tools/preview_storm.py` repete essa geometria em Python e monta
+`docs/storm_shape.png`: quatro vistas de topo (uma por tipo, na mesma escala), dois cortes
+verticais (furacão maior e vórtice, com o funil inclinado) e o perfil de alpha do teto. O
+modo `--check` varre 252 combinações (tipo × intensidade × altura de solo) e separa
+**guarda** (o renderizador decide não desenhar a peça, sempre antes do lote) de
+**problema** (geometria invertida ou nula). Resultado atual: nenhum problema; a única
+guarda que dispara é a do funil, em terreno acima de y≈200, onde o teto bate no limite do
+mundo.
+
 ## Texturas e renderização
 
 - Texturas de bloco são **atlas 4x4 de 128x128** (células de 32px). Cada face escolhe
