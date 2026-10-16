@@ -4,7 +4,7 @@ Mod de vento dinâmico para Minecraft Java Edition 1.7.10 (Forge).
 
 ## O que o mod implementa
 
-- **Campo de vento determinístico**: `Wind.getWindAt(world, x, y, z)` retorna `WindSample` (vetor, velocidade, rajada) calculado a partir da seed do mundo, tempo e posição. Cliente e servidor calculam o mesmo resultado — sem pacotes de sincronização.
+- **Campo de vento determinístico**: `Wind.getWindAt(world, x, y, z)` retorna `WindSample` (vetor, velocidade, rajada) calculado a partir da seed do mundo, tempo e posição. A intenção é que cliente e servidor calculem o mesmo resultado sem pacotes de sincronização — e isso **ainda não é verdade no cliente**: o 1.7.10 não manda a seed no login (o `WorldClient` é criado com `WorldSettings(0L, ...)`), então o cliente monta o modelo com semente 0 enquanto o servidor usa a seed real. As tempestades em si já chegam por pacote; o que diverge é o vento de fundo do lado do cliente (HUD, partículas, ângulo dos instrumentos). A correção está especificada em `SPEC_PROXIMA_FASE.md` (entrega D1).
 - **Modelo físico**: curl de ruído (divergência ~0), perfil logarítmico vertical, direção de pressão rotativa, ciclo diurno (pico ao meio-dia), fator de rajada (Ornstein-Uhlenbeck com ruído reutilizado), contribuição de tornado.
 - **Tempestades severas**: quatro tipos — vórtice (tornado/tromba d'água), tempestade tropical, furacão e furacão maior — com ciclo de vida completo (gênese, intensificação, maturidade com ciclo de substituição da parede do olho, dissipação) e trajetória em arco.
 - **Clima**: intensidade de tempestade derivada do estado do mundo (`isRaining`, `isThundering`, `rainingStrength`). As tempestades severas *comandam* o clima: chuva, trovoada e relâmpagos passam a ser consequência do sistema, e o mod para de forçar quando nenhum sistema alcança ninguém.
@@ -267,6 +267,14 @@ mundo.
 - Escala de velocidade do vento é relativa ao modelo; não há calibração formal para m/s do mundo real.
 - Os modelos JSON dos blocos existem, mas não são usados no mundo: com o tipo de render
   próprio quem desenha o bloco é o TESR.
+
+## Próxima fase
+
+A fase seguinte está especificada em `SPEC_PROXIMA_FASE.md`: consistência entre cliente e
+servidor (D1, o item acima), espaço de ids e persistência das tempestades, lista completa ao
+entrar e escopo por dimensão, validação em jogo com roteiro e comparador de campo, proteção de
+destruição, aviso ao jogador com barômetro, configuração comentada e validada, orçamento de
+desempenho medido e documentação de release (1.3.0).
 
 ## Repositório
 

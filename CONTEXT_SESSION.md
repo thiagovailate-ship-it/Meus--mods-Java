@@ -289,6 +289,10 @@ README, em `## Receitas`).
 - `README.md` - atualizado com descrição do mod
 - `RELATORIO_ENTREGA.md` - relatório completo das correções
 - `SPEC_TEXTURE_IMPROVEMENT.md` - spec para melhorar texturas (criado nesta sessão)
+- `SPEC_PROXIMA_FASE.md` - spec da próxima fase: consistência cliente/servidor, espaço de
+  ids, persistência, validação em jogo, proteção de destruição, aviso ao jogador,
+  configuração, desempenho e release. Traz os defeitos D-A..D-J encontrados na revisão,
+  cada um com a evidência, e a ordem de execução D1..D10 com critério de pronto.
 
 ## Arquivos Relevantes para Editar
 
