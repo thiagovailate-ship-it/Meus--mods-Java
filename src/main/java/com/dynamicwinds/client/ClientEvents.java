@@ -25,13 +25,13 @@ public class ClientEvents {
     }
 
     private static void registerTESR(Class<? extends net.minecraft.tileentity.TileEntity> teClass,
-                                      TileEntitySpecialRenderer<?> renderer) {
+                                      TileEntitySpecialRenderer renderer) {
         try {
             Field field = TileEntityRendererDispatcher.class.getDeclaredField("mapSpecialRenderers");
             field.setAccessible(true);
             @SuppressWarnings("unchecked")
-            Map<Class<? extends net.minecraft.tileentity.TileEntity>, TileEntitySpecialRenderer<?>> map =
-                (Map<Class<? extends net.minecraft.tileentity.TileEntity>, TileEntitySpecialRenderer<?>>) field.get(null);
+            Map<Class<? extends net.minecraft.tileentity.TileEntity>, TileEntitySpecialRenderer> map =
+                (Map<Class<? extends net.minecraft.tileentity.TileEntity>, TileEntitySpecialRenderer>) field.get(null);
             map.put(teClass, renderer);
         } catch (Exception e) {
             System.err.println("DynamicWinds: Failed to register TESR for " + teClass.getSimpleName() + ": " + e);
