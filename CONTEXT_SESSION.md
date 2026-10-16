@@ -285,8 +285,68 @@ Map<Class<? extends TileEntity>, TileEntitySpecialRenderer> map = (Map) field.ge
 map.put(TileEntityWindVane.class, new TESRWindVane());
 ```
 
+## Áudio (sessão de 2026-10-15)
+
+### APIs de áudio do 1.7.10 (conferidas no código-fonte, não por tentativa)
+Fonte usada: `xgraza/nebula-1.7.2` (SRG) + mapeamentos `1.7.10 stable` do
+Minecraft-Deobfuscator3000 (nomes MCP). Cuidado: `leijurv/MineBot/mcp918` é **1.8.9**, não 1.7.10 —
+tem `BlockPos`/`ITickableSound`/`SoundCategory` que enganam.
+
+- `ISound`: `getPositionedSoundLocation()` (é esse o nome no 1.7.10; `getSoundLocation` só existe do 1.8
+  em diante), `canRepeat()`, `getRepeatDelay()`, `getVolume()`, `getPitch()`, `getXPosF()/getYPosF()/getZPosF()`,
+  `getAttenuationType()` → `ISound.AttenuationType.NONE|LINEAR`.
+- `ITickableSound extends ISound, net.minecraft.server.gui.IUpdatePlayerListBox` (o tick do 1.7.10 é
+  `update()`, via `IUpdatePlayerListBox`; `net.minecraft.util.ITickable` é 1.8+). Tem `isDonePlaying()`.
+- `SoundManager.updateAllSounds()` chama `update()` de cada som tickável e, em seguida, **reaplica volume,
+  altura e posição** do canal — é isso que permite mixar um loop em tempo real.
+- Loop real: `playSound` cria a fonte com `canRepeat() && getRepeatDelay() == 0` como flag de repetição
+  do OpenAL. Fonte em fluxo (`stream: true`) relê o arquivo a cada volta → emenda audível. Por isso os
+  leitos do mod são bufferizados.
+- `volume == 0` faz o som ser **descartado** (`"Skipped playing sound... volume was zero"`): um leito tem
+  de nascer com ganho mínimo (0,02) e subir.
+- Volume > 1 **estica o raio audível** do canal (`16 * volume` blocos, modelo linear): é assim que o
+  trovão distante é posicionado no ponto da descarga e ainda assim é ouvido.
+- `SoundHandler`: `playSound(ISound)`, `stopSound(ISound)`, `isSoundPlaying(ISound)`.
+- `sounds.json`: `category` precisa ser um dos nomes do `SoundCategory` (master, music, record, weather,
+  block, hostile, neutral, player, ambient) — um valor inválido derruba o arquivo **inteiro** (a exceção é
+  capturada em `SoundHandler` e o `sounds.json` todo é descartado).
+- `EntityLightningBolt.onUpdate()` já toca `ambient.weather.thunder` com volume 10000. Ou seja: o relâmpago
+  do mod já tem som próprio do jogo — o áudio do mod é a camada do resto do sistema, não uma duplicata.
+
+### Arquitetura de áudio do mod
+- `core` não tem áudio; tudo vive em `client/audio`:
+  - `AmbientBed` — leito contínuo (loop do OpenAL, ganho suavizado, abrigo, posição do jogador).
+  - `AudioBeds` — pedido por tick (`beginTick`/`request`/`tick`), fade de 2,5 s, canal recriado quando o
+    gerenciador recusa, e o modelo de **abrigo** (profundidade sob o teto → `1 - 0,06·prof`, piso 0,12).
+  - `WindAudio` — 3 faixas cruzadas por pesos triangulares (brisa/forte/tempestade), rajadas por `gust`,
+    folhagem por varredura de `Material.leaves`, e altura (pitch) que **cai** com o déficit central.
+  - `StormAudio` — chuva em 3 regimes (`rain_light`/`rain_heavy`/`rain_wind`) com o olho seco, trovão
+    agendado a 343 m/s com timbre por distância, detritos acima de 20 m/s, e o clarão.
+  - `InstrumentAudio` — clique por volta do anemômetro e estalo da manga (os dois sons estavam órfãos).
+- `StormClientState`: `rainStrength()` (banda^0,8 · intensidade · secagem do olho, mais a chuva do jogo em
+  peso 0,45) e `flash(power)`/`flashStrength()`; a névoa acende no clarão (`StormFogHandler`).
+
+### Gerador de sons (`tools/gen_sounds.py`)
+- `pip install --target /tmp/aud numpy soundfile` (PyPI é alcançável nesta sandbox; libsndfile 1.2.2 escreve
+  Vorbis). Rodar `PYTHONPATH=/tmp/aud python3 tools/gen_sounds.py` reproduz os bytes.
+- Método: primeiro a forma (envelope/eventos), depois a **cor** — e a cor é conferida por medida, não por
+  ouvido. Métrica usada: fração de energia por faixa (<100 Hz, 100–400, 400–1,5k, 1,5k–5k, >5k) + rolloff 85%.
+- Dois erros reais que só apareceram na medida:
+  1. ruído branco moldado: as faixas agudas dominavam só por largura de banda → faltava inclinação 1/f na fonte;
+  2. **contínuo (DC)**: ruído moldado carrega offset constante, que concentra energia nos primeiros bins —
+     o trovão "próximo" ficava com 80% da energia abaixo de 100 Hz e quase nada de estalo, apesar do estalo
+     existir no sinal. `dc_block()` (highpass em 20 Hz) resolveu; as bandas finais batem com o alvo.
+- `loopify()` faz crossfade **e** casa o nível das pontas (sem isso, material com eventos esparsos, como
+  folhagem, dá salto de nível no loop).
+- 14 arquivos, 44,1 kHz mono Vorbis (blocos 256/2048, EOS presente, 3 cabeçalhos na ordem), ~1,0 MB no total.
+- Não há `silence.ogg`: sem como parar canal com fade no 1.7.10, o arquivo era peso morto.
+
+### Pendências de áudio
+- `wind_wind`... o leito `rain_wind` agora é a terceira faixa da chuva (cortina da parede do olho), não
+  mais o "ronco" — o ronco sai da faixa forte do vento, com a altura amarrada ao déficit.
+
 ## Links Úteis
 
 - CI: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions
-- Run mais recente: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38830747771
+- Run mais recente (áudio): https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38842089801
 - Repo: https://github.com/thiagovailate-ship-it/Meus--mods-Java
