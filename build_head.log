@@ -47,11 +47,6 @@ Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftfor
 Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/unpacked/src/main/resources/forge_at.cfg
 INFO: merging AccessMap net/minecraft/item/ItemBlock/field_150939_a from AccessChange(clear=0, set=0, vis=1) with AccessChange(clear=0, set=0, vis=1)
 Renamed 0 AT entries
-
-> Task :compileInjectedTagsJava
-> Task :injectedTagsClasses
-
-> Task :deobfuscateMergedJarToSrg
 Applying Exceptor
 Cleaning up generated debuginfo
 
@@ -59,20 +54,22 @@ Cleaning up generated debuginfo
 Didn't find cached decompiled jar, decompiling and saving to /home/runner/.gradle/caches/retro_futura_gradle/fernflower-cache/f857d0a5dc440e9576a099ffe2dcf0f57f62ec6a9a90cdd7e8a27d4573e0504b-d253f2106b6c42cd09e68e3eb271a05bffc1063ab065ac1a7425f1586d3b5891.jar
 Decompiling the srg jar with fernflower
 
+> Task :compileInjectedTagsJava
+> Task :injectedTagsClasses
 > Task :compileMcLauncherJava
 > Task :mcLauncherClasses
 > Task :packageMcLauncher
 
 > Task :decompileSrgJar
-  Decompiling took 31877 ms
+  Decompiling took 37403 ms
 
 > Task :cleanupDecompSrgJar
 Fixup stage 1 - applying FF patches
-  Stage 1 took 3420 ms
+  Stage 1 took 3175 ms
 Fixup stage 2 - applying MCP patches
-  Stage 2 took 84 ms
+  Stage 2 took 52 ms
 Fixup stage 3 - applying MCP cleanup
-  Stage 3 took 5592 ms
+  Stage 3 took 4895 ms
 Saving the fixed-up jar
 
 > Task :patchDecompiledJar
@@ -99,102 +96,105 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :packagePatchedMc
 
 > Task :compileJava
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:9: error: cannot find symbol
+import net.minecraft.client.renderer.tileentity.ClientRegistry;
+                                               ^
+  symbol:   class ClientRegistry
+  location: package net.minecraft.client.renderer.tileentity
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:4: error: cannot find symbol
+import net.minecraft.client.renderer.BufferBuilder;
+                                    ^
+  symbol:   class BufferBuilder
+  location: package net.minecraft.client.renderer
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:7: error: package net.minecraft.client.renderer.vertex does not exist
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+                                           ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:13: error: cannot find symbol
+        ClientRegistry.bindTileEntitySpecialRenderer(
+        ^
+  symbol:   variable ClientRegistry
+  location: class com.dynamicwinds.client.ClientEvents
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:16: error: cannot find symbol
+        ClientRegistry.bindTileEntitySpecialRenderer(
+        ^
+  symbol:   variable ClientRegistry
+  location: class com.dynamicwinds.client.ClientEvents
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:29: error: cannot find symbol
+        BufferBuilder buf = tess.getBuffer();
+        ^
+  symbol:   class BufferBuilder
+  location: class com.dynamicwinds.client.render.tesr.TESRWindVane
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:29: error: cannot find symbol
+        BufferBuilder buf = tess.getBuffer();
+                                ^
+  symbol:   method getBuffer()
+  location: variable tess of type net.minecraft.client.renderer.Tessellator
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:30: error: cannot find symbol
+        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+                                 ^
+  symbol:   variable DefaultVertexFormats
+  location: class com.dynamicwinds.client.render.tesr.TESRWindVane
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:48: error: cannot find symbol
+        BufferBuilder buf = tess.getBuffer();
+        ^
+  symbol:   class BufferBuilder
+  location: class com.dynamicwinds.client.render.tesr.TESRWindVane
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:48: error: cannot find symbol
+        BufferBuilder buf = tess.getBuffer();
+                                ^
+  symbol:   method getBuffer()
+  location: variable tess of type net.minecraft.client.renderer.Tessellator
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:56: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/blocks/BlockWindVane.java:11: error: cannot find symbol
+        setTextureName("dynamicwinds:blocks/wind_vane");
+        ^
+  symbol:   method setTextureName(java.lang.String)
+  location: class com.dynamicwinds.content.blocks.BlockWindVane
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/blocks/BlockWindsock.java:11: error: cannot find symbol
+        setTextureName("dynamicwinds:blocks/windsock");
+        ^
+  symbol:   method setTextureName(java.lang.String)
+  location: class com.dynamicwinds.content.blocks.BlockWindsock
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/blocks/BlockAnemometer.java:13: error: cannot find symbol
+        setTextureName("dynamicwinds:blocks/anemometer");
+        ^
+  symbol:   method setTextureName(java.lang.String)
+  location: class com.dynamicwinds.content.blocks.BlockAnemometer
 Note: /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/gui/WindConfigGui.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
+14 errors
 
-> Task :classes
-> Task :jar
-> Task :compileTestJava
-> Task :testClasses
-> Task :reobfJar
-> Task :test
-> Task :check
-
-> Task :javadoc
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @param for uStar
-    public static double speed(double uStar, double z, double z0) {
-                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @param for z
-    public static double speed(double uStar, double z, double z0) {
-                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @param for z0
-    public static double speed(double uStar, double z, double z0) {
-                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @return
-    public static double speed(double uStar, double z, double z0) {
-                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @param for x
-    public Vec3 direction(double x, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @param for z
-    public Vec3 direction(double x, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @param for timeTicks
-    public Vec3 direction(double x, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @return
-    public Vec3 direction(double x, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:36: error: bad use of '>'
-     * Deterministic: same seed, time, position => same result.
-                                                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @param for seed
-    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @param for x
-    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @param for y
-    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @param for z
-    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @param for timeTicks
-    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:38: warning: no @return
-    public Vec3 sample(long seed, double x, double y, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:102: warning: no @param for seed
-    public double[] activeCenter(long seed, long timeTicks) {
-                    ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:102: warning: no @param for timeTicks
-    public double[] activeCenter(long seed, long timeTicks) {
-                    ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/TornadoField.java:102: warning: no @return
-    public double[] activeCenter(long seed, long timeTicks) {
-                    ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for w
-    public void refreshNear(World w, double px, double pz, int radius) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for px
-    public void refreshNear(World w, double px, double pz, int radius) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for pz
-    public void refreshNear(World w, double px, double pz, int radius) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for radius
-    public void refreshNear(World w, double px, double pz, int radius) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/WindEngine.java:54: warning: no @param for world
-    public void unloadWorld(World world) {
-                ^
-1 error
-22 warnings
-
-> Task :javadoc FAILED
+> Task :compileJava FAILED
 
 [Incubating] Problems report is available at: file:///home/runner/work/Meus--mods-Java/Meus--mods-Java/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':javadoc'.
-> Javadoc generation failed. Generated Javadoc options file (useful for troubleshooting): '/home/runner/work/Meus--mods-Java/Meus--mods-Java/build/tmp/javadoc/javadoc.options'
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler output below.
+  /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:9: error: cannot find symbol
+  import net.minecraft.client.renderer.tileentity.ClientRegistry;
+                                                 ^
+    symbol:   class ClientRegistry
+    location: package net.minecraft.client.renderer.tileentity
+  14 errors
 
 * Try:
-> Run with --info or --debug option to get more log output.
+> Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to generate a Build Scan (powered by Develocity).
-> Get more help at https://help.gradle.org.
 
+* Exception is:
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava'.
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:121)
+	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
