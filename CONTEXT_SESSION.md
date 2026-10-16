@@ -27,6 +27,16 @@ DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa
 - `integration/` - Engine, config, comandos, push de entidades
 - `client/` - Partículas, áudio, HUD, renderização, GUI
 - `content/` - Blocos, tile entities, receitas
+- `tools/` - Geradores reproduzíveis (texturas e prancha de prévia), Python puro
+
+### Renderização dos instrumentos (client/render/tesr/)
+- `AbstractBlockTESR` - base: matriz, estado de OpenGL, blending, brilho por nível de luz
+- `BoxMesh` - tabela de faces/winding do cubo; **sem** dependência do Minecraft (testável)
+- `AtlasCells` - (coluna, linha) do atlas → UV, com a inversão de `v`
+- `TextureAtlas` - emissão dos quads (immediate mode) com sombreamento por face
+- `TESRWindVane`, `TESRWindsock`, `TESRAnemometer` - modelos
+- `RenderTypes.DYNAMICWINDS_INSTRUMENT` - tipo de render próprio: o bloco não entra na
+  malha do chunk (quem desenha é o TESR) e o `ItemBlock` cai no caminho de icône 2D
 
 ### Modelo de Vento (core/)
 - `CurlNoise.java` - Campo de vento divergência-zero (curl de potencial multi-octave)
@@ -131,12 +141,17 @@ DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa
 
 ## O que Precisa de Implementação/Revisão
 
-### Pendente
-1. **TESRAnemometer.java** - não existe, precisaria renderizar o anemômetro
-2. **Qualidade das texturas** - estão simples (64x64, geradas programaticamente)
-3. **UV mapping refinado** - todas as faces usam mesmo UV; poderia ser melhor
-4. **Modelos JSON para blocos** - existem mas podem não ser usados (TESRs fazem renderização custom)
-5. **Mixin de chuva/neve** - não implementado (mod inicializa sem, mas não modifica precipitation)
+### Resolvido na sessão seguinte (commit `50e0a19`, ver SPEC_TEXTURE_IMPROVEMENT.md)
+1. **TESRAnemometer.java** - implementado (poste, rotor de 3 conchas, mostrador, bandeirola) + `TileEntityAnemometer`
+2. **Qualidade das texturas** - atlas 4x4 de 128x128 com células de 32px, gerados por `tools/gen_textures.py`
+3. **UV mapping refinado** - cada face usa sua célula; `BoxMesh`/`AtlasCells`/`TextureAtlas` + `BoxMeshTest`
+   (a versão anterior tinha 4 das 6 faces com winding invertido e era descartada pelo culling)
+4. **Registro de TESR** - a reflexão usava `Field.get(null)` em campo de instância e falhava sempre;
+   agora usa `ClientRegistry` (API do FML, remapeada no reobf)
+5. **Icône de inventário** - blocos usam tipo de render próprio, então precisam de sprite 2D (`*_item.png`)
+6. **Renderização da manga** - deixou de ser placeholder; anéis com bandas, inflação e queda da ponta
+7. **Modelos JSON para blocos** - mantidos; não são usados no mundo com tipo de render próprio
+8. **Mixin de chuva/neve** - segue não implementado (mod inicializa sem, mas não modifica precipitation)
 
 ### Documentação
 - `README.md` - atualizado com descrição do mod
@@ -145,17 +160,26 @@ DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa
 
 ## Arquivos Relevantes para Editar
 
-### Texturas
-- `src/main/resources/assets/dynamicwinds/textures/blocks/*.png`
+### Texturas (fonte da verdade)
+- `tools/gen_textures.py` - gera todas as texturas; `textures/blocks/*.png` e
+  `textures/particle/*.png` são artefatos deste script
+- `tools/preview_textures.py` - gera `docs/textures_preview.png`
 
 ### TESRs
 - `src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java`
 - `src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java`
-- `src/main/java/com/dynamicwinds/client/render/tesr/TESRAnemometer.java` (criar)
+- `src/main/java/com/dynamicwinds/client/render/tesr/TESRAnemometer.java`
+- `src/main/java/com/dynamicwinds/client/render/tesr/BoxMesh.java` (winding/UV)
+- `src/test/java/com/dynamicwinds/client/render/BoxMeshTest.java` (travas no CI)
 
 ### Modelos/Assets
 - `src/main/resources/assets/dynamicwinds/models/block/*.json`
-- `src/main/resources/assets/dynamicwinds/textures/blocks/*.png`
+- `src/main/resources/assets/dynamicwinds/textures/blocks/*.png` (gerados)
+- `src/main/resources/assets/dynamicwinds/textures/particle/*.png` (gerados)
+
+### Blocos
+- `src/main/java/com/dynamicwinds/content/RenderTypes.java` (tipo de render próprio)
+- `src/main/java/com/dynamicwinds/content/blocks/*.java` (ícones, hitbox, som, aba)
 
 ### Configuração Build
 - `.github/workflows/build.yml`

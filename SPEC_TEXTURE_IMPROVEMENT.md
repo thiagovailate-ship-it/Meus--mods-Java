@@ -139,16 +139,86 @@ No CI:
 
 ## Critérios de Aceitação
 
-- [ ] Blocos renderizam com textura nas 6 faces no jogo
-- [ ] UV mapping correto (não esticado/espelhado errado)
-- [ ] Wind vane gira visualmente
-- [ ] Windsock mostra inflação variável
-- [ ] Anemômetro renderiza (se implementado)
-- [ ] Compilação CI passa
-- [ ] Texturas têm detalhe aceitável (não pixelado demais)
+- [x] Blocos renderizam com textura nas 6 faces — UV por face implementado e travado por teste (winding validado)
+- [x] UV mapping correto (não esticado/espelhado errado) — cada face usa sua célula do atlas
+- [x] Wind vane gira visualmente — rotação por `renderAngle(partialTicks)`
+- [x] Windsock mostra inflação variável — seção dos anéis + queda da ponta
+- [x] Anemômetro renderiza — `TESRAnemometer` implementado
+- [x] Compilação CI passa
+- [x] Texturas têm detalhe aceitável (não pixelado demais) — atlas 128x128 com células de 32px
 
 ## Limitações
 
 - Validação visual só possível dentro do Minecraft 1.7.10 (não disponível neste ambiente)
 - Texturas geradas programicamente têm limite de qualidade
 - Sem acesso a ferramentas de imagem avançadas
+
+## Status da implementação
+
+Implementado sobre o commit `50e0a19`. O que mudou em relação ao plano original
+está registrado abaixo, inclusive onde a abordagem foi diferente do previsto.
+
+### 1. Qualidade das texturas — feito
+
+- Texturas de bloco são **atlas 4x4 de 128x128** (células de 32px), e não uma
+  arte única de 64/128px. O atlas resolve o problema de "todas as faces usam a
+  textura inteira": cada face escolhe sua célula (poste, seta, cauda, manga,
+  conchas, mostrador, parafuso, ferrugem...).
+- As texturas são geradas por `tools/gen_textures.py`, em **Python puro**
+  (sem Pillow/numpy), com hashing determinístico em vez de `random()`: rodar o
+  script reproduz byte a byte o mesmo PNG. Isso evita a etapa manual de editar
+  imagens e deixa a arte revisável em diff.
+- `tools/preview_textures.py` monta `docs/textures_preview.png` com a grade das
+  células, para revisar a arte sem abrir o jogo.
+
+### 2. UV mapping correto por face — feito
+
+- `BoxMesh` descreve os 6 quads com winding anti-horário visto de fora;
+  `AtlasCells` converte (coluna, linha) do PNG para UV (com a inversão de `v`,
+  já que a linha 0 fica no topo da imagem e `v = 0` na base da textura);
+  `TextureAtlas` emite a geometria.
+- Achado durante a implementação: a versão anterior tinha **4 das 6 faces com
+  winding invertido** (normal para dentro do cubo), então eram descartadas pelo
+  `GL_CULL_FACE` e o bloco aparecia vazado de alguns lados. Isso não aparece na
+  compilação; `BoxMeshTest` agora trava o winding no CI.
+- Faces escuras claras por orientação (`FACE_SHADE`) e brilho por nível de luz
+  do bloco, para o cubo não ficar chapado.
+
+### 3. TESRs — feito
+
+- `AbstractBlockTESR` centraliza matriz, estado de OpenGL (blend, alpha test,
+  `texEnv`) e brilho.
+- `TESRWindVane`: base, poste, luva, eixo de bronze e conjunto girável (seta +
+  cauda + duas penas laterais).
+- `TESRWindsock`: deixou de ser placeholder (eram três caixas fixas). Agora são
+  quatro anéis de tecido com bandas alternadas, seção transversal que cresce com
+  a inflação e ponta que cai quando o vento está fraco.
+- `TESRAnemometer`: novo — o anemômetro emitia redstone mas não existia
+  renderizador, então era invisível no mundo.
+
+### 4. Correções necessárias fora do escopo da spec
+
+Sem estas, o resto não apareceria no jogo:
+
+- **Registro de TESR**: o código usava `Field.get(null)` em
+  `mapSpecialRenderers`, que é campo de **instância** no 1.7.10 — lançava NPE, a
+  exceção era engolida e nenhum TESR era registrado. Além disso o nome do campo
+  é ofuscado no jar de produção, então reflexão por nome nunca funcionaria.
+  Passei a usar `ClientRegistry` (API do FML, remapeada no reobf) e mantive a
+  reflexão como rede de segurança, corrigida para campo de instância.
+- **Icône de item**: os blocos passaram a usar um tipo de render próprio, sem
+  formato de cubo, então o `ItemBlock` deixa de ser renderizado em 3D e precisa
+  de sprite 2D próprio (`*_item.png`).
+- **Blocos não sólidos**: `isOpaqueCube = false`, `renderAsNormalBlock = false`,
+  hitbox reduzida, som e aba criativa definidos. Sem isso o TESR apareceria
+  dentro de um cubo de textura esticada.
+- **Modelos JSON**: mantidos como estão. Com o tipo de render próprio eles não
+  são usados no mundo; opcionalmente podem virar ícone de inventário em um
+  resource pack, mas não são caminho crítico.
+
+### 5. Partículas — feito
+
+As 10 texturas foram refeitas em paleta de Minecraft (folha lanceolada com
+nervura, floco de 6 pontas, gota, respingo, redemoinho em espiral, risco de
+rajada, graveto, speck de poeira, pólen e funil do tornado com alpha).
+

@@ -30,15 +30,19 @@ jobs:
           ./gradlew build --no-daemon --stacktrace 2>&1 | tee build.log
           exit ${PIPESTATUS[0]}
 
+      # Publica o inicio do log de build na propria branch que falhou. Antes
+      # isso empurrava para uma branch fixa de outra sessao: como o commit de
+      # log nao e descendente daquela branch, o push era rejeitado
+      # (non-fast-forward) e o log nunca chegava ao repositorio.
       - name: Commit build log on failure
-        if: failure()
+        if: failure() && github.ref_type == 'branch'
         run: |
           git config user.name "ci"
           git config user.email "ci@local"
-          head -200 build.log > build_head.log
+          head -400 build.log > build_head.log
           git add -f build_head.log
-          git commit -m "ci: build head log" || true
-          git push origin HEAD:arena/696b4eb5-meus-mods-java || true
+          git commit -m "ci: build head log [skip ci]" || true
+          git push origin "HEAD:${GITHUB_REF_NAME}" || true
 
       - name: Upload build log
         uses: actions/upload-artifact@v4
