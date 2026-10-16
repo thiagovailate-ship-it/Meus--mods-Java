@@ -24,12 +24,27 @@ public final class TextureAtlas {
 
     private TextureAtlas() {}
 
-    /** Todos os 6 indices de face iguais. */
+    /**
+     * Todos os 6 indices de face iguais.
+     *
+     * @param cell indice da celula do atlas
+     * @return vetor com a mesma celula para as 6 faces
+     */
     public static int[] all(int cell) {
         return new int[] {cell, cell, cell, cell, cell, cell};
     }
 
-    /** Monta o conjunto de UV na ordem esperada por {@link #boxUV}. */
+    /**
+     * Monta o conjunto de UV na ordem esperada por {@link #boxUV}.
+     *
+     * @param cellZPos celula da face +Z (sul)
+     * @param cellZNeg celula da face -Z (norte)
+     * @param cellXPos celula da face +X (leste)
+     * @param cellXNeg celula da face -X (oeste)
+     * @param cellYPos celula da face +Y (topo)
+     * @param cellYNeg celula da face -Y (fundo)
+     * @return vetor na ordem exigida por {@code boxUV}
+     */
     public static int[] faces(int cellZPos, int cellZNeg, int cellXPos, int cellXNeg,
                              int cellYPos, int cellYNeg) {
         return new int[] {cellXPos, cellXNeg, cellYPos, cellYNeg, cellZPos, cellZNeg};
@@ -38,6 +53,20 @@ public final class TextureAtlas {
     /**
      * Desenha um cubo texturizado. A textura precisa estar ligada
      * ({@code GL_TEXTURE_2D}) e o atlas ja vinculado.
+     *
+     * @param x1 limite minimo em X
+     * @param y1 limite minimo em Y
+     * @param z1 limite minimo em Z
+     * @param x2 limite maximo em X
+     * @param y2 limite maximo em Y
+     * @param z2 limite maximo em Z
+     * @param cellXPos celula da face +X
+     * @param cellXNeg celula da face -X
+     * @param cellYPos celula da face +Y
+     * @param cellYNeg celula da face -Y
+     * @param cellZPos celula da face +Z
+     * @param cellZNeg celula da face -Z
+     * @param brightness multiplicador global de brilho (1.0 = sem alteracao)
      */
     public static void boxUV(double x1, double y1, double z1, double x2, double y2, double z2,
                              int cellXPos, int cellXNeg, int cellYPos, int cellYNeg,
@@ -67,13 +96,37 @@ public final class TextureAtlas {
         GL11.glEnd();
     }
 
-    /** Cubo com a mesma celula em todas as faces. */
+    /**
+     * Cubo com a mesma celula em todas as faces.
+     *
+     * @param x1 limite minimo em X
+     * @param y1 limite minimo em Y
+     * @param z1 limite minimo em Z
+     * @param x2 limite maximo em X
+     * @param y2 limite maximo em Y
+     * @param z2 limite maximo em Z
+     * @param cell celula usada nas 6 faces
+     * @param brightness multiplicador global de brilho
+     */
     public static void boxSingle(double x1, double y1, double z1, double x2, double y2, double z2,
                                  int cell, float brightness) {
         boxUV(x1, y1, z1, x2, y2, z2, cell, cell, cell, cell, cell, cell, brightness);
     }
 
-    /** Cubo com celula por familia de face (topo, lateral e fundo). */
+    /**
+     * Cubo com celula por familia de face (topo, laterais e fundo).
+     *
+     * @param x1 limite minimo em X
+     * @param y1 limite minimo em Y
+     * @param z1 limite minimo em Z
+     * @param x2 limite maximo em X
+     * @param y2 limite maximo em Y
+     * @param z2 limite maximo em Z
+     * @param cellSides celula das quatro faces laterais
+     * @param cellTop celula da face de topo
+     * @param cellBottom celula da face de fundo
+     * @param brightness multiplicador global de brilho
+     */
     public static void boxSides(double x1, double y1, double z1, double x2, double y2, double z2,
                                 int cellSides, int cellTop, int cellBottom, float brightness) {
         boxUV(x1, y1, z1, x2, y2, z2,

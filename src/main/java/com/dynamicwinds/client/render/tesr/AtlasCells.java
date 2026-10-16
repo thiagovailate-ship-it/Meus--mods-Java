@@ -22,49 +22,97 @@ public final class AtlasCells {
 
     private AtlasCells() {}
 
-    /** Converte (coluna, linha) no indice de celula usado pelos TESRs. */
+    /**
+     * Converte (coluna, linha) no indice de celula usado pelos TESRs.
+     *
+     * @param col coluna no atlas (0 = esquerda)
+     * @param row linha no atlas (0 = topo da imagem)
+     * @return indice da celula, de 0 a 15
+     */
     public static int index(int col, int row) {
         return row * COLS + col;
     }
 
+    /**
+     * @param cell indice da celula (0..15)
+     * @return coluna correspondente
+     */
     public static int col(int cell) {
         return cell % COLS;
     }
 
+    /**
+     * @param cell indice da celula (0..15)
+     * @return linha correspondente
+     */
     public static int row(int cell) {
         return cell / COLS;
     }
 
+    /**
+     * @param col coluna no atlas
+     * @return coordenada u da borda esquerda da celula
+     */
     public static float u0(int col) {
         return col * U_SIZE;
     }
 
+    /**
+     * @param col coluna no atlas
+     * @return coordenada u da borda direita da celula
+     */
     public static float u1(int col) {
         return (col + 1) * U_SIZE;
     }
 
-    /** v=0 e a base da imagem em OpenGL, ou seja, a ultima linha da celula no PNG. */
+    /**
+     * @param row linha no atlas (0 = topo da imagem)
+     * @return coordenada v da base da celula, ja convertida para OpenGL
+     */
     public static float v0(int row) {
         return 1.0f - (row + 1) * V_SIZE;
     }
 
+    /**
+     * @param row linha no atlas (0 = topo da imagem)
+     * @return coordenada v do topo da celula
+     */
     public static float v1(int row) {
         return 1.0f - row * V_SIZE;
     }
 
+    /**
+     * @param col coluna no atlas
+     * @param sel 0 para a borda esquerda, 1 para a direita
+     * @return coordenada u pedida
+     */
     public static float u(int col, int sel) {
         return sel == 0 ? u0(col) : u1(col);
     }
 
+    /**
+     * @param row linha no atlas
+     * @param sel 0 para a base da celula, 1 para o topo
+     * @return coordenada v pedida
+     */
     public static float v(int row, int sel) {
         return sel == 0 ? v0(row) : v1(row);
     }
 
-    /** UV de um canto da celula, com selecao (u, v) em {0,1}. */
+    /**
+     * @param cell indice da celula (0..15)
+     * @param sel 0 para a borda esquerda, 1 para a direita
+     * @return coordenada u pedida
+     */
     public static float uFor(int cell, int sel) {
         return u(col(cell), sel);
     }
 
+    /**
+     * @param cell indice da celula (0..15)
+     * @param sel 0 para a base da celula, 1 para o topo
+     * @return coordenada v pedida
+     */
     public static float vFor(int cell, int sel) {
         return v(row(cell), sel);
     }

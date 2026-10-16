@@ -71,19 +71,25 @@ class BoxMeshTest {
 
     @Test
     void topoEBaseNaoUsamUVPorAltura() {
-        // nas faces de topo/fundo v deve seguir o eixo Z, e nao a altura
+        // Nas faces de topo/fundo, v deve seguir o eixo Z (e nao a altura).
+        // +Y mapeia v para -Z e -Y para +Z: sao espelhadas de proposito, porque
+        // um cubo olhado por baixo mostra o eixo Z invertido.
         for (int face : new int[] {BoxMesh.FACE_YP, BoxMesh.FACE_YN}) {
-            boolean sawBoth = false;
-            int[] seen = {-1, -1};
+            float expectedY = face == BoxMesh.FACE_YP ? 1f : 0f;
+            float vAtZ1 = face == BoxMesh.FACE_YP ? 0f : 1f;
+            boolean[] seen = new boolean[2];
             for (int v = 0; v < BoxMesh.VERTS_PER_FACE; v++) {
                 int[] entry = BoxMesh.FACES[face][v];
                 float[] corner = BoxMesh.CORNER[entry[0]];
-                assertEquals(0f, corner[1],
+                assertEquals(expectedY, corner[1], 1.0E-6f,
                         "face " + face + " deveria ser plana em Y");
-                seen[entry[2]] = 1;
+                float expectedV = corner[2] == 1f ? vAtZ1 : 1f - vAtZ1;
+                assertEquals(expectedV, (float) entry[2], 1.0E-6f,
+                        "face " + face + ": v deveria seguir Z, nao a altura");
+                seen[entry[2]] = true;
             }
-            sawBoth = seen[0] == 1 && seen[1] == 1;
-            assertTrue(sawBoth, "face " + face + " deveria varrer os dois valores de v");
+            assertTrue(seen[0] && seen[1],
+                    "face " + face + " deveria varrer os dois valores de v");
         }
     }
 

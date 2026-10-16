@@ -24,10 +24,21 @@ public abstract class AbstractBlockTESR extends TileEntitySpecialRenderer {
     /** @return textura do atlas do bloco renderizado por esta subclasse */
     protected abstract ResourceLocation modelTexture();
 
-    /** Desenha o modelo em coordenadas locais do bloco (0..1). */
+    /**
+     * Desenha o modelo em coordenadas locais do bloco (0..1).
+     *
+     * @param tileEntity   tile entity do instrumento (a subclasse faz o cast)
+     * @param partialTicks fracao do tick atual, para interpolar o movimento
+     */
     protected abstract void renderModel(TileEntity tileEntity, float partialTicks);
 
-    /** @return deslocamento vertical extra aplicado ao modelo */
+    /**
+     * Deslocamento vertical extra aplicado ao modelo inteiro.
+     *
+     * @param tileEntity   tile entity do instrumento
+     * @param partialTicks fracao do tick atual
+     * @return deslocamento em blocos (0 = nenhum)
+     */
     protected float bobOffset(TileEntity tileEntity, float partialTicks) {
         return 0.0f;
     }
@@ -67,6 +78,10 @@ public abstract class AbstractBlockTESR extends TileEntitySpecialRenderer {
     /**
      * Brilho do bloco (0.35..1.0) a partir do nivel de luz combinado.
      * Sem isso os instrumentos ficam com brilho de ceu aberto dentro de cavernas.
+     *
+     * @param tileEntity tile entity do instrumento (pode ser null)
+     * @param dy         deslocamento em Y usado para escolher o bloco de luz
+     * @return fator de brilho entre 0.35 e 1.0
      */
     protected static float brightnessAt(TileEntity tileEntity, int dy) {
         if (tileEntity == null) {
