@@ -158,7 +158,7 @@ public final class StormRenderer {
         // o relevo sob o anel, e nao so sob o centro: uma tempestade sobre um
         // morro enterraria parte da parede
         double terrainRadius = narrow ? rmax * 2.0 : rmax * 1.45;
-        double groundY = terrainTop(mc, storm, cx, cz, terrainRadius, time);
+        double groundY = terrainTop(mc, s, cx, cz, terrainRadius, time);
         double top = StormKind.columnTop(s.kind);
         double deckY = Math.min(groundY + top * DECK_FRACTION, SKY_LIMIT);
         double baseY = narrow ? groundY - 1.0 : groundY + 2.0;
