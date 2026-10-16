@@ -34,8 +34,9 @@ public final class ItemBarometer extends Item {
         if (player.isSneaking()) {
             unit = (unit + 1) % 3;
             nbt.setByte(UNIT_TAG, (byte) unit);
-            player.addChatMessage(new ChatComponentText("Barometer unit: "
-                    + (unit == 0 ? "m/s" : unit == 1 ? "km/h" : "hPa")));
+            player.addChatMessage(new ChatComponentText(com.dynamicwinds.integration.StormLanguage.text(
+                    unit == 0 ? "barometer.unit.ms" : unit == 1
+                            ? "barometer.unit.kmh" : "barometer.unit.hpa")));
             return stack;
         }
 
@@ -48,15 +49,15 @@ public final class ItemBarometer extends Item {
                 : field.sampleDeficitHpa(Math.max(0L, time - 200L), x, z);
         double trend = deficit - oldDeficit;
         if (unit == 2) {
-            player.addChatMessage(new ChatComponentText(String.format(
-                    "Barometer: pressure deficit %.2f hPa (%+.2f hPa / 10 s; %s)",
-                    deficit, trend, trend > 0.02 ? "pressure falling" : trend < -0.02
-                            ? "pressure rising" : "steady")));
+            String trendKey = trend > 0.02 ? "barometer.falling"
+                    : trend < -0.02 ? "barometer.rising" : "barometer.steady";
+            player.addChatMessage(new ChatComponentText(com.dynamicwinds.integration.StormLanguage.text(
+                    "barometer.pressure", deficit, trend,
+                    com.dynamicwinds.integration.StormLanguage.text(trendKey))));
         } else {
             double speed = unit == 1 ? sample.speed * 3.6 : sample.speed;
-            player.addChatMessage(new ChatComponentText(String.format(
-                    "Barometer: wind %.1f %s · pressure deficit %.2f hPa (%+.2f / 10 s)",
-                    speed, unit == 1 ? "km/h" : "m/s", deficit, trend)));
+            player.addChatMessage(new ChatComponentText(com.dynamicwinds.integration.StormLanguage.text(
+                    "barometer.wind", speed, unit == 1 ? "km/h" : "m/s", deficit, trend)));
         }
         return stack;
     }

@@ -37,6 +37,7 @@ public class ClientEvents {
 
     public static void register() {
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new ClientEvents());
+        cpw.mods.fml.common.FMLCommonHandler.instance().bus().register(new ClientNetworkLifecycle());
         // nevoa, nuvens e sprites das particulas proprias
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new StormFogHandler());
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new ParticleIcons());
@@ -95,6 +96,15 @@ public class ClientEvents {
         }
     }
 
+    private static final class ClientNetworkLifecycle {
+        @SubscribeEvent
+        public void onDisconnect(cpw.mods.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+            com.dynamicwinds.api.Wind.clearSyncedWorldState();
+            com.dynamicwinds.integration.network.PacketWorldSync.reset();
+            com.dynamicwinds.integration.network.StormNetwork.reset();
+        }
+    }
+
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent e) {
         if (e.phase == TickEvent.Phase.END) {
@@ -110,6 +120,7 @@ public class ClientEvents {
                     net.minecraft.client.Minecraft.getMinecraft().theWorld);
             com.dynamicwinds.integration.network.StormNetwork.drainClient(
                     net.minecraft.client.Minecraft.getMinecraft().theWorld);
+            com.dynamicwinds.client.particles.ParticleBudget.beginTick();
             // o estado do sistema dominante e recalculado uma vez por tick; o
             // render, a nevoa e o audio consomem este mesmo resultado
             StormClientState.tick();

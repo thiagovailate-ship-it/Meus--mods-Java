@@ -84,6 +84,15 @@ public final class StormRenderer {
     private StormRenderer() {}
 
     public static void render(float partialTicks) {
+        long started = System.nanoTime();
+        try {
+            renderFrame(partialTicks);
+        } finally {
+            com.dynamicwinds.integration.PerfTracker.recordClientFrame(System.nanoTime() - started);
+        }
+    }
+
+    private static void renderFrame(float partialTicks) {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.theWorld == null || mc.thePlayer == null) return;
         if (!WindConfig.stormRenderSky) return;

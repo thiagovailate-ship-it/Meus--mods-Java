@@ -4,7 +4,10 @@ Mod de vento dinâmico para Minecraft Java Edition 1.7.10 (Forge).
 
 ## O que o mod implementa
 
-- **Campo de vento determinístico**: `Wind.getWindAt(world, x, y, z)` retorna `WindSample` (vetor, velocidade, rajada) calculado a partir da seed do mundo, tempo e posição. A intenção é que cliente e servidor calculem o mesmo resultado sem pacotes de sincronização — e isso **ainda não é verdade no cliente**: o 1.7.10 não manda a seed no login (o `WorldClient` é criado com `WorldSettings(0L, ...)`), então o cliente monta o modelo com semente 0 enquanto o servidor usa a seed real. As tempestades em si já chegam por pacote; o que diverge é o vento de fundo do lado do cliente (HUD, partículas, ângulo dos instrumentos). A correção está especificada em `SPEC_PROXIMA_FASE.md` (entrega D1).
+- **Campo de vento determinístico**: `Wind.getWindAt(world, x, y, z)` retorna vetor, velocidade e rajada; o servidor envia seed/configuração de física ao cliente. Determinismo é mecanismo da simulação, não substituto de sincronização.
+- **Autoridade e persistência**: o cliente não gera tempestades naturais; recebe snapshots por dimensão. Parâmetros de nascimento dos sistemas vivos são guardados em `WorldSavedData`.
+- **Barômetro e alerta**: item portátil mostra déficit/tendência; HUD avisa quando uma tempestade se aproxima.
+- Manual: [`MANUAL.md`](MANUAL.md); opções: [`docs/CONFIG.md`](docs/CONFIG.md); roteiro visual: [`docs/PLAYTEST.md`](docs/PLAYTEST.md); relatório: [`RELATORIO_ENTREGA.md`](RELATORIO_ENTREGA.md).
 - **Modelo físico**: curl de ruído (divergência ~0), perfil logarítmico vertical, direção de pressão rotativa, ciclo diurno (pico ao meio-dia), fator de rajada (Ornstein-Uhlenbeck com ruído reutilizado), contribuição de tornado.
 - **Tempestades severas**: quatro tipos — vórtice (tornado/tromba d'água), tempestade tropical, furacão e furacão maior — com ciclo de vida completo (gênese, intensificação, maturidade com ciclo de substituição da parede do olho, dissipação) e trajetória em arco.
 - **Clima**: intensidade de tempestade derivada do estado do mundo (`isRaining`, `isThundering`, `rainingStrength`). As tempestades severas *comandam* o clima: chuva, trovoada e relâmpagos passam a ser consequência do sistema, e o mod para de forçar quando nenhum sistema alcança ninguém.
@@ -14,8 +17,8 @@ Mod de vento dinâmico para Minecraft Java Edition 1.7.10 (Forge).
 - **Instrumentos**: wind vane (orientação), windsock (inflação), anemometer (saída redstone 0..15 e rotor visual). Os três blocos são desenhados por TESR, com atlas próprio por face.
 - **Cajado da Catástrofe**: item que invoca um sistema pronto, que depois vive sozinho sob a física. Agachado + clique direito troca o tipo (a escolha fica no NBT do item, então dois cajados podem ter tipos diferentes).
 - **Destruição**: dano pesado derivado do campo de vento, não de uma tabela de raio (ver a seção "Física das tempestades").
-- **Configuração**: `WindConfig` com `enableParticles`, `enablePush`, `enableAudio`, `baseSpeedMultiplier`, `debugHud`, `tornadoParticleRate`, `tornadoDebrisRate`, `tornadoMaxViewDistance`, o grupo `storms` (`enableStorms`, `stormSpawnChance`, `northernHemisphere`, `stormForceWeather`, `stormLightning`, `stormMaxViewDistance`, `stormRainRate`) e o grupo `destruction` (`enableDestruction`, `destructionBlocksPerTick`, `destructionRadiusScale`, `destructionDropItems`, `destructionProtectSpawn`). Todas carregadas do arquivo de configuração e conectadas ao comportamento.
-- **Comandos**: `/wind get|profile|debug|storm` — e `storm` aceita `list`, `spawn <vortice|tropical|furacao|maior> [distância] [intensidade]` (operador) e `clear`.
+- **Configuração**: vento, VFX, dimensões permitidas, teto de destruição, modo de aviso e lista de blocos protegidos; opções e limites em [`docs/CONFIG.md`](docs/CONFIG.md).
+- **Comandos**: `/wind get|profile|debug|storm|field|dump|perf|protect|destruction`; sintaxe completa em [`MANUAL.md`](MANUAL.md).
 - **HUD de depuração**: mostra vetor, velocidade e rajada, mais categoria, déficit de pressão, vento de pico, distância ao centro e densidade da névoa quando `debugHud` está ativo.
 
 ## Física das tempestades
@@ -268,15 +271,11 @@ mundo.
 - Os modelos JSON dos blocos existem, mas não são usados no mundo: com o tipo de render
   próprio quem desenha o bloco é o TESR.
 
-## Próxima fase
+## Estado da validação de release
 
-A fase seguinte está especificada em `SPEC_PROXIMA_FASE.md`: consistência entre cliente e
-servidor (D1, o item acima), espaço de ids e persistência das tempestades, lista completa ao
-entrar e escopo por dimensão, validação em jogo com roteiro e comparador de campo, proteção de
-destruição, aviso ao jogador com barômetro, configuração comentada e validada, orçamento de
-desempenho medido e documentação de release (1.3.0).
+A fase 1.3.0 está em andamento. Build/CI e verificações Python passaram em um estado intermediário; o playtest real de Minecraft/Forge e suas capturas ainda estão pendentes. Não considere os critérios de release marcados como aprovados até preencher `docs/PLAYTEST.md` e confirmar o CI final.
 
 ## Repositório
 
-- Branch de desenvolvimento: `arena/696b4eb5-meus-mods-java`
+- Branch de desenvolvimento desta sessão: `arena/3ea9d885-meus-mods-java`
 - CI: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions

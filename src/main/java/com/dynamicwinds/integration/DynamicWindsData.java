@@ -67,6 +67,12 @@ public final class DynamicWindsData extends WorldSavedData {
         tag.setTag(SYSTEMS_KEY, list);
     }
 
+    public static void captureWorld(World world, StormField field) {
+        if (world != null && !world.isRemote && field != null) {
+            forWorld(world).capture(world, field);
+        }
+    }
+
     /** Restore a save snapshot into the server's field, deduplicating natural IDs. */
     public void restore(StormField field) {
         for (StormSystem system : systems) field.addDynamic(system);
@@ -77,7 +83,8 @@ public final class DynamicWindsData extends WorldSavedData {
         systems.clear();
         long time = world.getTotalWorldTime();
         for (StormSystem system : field.activeAt(time, Wind.surfaceEnergyFor(world))) {
-            systems.add(system);
+            // Natural systems are reproducible from seed/time; persist only dynamic ones.
+            if (system.playerSpawned) systems.add(system);
         }
         markDirty();
     }

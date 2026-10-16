@@ -156,4 +156,15 @@ O mod DynamicWinds para Minecraft 1.7.10 foi auditado, corrigido e evoluído par
 
 ---
 
-Relatório gerado após correções incrementais e validação via GitHub Actions. O projeto está em estado de compilação limpa, testes passando e pronto para validação no jogo.
+Relatório histórico: os resultados acima descrevem a fase anterior e não representam o workspace atual.
+
+## 9. Fase 1.3.0 em andamento — 2026-10-16
+
+- Branch fixa desta sessão: `arena/3ea9d885-meus-mods-java`.
+- O CI `38888710290` passou para o commit `97ea6ed`, mas não inclui as alterações posteriores atualmente no workspace.
+- Esta rodada acrescenta teste de persistência NBT, checker CSV fechado, documentação de release, contador/perfil de desempenho, limite de partículas configurável, ciclo de vida de rede no disconnect e validação de propriedades numéricas. O workspace contém 59 métodos `@Test`; ainda aguardam execução.
+- Os checks locais Python (`check_mirror.py`, `check_seams.py`, `py_compile`) e `git diff --check` passaram nesta rodada.
+- `./gradlew build` não pôde ser executado localmente: o ambiente não tem `java` nem `JAVA_HOME`. O novo CI deverá validar compilação/testes.
+- **Playtest real ainda pendente:** Minecraft 1.7.10/Forge, nove cenários, capturas e veredictos requerem execução no cliente e não foram realizados neste ambiente. Ver `docs/PLAYTEST.md`.
+- Portanto, não declarar a release 1.3.0 concluída até CI verde do estado atual e evidências do playtest anexadas.
+

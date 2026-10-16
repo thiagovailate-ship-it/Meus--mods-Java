@@ -75,6 +75,8 @@ public class WindCommand extends CommandBase {
             doField(p, args);
         } else if ("dump".equals(sub)) {
             doDump(p, args);
+        } else if ("perf".equals(sub)) {
+            doPerf(p);
         } else {
             p.addChatMessage(new ChatComponentText(getCommandUsage(sender)));
         }
@@ -158,6 +160,7 @@ public class WindCommand extends CommandBase {
                 return;
             }
             StormSystem s = field.spawnAtProgress(kind, time, x, z, yaw, mul, progress);
+com.dynamicwinds.integration.DynamicWindsData.captureWorld(world, field);
             StormNetwork.broadcastSpawn(s, world.provider.dimensionId);
             p.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "Sistema #" + s.id
                     + " (" + StormKind.name(kind) + ") formado em "
@@ -171,6 +174,7 @@ public class WindCommand extends CommandBase {
             if (!senderHasPermission(p)) return;
             int removed = field.dynamicCount();
             field.clearDynamic();
+            if (removed > 0) com.dynamicwinds.integration.DynamicWindsData.markWorldDirty(world);
             StormNetwork.broadcastClear(world.provider.dimensionId);
             p.addChatMessage(new ChatComponentText("Sistemas invocados removidos: " + removed + "."));
             return;
@@ -233,7 +237,7 @@ public class WindCommand extends CommandBase {
         File file = new File(world.getSaveHandler().getWorldDirectory(), "dynamicwinds-dump.csv");
         try {
             PrintWriter out = new PrintWriter(new FileWriter(file));
-            out.println("x,z,y,v_total,v_tangential,v_radial,wind_vertical,deficit_hpa");
+            out.println("world_time,x,z,y,v_total,v_tangential,v_radial,wind_vertical,deficit_hpa,storm_speed,storm_kind,storm_id,spawn_tick,spawn_x,spawn_z,heading,turn_rate,north,intensity_mul,surface_y,energy");
             long time = world.getTotalWorldTime();
             int centerX = (int) Math.floor(player.posX), centerZ = (int) Math.floor(player.posZ);
             StormField field = Wind.stormsFor(world);
@@ -244,10 +248,15 @@ public class WindCommand extends CommandBase {
                     WindSample sample = Wind.getWindAt(world, x + 0.5, y, z + 0.5);
                     StormSystem storm = field == null ? null : field.strongestAt(time, x + 0.5, z + 0.5);
                     double tan = 0.0, radial = 0.0, vertical = 0.0, deficit = 0.0;
+                    double stormSpeed = 0.0, spawnX = 0.0, spawnZ = 0.0, heading = 0.0;
+                    double turnRate = 0.0, intensity = 0.0, energyAtCenter = 0.0;
+                    long stormId = 0L, spawnTick = 0L;
+                    int kind = -1, surface = Wind.surfaceHeightAt(world, x, z);
+                    boolean north = true;
                     if (storm != null) {
-                        int surface = Wind.surfaceHeightAt(world, x, z);
-                        double e = energy.energyAt(storm.centerX(time), storm.centerZ(time));
-                        com.dynamicwinds.core.Vec3 v = storm.wind(time, x + 0.5, y, z + 0.5, surface, e);
+                        energyAtCenter = energy.energyAt(storm.centerX(time), storm.centerZ(time));
+                        com.dynamicwinds.core.Vec3 v = storm.wind(time, x + 0.5, y, z + 0.5,
+                                surface, energyAtCenter);
                         double dx = x + 0.5 - storm.centerX(time), dz = z + 0.5 - storm.centerZ(time);
                         double length = Math.sqrt(dx * dx + dz * dz);
                         double ux = length == 0.0 ? 1.0 : dx / length;
@@ -255,10 +264,23 @@ public class WindCommand extends CommandBase {
                         radial = v.x * ux + v.z * uz;
                         tan = -v.x * uz + v.z * ux;
                         vertical = v.y;
+                        stormSpeed = v.length();
                         deficit = storm.deficitHpa(time, x + 0.5, z + 0.5);
+                        kind = storm.kind;
+                        stormId = storm.id;
+                        spawnTick = storm.spawnTick;
+                        spawnX = storm.spawnX;
+                        spawnZ = storm.spawnZ;
+                        heading = storm.heading0;
+                        turnRate = storm.turnRate;
+                        north = storm.north;
+                        intensity = storm.intensityMul;
                     }
-                    out.println((x + 0.5) + "," + (z + 0.5) + "," + y + "," + sample.speed
-                            + "," + tan + "," + radial + "," + vertical + "," + deficit);
+                    out.println(time + "," + (x + 0.5) + "," + (z + 0.5) + "," + y + "," + sample.speed
+                            + "," + tan + "," + radial + "," + vertical + "," + deficit
+                            + "," + stormSpeed + "," + kind + "," + stormId + "," + spawnTick
+                            + "," + spawnX + "," + spawnZ + "," + heading + "," + turnRate
+                            + "," + north + "," + intensity + "," + surface + "," + energyAtCenter);
                 }
             }
             out.close();
@@ -270,6 +292,19 @@ public class WindCommand extends CommandBase {
 
     private static int parseInteger(String text, int fallback) {
         try { return Integer.parseInt(text); } catch (NumberFormatException ex) { return fallback; }
+    }
+
+    private void doPerf(EntityPlayer player) {
+        if (!senderHasPermission(player)) return;
+        World world = player.worldObj;
+        StormField field = Wind.stormsFor(world);
+        int active = field == null ? 0 : field.activeAt(world.getTotalWorldTime()).size();
+        player.addChatMessage(new ChatComponentText("[perf] "
+                + com.dynamicwinds.integration.PerfTracker.summary()));
+        player.addChatMessage(new ChatComponentText("[perf] dimension="
+                + world.provider.dimensionId + " activeStorms=" + active + "; "
+                + com.dynamicwinds.integration.DestructionHandler.statsSummary(
+                        world.provider.dimensionId, world.getTotalWorldTime())));
     }
 
     private void doDestruction(EntityPlayer player, String[] args) {
@@ -359,7 +394,7 @@ public class WindCommand extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, new String[]{"get", "profile", "debug", "storm", "protect", "destruction", "field", "dump"});
+            return getListOfStringsMatchingLastWord(args, new String[]{"get", "profile", "debug", "storm", "protect", "destruction", "field", "dump", "perf"});
         }
         if (args.length == 2 && "storm".equals(args[0])) {
             return getListOfStringsMatchingLastWord(args, new String[]{"list", "spawn", "clear"});

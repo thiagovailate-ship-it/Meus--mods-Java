@@ -40,7 +40,7 @@ public final class WindVFX {
             else if (r < 0.85) fx = new DustParticle(w, x, y, z);
             else if (r < 0.95) fx = new SwirlParticle(w, x, y, z);
             else fx = new GustParticle(w, x, y, z);
-            Minecraft.getMinecraft().effectRenderer.addEffect(fx);
+            ParticleBudget.submit(Minecraft.getMinecraft(), fx, 0);
         }
     }
 }

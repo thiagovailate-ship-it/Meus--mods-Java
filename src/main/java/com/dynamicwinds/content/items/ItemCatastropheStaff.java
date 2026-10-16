@@ -101,6 +101,7 @@ public class ItemCatastropheStaff extends Item {
         StormField field = Wind.stormsFor(world);
         if (field == null) return stack;
         StormSystem s = field.spawn(kind, now, x, z, yaw, INTENSITY);
+        com.dynamicwinds.integration.DynamicWindsData.captureWorld(world, field);
         StormNetwork.broadcastSpawn(s, world.provider.dimensionId);
         tag.setLong(TAG_LAST, now);
 

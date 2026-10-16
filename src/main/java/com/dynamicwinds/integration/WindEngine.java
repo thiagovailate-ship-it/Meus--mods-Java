@@ -48,6 +48,15 @@ public final class WindEngine {
 
     public void tick(World world) {
         if (world.isRemote) return;
+        long started = System.nanoTime();
+        try {
+            tickServer(world);
+        } finally {
+            PerfTracker.recordServerTick(System.nanoTime() - started);
+        }
+    }
+
+    private void tickServer(World world) {
         tickCounter++;
         StormField stormField = Wind.stormsFor(world);
         if (restoredWorlds.add(world)) {

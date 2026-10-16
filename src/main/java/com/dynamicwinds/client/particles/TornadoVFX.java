@@ -103,7 +103,7 @@ public final class TornadoVFX {
             double z = cz + Math.sin(angle) * radius;
             double y = groundY + RND.nextDouble() * height;
             TornadoParticle p = new TornadoParticle(mc.theWorld, x, y, z, radius, angle);
-            mc.effectRenderer.addEffect(p);
+            ParticleBudget.submit(mc, p, 1);
         }
 
         if (RND.nextDouble() < 0.15 * WindConfig.tornadoDebrisRate() * intensity) {
@@ -112,7 +112,7 @@ public final class TornadoVFX {
             double x = cx + Math.cos(angle) * radius;
             double z = cz + Math.sin(angle) * radius;
             double y = groundY + RND.nextDouble() * 10.0;
-            mc.effectRenderer.addEffect(new DebrisParticle(mc.theWorld, x, y, z));
+            ParticleBudget.submit(mc, new DebrisParticle(mc.theWorld, x, y, z), 1);
         }
 
         // respingo na parede do olho, perto o bastante para ser visto
@@ -127,8 +127,8 @@ public final class TornadoVFX {
                 double z = cz + Math.sin(angle) * radius;
                 if (Math.hypot(x - player.posX, z - player.posZ) > SPRAY_RADIUS) continue;
                 int ground = mc.theWorld.getHeightValue((int) Math.floor(x), (int) Math.floor(z));
-                mc.effectRenderer.addEffect(
-                        new SprayParticle(mc.theWorld, x, ground + 0.4, z));
+                ParticleBudget.submit(mc,
+                        new SprayParticle(mc.theWorld, x, ground + 0.4, z), 2);
             }
         }
     }
@@ -171,8 +171,8 @@ public final class TornadoVFX {
             double y = player.posY + 8.0 + RND.nextDouble() * 14.0;
             double z = player.posZ + Math.sin(angle) * radius;
             WindSample s = Wind.getWindAt(mc.theWorld, x, y, z);
-            mc.effectRenderer.addEffect(new RainStreakParticle(mc.theWorld, x, y, z,
-                    s.vector.x, s.vector.y, s.vector.z));
+            ParticleBudget.submit(mc, new RainStreakParticle(mc.theWorld, x, y, z,
+                    s.vector.x, s.vector.y, s.vector.z), 3);
         }
     }
 }

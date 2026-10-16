@@ -47,6 +47,8 @@ public final class HeightmapCache {
         if (h == null) {
             h = computeHeight(Wind.cellCenter(cx), Wind.cellCenter(cz));
             heights.put(k, h);
+        } else {
+            PerfTracker.recordHeightHit();
         }
         return h;
     }
@@ -65,6 +67,7 @@ public final class HeightmapCache {
     }
 
     private int computeHeight(int x, int z) {
+        PerfTracker.recordHeightMiss();
         // nao forca carregamento de chunk: getHeightValue e a altura pelo mapa
         // de alturas do chunk, nao uma varredura de blocos
         return world.getHeightValue(x, z);

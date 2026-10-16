@@ -31,6 +31,7 @@ public final class WindConfig {
     public static double stormMaxViewDistance = 420.0;
     /** Chuva inclinada pelo vento, em particulas por tick. */
     public static int stormRainRate = 16;
+    public static int maxParticles = 400;
     public static int[] stormsInDimensions = new int[]{0};
 
     // destruicao causada por tempestades
@@ -113,6 +114,8 @@ public final class WindConfig {
         destructionProtectedDimensions = parseDimensions(cfg.getStringList(
                 "destructionProtectedDimensions", "destruction", new String[0],
                 "Dimension IDs where destruction is completely disabled."));
+        maxParticles = boundedInt("perf.maxParticles", cfg.get("perf", "maxParticles", 400,
+                "Maximum DynamicWinds particles accepted per client tick"), 50, 5000, 400);
         sanitize();
         cfg.save();
     }
@@ -140,6 +143,8 @@ public final class WindConfig {
                 cfg.get("destruction", "destructionRadiusScale", 1.0), 0.1, 3.0, 1.0);
         destructionMaxPerStorm = boundedInt("destruction.destructionMaxPerStorm",
                 cfg.get("destruction", "destructionMaxPerStorm", 60), 0, 10000, 60);
+        maxParticles = boundedInt("perf.maxParticles", cfg.get("perf", "maxParticles", 400),
+                50, 5000, 400);
     }
 
     public static void saveAndReload() {

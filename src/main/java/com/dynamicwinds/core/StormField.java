@@ -277,8 +277,12 @@ public final class StormField {
                                        double progress) {
         double bounded = Math.max(0.0, Math.min(0.999, progress));
         long birth = time - Math.round(bounded * StormKind.durationTicks(kind));
+        long age = time - birth;
+        double speed = StormKind.translationSpeed(kind);
+        double birthX = x - speed * age * Math.cos(headingRad);
+        double birthZ = z - speed * age * Math.sin(headingRad);
         StormSystem system = new StormSystem(kind, nextDynamicId.getAndDecrement(), birth,
-                x, z, headingRad, 0.0, north, intensityMul, true);
+                birthX, birthZ, headingRad, 0.0, north, intensityMul, true);
         dynamic.add(system);
         return system;
     }

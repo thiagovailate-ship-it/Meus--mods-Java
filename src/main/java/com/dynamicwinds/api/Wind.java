@@ -132,6 +132,7 @@ public final class Wind {
     }
 
     public static WindSample getWindAt(World world, double x, double y, double z) {
+        com.dynamicwinds.integration.PerfTracker.recordWindSample();
         long seed = seedFor(world);
         WindModel model = modelFor(world);
         int sx = (int) Math.floor(x);
@@ -170,6 +171,11 @@ public final class Wind {
     }
 
     public static void invalidateModels() {
+        MODELS.clear();
+    }
+
+    public static void clearSyncedWorldState() {
+        SYNCED_SEEDS.clear();
         MODELS.clear();
     }
 
