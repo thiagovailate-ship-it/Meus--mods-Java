@@ -13,21 +13,39 @@ public class TileEntityWindsock extends TileEntity {
     /** Deslocamento vertical da ponta, para a manga "pescar" no vento fraco. */
     public float droop = 0f;
     public float prevDroop = 0f;
+    /** Falso ate o primeiro tick depois de carregar o chunk. */
+    private boolean initialized;
 
     @Override
     public void updateEntity() {
         if (worldObj == null) return;
         com.dynamicwinds.core.WindSample s = Wind.getWindAt(worldObj, xCoord + 0.5, yCoord + 1.0, zCoord + 0.5);
 
+        float target = (float) Math.min(1.0, s.speed / 8.0);
+        float newYaw = (float) Math.atan2(s.vector.x, s.vector.z);
+        if (!initialized) {
+            // Primeiro tick depois de carregar o chunk: a manga ja aparece
+            // estufada na medida do vento. Antes ela recomecava de zero e
+            // desinflava/inflava visivelmente a cada carregamento, porque a
+            // inflacao e um valor suavizado, nao um valor derivado na hora.
+            initialized = true;
+            inflation = target;
+            prevInflation = target;
+            yaw = newYaw;
+            prevYaw = newYaw;
+            droop = 0.22f * (1.0f - inflation);
+            prevDroop = droop;
+            return;
+        }
+
         prevInflation = inflation;
         prevYaw = yaw;
         prevDroop = droop;
 
-        float target = (float) Math.min(1.0, s.speed / 8.0);
         inflation += (target - inflation) * 0.12f;
 
         float previousYaw = yaw;
-        yaw = (float) Math.atan2(s.vector.x, s.vector.z);
+        yaw = newYaw;
 
         // giro brusco = escoamento desprendendo e voltando a grudar no tecido
         if (worldObj.isRemote) {

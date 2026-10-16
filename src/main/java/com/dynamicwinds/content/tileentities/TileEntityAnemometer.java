@@ -22,6 +22,9 @@ public class TileEntityAnemometer extends TileEntity {
     /** Suavizacao da velocidade (o vento instantaneo e muito ruidoso para o rotor). */
     public float smoothedSpeed = 0f;
 
+    /** Falso ate o primeiro tick depois de carregar o chunk. */
+    private boolean initialized;
+
     @Override
     public void updateEntity() {
         if (worldObj == null) {
@@ -35,6 +38,18 @@ public class TileEntityAnemometer extends TileEntity {
 
         WindSample sample = Wind.getWindAt(worldObj, xCoord + 0.5, yCoord + 0.5, zCoord + 0.5);
         float speed = (float) sample.speed;
+        if (!initialized) {
+            // Primeiro tick depois de carregar o chunk: comeca com a velocidade
+            // ja suavizada (sem acelerar de zero) e sem passar pelo teste de
+            // volta completa, que dispararia um clique de rotor falso.
+            initialized = true;
+            smoothedSpeed = speed;
+            rotation = 0f;
+            prevRotation = 0f;
+            direction = (float) Math.toDegrees(Math.atan2(sample.vector.z, sample.vector.x));
+            prevDirection = direction;
+            return;
+        }
         smoothedSpeed += (speed - smoothedSpeed) * 0.15f;
 
         // ~28 graus por (unidade de vento * tick): gira visivelmente a partir de
