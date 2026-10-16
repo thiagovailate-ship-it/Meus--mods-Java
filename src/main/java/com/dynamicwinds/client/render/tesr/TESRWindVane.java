@@ -39,7 +39,4 @@ public class TESRWindVane extends TileEntitySpecialRenderer {
         GL11.glVertex3f(x1, y2, z2);
         GL11.glEnd();
     }
-    
-    @Override
-    public boolean isGlobalRenderer() { return false; }
 }
