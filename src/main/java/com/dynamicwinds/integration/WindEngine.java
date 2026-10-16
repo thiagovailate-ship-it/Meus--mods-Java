@@ -3,7 +3,6 @@ package com.dynamicwinds.integration;
 import com.dynamicwinds.api.Wind;
 import com.dynamicwinds.core.WindSample;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
 
 import java.util.HashMap;
 import java.util.Map;

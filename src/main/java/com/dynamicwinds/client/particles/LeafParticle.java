@@ -3,8 +3,6 @@ package com.dynamicwinds.client.particles;
 import com.dynamicwinds.api.Wind;
 import com.dynamicwinds.core.WindSample;
 import net.minecraft.client.particle.EntityFX;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class LeafParticle extends EntityFX {

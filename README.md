@@ -6,15 +6,66 @@ Mod de vento dinâmico para Minecraft Java Edition 1.7.10 (Forge).
 
 - **Campo de vento determinístico**: `Wind.getWindAt(world, x, y, z)` retorna `WindSample` (vetor, velocidade, rajada) calculado a partir da seed do mundo, tempo e posição. Cliente e servidor calculam o mesmo resultado — sem pacotes de sincronização.
 - **Modelo físico**: curl de ruído (divergência ~0), perfil logarítmico vertical, direção de pressão rotativa, ciclo diurno (pico ao meio-dia), fator de rajada (Ornstein-Uhlenbeck com ruído reutilizado), contribuição de tornado.
-- **Clima**: intensidade de tempestade derivada do estado do mundo (`isRaining`, `isThundering`, `rainingStrength`). Tempestades aumentam a velocidade do vento.
-- **Tornados**: ciclo de vida completo (formação, maturidade, dissolução), distribuição espacial pela seed, vortex de Rankine com updraft e inflow radial. `TornadoVFX` emite partículas com emissão limitada por distância e taxa configurável.
+- **Tempestades severas**: quatro tipos — vórtice (tornado/tromba d'água), tempestade tropical, furacão e furacão maior — com ciclo de vida completo (gênese, intensificação, maturidade com ciclo de substituição da parede do olho, dissipação) e trajetória em arco.
+- **Clima**: intensidade de tempestade derivada do estado do mundo (`isRaining`, `isThundering`, `rainingStrength`). As tempestades severas *comandam* o clima: chuva, trovoada e relâmpagos passam a ser consequência do sistema, e o mod para de forçar quando nenhum sistema alcança ninguém.
 - **Partículas visuais**: folhas, pólen, poeira, redemoinhos, rajadas e detritos, espawados ao redor do jogador conforme velocidade local.
 - **Áudio**: som ambiente de vento, sons de rajada e rustle de folhas, com controle por `enableAudio`.
 - **Entidades e itens**: força de vento aplicada com dinâmica de fluidos (0.5 * rho * v² * coeff), clipagem de velocidade e arrasto. Itens não têm multiplicação de velocidade.
 - **Instrumentos**: wind vane (orientação), windsock (inflação), anemometer (saída redstone 0..15 e rotor visual). Os três blocos são desenhados por TESR, com atlas próprio por face.
-- **Configuração**: `WindConfig` com `enableParticles`, `enablePush`, `enableAudio`, `baseSpeedMultiplier`, `debugHud`, `tornadoParticleRate`, `tornadoDebrisRate`, `tornadoMaxViewDistance`. Todas carregadas do arquivo de configuração e conectadas ao comportamento.
-- **Comandos**: `/wind get|profile|debug|storm [x] [y] [z]`.
-- **HUD de depuração**: mostra vetor, velocidade e rajada quando `debugHud` está ativo.
+- **Cajado da Catástrofe**: item que invoca um sistema pronto, que depois vive sozinho sob a física. Agachado + clique direito troca o tipo (a escolha fica no NBT do item, então dois cajados podem ter tipos diferentes).
+- **Destruição**: dano pesado derivado do campo de vento, não de uma tabela de raio (ver a seção "Física das tempestades").
+- **Configuração**: `WindConfig` com `enableParticles`, `enablePush`, `enableAudio`, `baseSpeedMultiplier`, `debugHud`, `tornadoParticleRate`, `tornadoDebrisRate`, `tornadoMaxViewDistance`, o grupo `storms` (`enableStorms`, `stormSpawnChance`, `northernHemisphere`, `stormForceWeather`, `stormLightning`, `stormMaxViewDistance`, `stormRainRate`) e o grupo `destruction` (`enableDestruction`, `destructionBlocksPerTick`, `destructionRadiusScale`, `destructionDropItems`, `destructionProtectSpawn`). Todas carregadas do arquivo de configuração e conectadas ao comportamento.
+- **Comandos**: `/wind get|profile|debug|storm` — e `storm` aceita `list`, `spawn <vortice|tropical|furacao|maior> [distância] [intensidade]` (operador) e `clear`.
+- **HUD de depuração**: mostra vetor, velocidade e rajada, mais categoria, déficit de pressão, vento de pico, distância ao centro e densidade da névoa quando `debugHud` está ativo.
+
+## Física das tempestades
+
+O núcleo (`com.dynamicwinds.core`) é Java puro, sem nenhuma referência ao Minecraft, e é
+onde vive a física. A regra do projeto é: **a arte não desenha nada que a física não
+diga**. O raio do olho é o raio do vento máximo, o sense de rotação é o do campo, o
+alcance dos efeitos é o raio externo do sistema, e a destruição consulta o mesmo campo de
+vento que o resto do mod.
+
+- **Perfil de vento** (`VortexBalance`): Rankine modificado — rotação de corpo sólido
+  dentro do raio de vento máximo e decaimento em lei de potência fora, contínuo em
+  `Rmax` e com pico exatamente `Vmax`.
+- **Campo de pressão**: não é uma curva ajustada à mão. É a integral do balanço do vento
+  gradiente, `dp/dr = ρ(v²/r + f·v)`, sobre o *mesmo* perfil de vento, resolvida
+  analiticamente. Os déficits centrais que saem disso ficam nas faixas observadas: 7,9 hPa
+  (tempestade tropical), 29,3 (furacão) e 71,8 (furacão maior). O termo de Coriolis é
+  mantido explícito por fidelidade — ele contribui menos de 0,1% (a escala é
+  ciclostrófica), mas é o que define o sentido de rotação por hemisfério.
+- **Estrutura do campo**: inflow em espiral de Ekman (6° a 26° conforme o raio),
+  ascendência na parede do olho, subsidiência dentro do olho, translação do sistema somada
+  ao campo, ganho dentro da camada limite e decaimento acima do topo da coluna.
+- **Ciclo de vida**: gênese, intensificação, maturidade e dissipação em `smoothstep` — sem
+  salto de vento na troca de fase — e o campo se **expande ao enfraquecer**, como em um
+  ciclone real.
+- **Landfall**: a energia da superfície (oceano quente versus continente, por bioma da
+  posição central) entra no sistema, que perde força em terra.
+- **Escala, dita com honestidade**: 1 bloco = 1 metro para velocidade, então `Vmax` está em
+  m/s (72 m/s ≈ 260 km/h). Os *raios* são comprimidos cerca de 300x em relação a um
+  ciclone real — um furacão verdadeiro tem `Rmax` de 30 a 60 km — para caber em uma área
+  jogável. O que se preserva é a relação vento-pressão, que é o que a escala acerta.
+- **Sem CFD**: simulação de fluido de verdade é impossível a 20 TPS em blocos. O que existe
+  aqui é meteorologia padrão (Rankine modificado, balanço do vento gradiente, lei
+  logarítmica, inflow de Ekman) travada por testes, com a calibração documentada em vez de
+  escondida.
+- **Destruição**: cada bloco candidato é consultado no mesmo campo de vento e quebra se
+  passar de `v_critico = 9 + 24·dureza` m/s (folhagem ≈ 14, terra ≈ 21, tronco ≈ 57,
+  obsidiana praticamente nunca). Daí saem de graça: o olho fica intacto, a faixa
+  destrutiva é a parede do olho e migra com ela, e o landfall enfraquece a destruição
+  junto com o sistema.
+
+## Testes
+
+`src/test/java/com/dynamicwinds/core/StormPhysicsTest.java` trava o contrato da física:
+pico do perfil e continuidade em `Rmax`, faixas de déficit por tipo, equivalência entre a
+integral analítica e uma integração numérica de `dp/dr` em 200 000 passos, continuidade do
+ciclo de vida, velocidade de deslocamento constante da trajetória (sem acumular erro de
+passo), olho calmo versus parede do olho violenta, subsidiência versus ascendência,
+inversão de rotação por hemisfério, landfall, determinismo e ciclo de vida dos sistemas
+invocados.
 
 ## Build e CI
 
@@ -44,7 +95,11 @@ Mod de vento dinâmico para Minecraft Java Edition 1.7.10 (Forge).
 
 ## Limitações conhecidas
 
-- Mixins de renderização de chuva/neve não implementados (o mod inicializa sem falhas).
+- Mixins de renderização de chuva/neve não implementados; a chuva inclinada pelo vento é
+  resolvida com partícula própria (`RainStreakParticle`), que lê a velocidade do campo no
+  ponto de nascimento — sem depender da biblioteca de Mixin.
+- A calibração de `destructionBlocksPerTick` e das taxas de partícula foi feita por
+  estimativa física, não por playtest: os valores estão no config para ajuste direto.
 - Validação no jogo (runClient/runServer) não foi executada neste ambiente (sem toolchain local); testes de runtime são pendentes de validação manual.
 - Escala de velocidade do vento é relativa ao modelo; não há calibração formal para m/s do mundo real.
 - Os modelos JSON dos blocos existem, mas não são usados no mundo: com o tipo de render

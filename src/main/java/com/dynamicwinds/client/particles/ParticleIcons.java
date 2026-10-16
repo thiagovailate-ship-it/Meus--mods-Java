@@ -32,7 +32,11 @@ public final class ParticleIcons {
 
     private static final Map<String, IIcon> ICONS = new HashMap<String, IIcon>();
 
-    private ParticleIcons() {}
+    /**
+     * Construtor publico porque a instancia e registrada no barramento de eventos
+     * do Forge (o handler de stitch e um metodo de instancia).
+     */
+    public ParticleIcons() {}
 
     /** Handler de stitch: registra os sprites no atlas de itens (camada 1). */
     @SubscribeEvent
