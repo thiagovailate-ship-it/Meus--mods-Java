@@ -3,6 +3,7 @@ package com.dynamicwinds.content;
 import com.dynamicwinds.content.blocks.BlockAnemometer;
 import com.dynamicwinds.content.blocks.BlockWindVane;
 import com.dynamicwinds.content.blocks.BlockWindsock;
+import com.dynamicwinds.content.tileentities.TileEntityAnemometer;
 import com.dynamicwinds.content.tileentities.TileEntityWindVane;
 import com.dynamicwinds.content.tileentities.TileEntityWindsock;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -28,6 +29,7 @@ public final class ContentRegistry {
 
         GameRegistry.registerTileEntity(TileEntityWindVane.class, "dynamicwinds:windVane");
         GameRegistry.registerTileEntity(TileEntityWindsock.class, "dynamicwinds:windsock");
+        GameRegistry.registerTileEntity(TileEntityAnemometer.class, "dynamicwinds:anemometer");
 
         // recipes
         GameRegistry.addRecipe(new ItemStack(windVane), " S ", " S ", "III",
