@@ -39,21 +39,21 @@ public class TESRWindsock extends TileEntitySpecialRenderer {
         buf.begin(GL11.GL_QUADS, SIMPLE_FORMAT);
         
         // Base
-        renderBox(buf, 0.4f, 0.0f, 0.4f, 1.0f, 0.2f, 1.0f, 0.7f, 0.7f, 0.7f, 1.0f);
+        renderBox(buf, 0.4, 0.0, 0.4, 1.0, 0.2, 1.0, 0.7f, 0.7f, 0.7f, 1.0f);
         
         // Sock body - inflated based on wind
         float width = 0.6f + inflation * 0.4f;
         float height = 0.6f + inflation * 0.6f;
         float depth = 0.6f + inflation * 0.3f;
         
-        renderBox(buf, 0.5f - width/2, 0.2f, 0.5f - depth/2,
-                  0.5f + width/2, 0.2f + height, 0.5f + depth/2,
+        renderBox(buf, 0.5 - width/2, 0.2, 0.5 - depth/2,
+                  0.5 + width/2, 0.2 + height, 0.5 + depth/2,
                   0.8f, 0.4f, 0.2f, 1.0f);
         
         // tapered end
         float endX = 0.5f + width/2 + inflation * 0.3f;
         float endZ = 0.5f + depth/2 + inflation * 0.2f;
-        renderBox(buf, 0.5f + width/2 - 0.1f, 0.2f + height * 0.9f, 0.5f + depth/2 - 0.1f,
+        renderBox(buf, 0.5 + width/2 - 0.1f, 0.2f + height * 0.9f, 0.5 + depth/2 - 0.1f,
                   endX, 0.2f + height, endZ,
                   0.6f, 0.3f, 0.2f, 1.0f);
         
@@ -62,7 +62,7 @@ public class TESRWindsock extends TileEntitySpecialRenderer {
     }
     
     private void renderBox(net.minecraft.client.renderer.WorldRenderer buf,
-                           float x1, float y1, float z1, float x2, float y2, float z2,
+                           double x1, double y1, double z1, double x2, double y2, double z2,
                            float r, float g, float b, float a) {
         buf.pos(x1, y1, z2).color(r, g, b, a).endVertex();
         buf.pos(x2, y1, z2).color(r, g, b, a).endVertex();

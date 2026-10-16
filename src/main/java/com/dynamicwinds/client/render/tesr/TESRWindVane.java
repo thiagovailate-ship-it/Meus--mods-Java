@@ -40,20 +40,20 @@ public class TESRWindVane extends TileEntitySpecialRenderer {
         buf.begin(GL11.GL_QUADS, SIMPLE_FORMAT);
         
         // Base box
-        renderBox(buf, 0.4f, 0.0f, 0.4f, 1.0f, 1.0f, 1.0f, 0.8f, 0.8f, 0.8f, 1.0f);
+        renderBox(buf, 0.4, 0.0, 0.4, 1.0, 1.0, 1.0, 0.8f, 0.8f, 0.8f, 1.0f);
         
         // Arrow shaft
-        renderBox(buf, 0.4f, 0.1f, 0.9f, 0.5f, 1.2f, 1.1f, 0.6f, 0.6f, 0.6f, 1.0f);
+        renderBox(buf, 0.4, 0.1, 0.9, 0.5, 1.2, 1.1, 0.6f, 0.6f, 0.6f, 1.0f);
         
         // Arrow head
-        renderBox(buf, 0.3f, 1.2f, 0.8f, 0.6f, 1.6f, 1.2f, 0.4f, 0.4f, 0.4f, 1.0f);
+        renderBox(buf, 0.3, 1.2, 0.8, 0.6, 1.6, 1.2, 0.4f, 0.4f, 0.4f, 1.0f);
         
         tess.draw();
         GL11.glPopMatrix();
     }
     
     private void renderBox(net.minecraft.client.renderer.WorldRenderer buf,
-                           float x1, float y1, float z1, float x2, float y2, float z2,
+                           double x1, double y1, double z1, double x2, double y2, double z2,
                            float r, float g, float b, float a) {
         buf.pos(x1, y1, z2).color(r, g, b, a).endVertex();
         buf.pos(x2, y1, z2).color(r, g, b, a).endVertex();
