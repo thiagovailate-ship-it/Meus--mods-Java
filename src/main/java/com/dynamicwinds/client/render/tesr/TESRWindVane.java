@@ -16,27 +16,45 @@ public class TESRWindVane extends TileEntitySpecialRenderer {
         GL11.glPushMatrix();
         GL11.glTranslated(x + 0.5, y + 0.5, z + 0.5);
         
-        // Rotate to face wind direction
         GL11.glRotatef(-vane.angle * 180.0f / (float) Math.PI, 0, 1, 0);
         
         bindTexture(TEX);
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
         
-        // Render a simple box using direct GL calls
-        renderBox(0.4f, 0.0f, 0.4f, 1.0f, 1.0f, 1.0f, 0.8f, 0.8f, 0.8f);
-        renderBox(0.4f, 0.1f, 0.9f, 0.5f, 1.2f, 1.1f, 0.6f, 0.6f, 0.6f);
-        renderBox(0.3f, 1.2f, 0.8f, 0.6f, 1.6f, 1.2f, 0.4f, 0.4f, 0.4f);
+        renderTexturedBox(0.3f, 0.0f, 0.3f, 0.9f, 1.0f, 0.9f);
+        renderTexturedBox(0.4f, 0.1f, 0.85f, 0.5f, 1.2f, 1.15f);
+        renderTexturedBox(0.3f, 1.2f, 0.8f, 0.6f, 1.6f, 1.2f);
         
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glPopMatrix();
     }
     
-    private void renderBox(float x1, float y1, float z1, float x2, float y2, float z2,
-                           float r, float g, float b) {
-        GL11.glColor3f(r, g, b);
+    private void renderTexturedBox(float x1, float y1, float z1, float x2, float y2, float z2) {
         GL11.glBegin(GL11.GL_QUADS);
-        GL11.glVertex3f(x1, y1, z2);
-        GL11.glVertex3f(x2, y1, z2);
-        GL11.glVertex3f(x2, y2, z2);
-        GL11.glVertex3f(x1, y2, z2);
+        GL11.glTexCoord2f(0, 0); GL11.glVertex3f(x1, y1, z2);
+        GL11.glTexCoord2f(1, 0); GL11.glVertex3f(x2, y1, z2);
+        GL11.glTexCoord2f(1, 1); GL11.glVertex3f(x2, y2, z2);
+        GL11.glTexCoord2f(0, 1); GL11.glVertex3f(x1, y2, z2);
+        GL11.glTexCoord2f(1, 0); GL11.glVertex3f(x1, y1, z1);
+        GL11.glTexCoord2f(0, 0); GL11.glVertex3f(x2, y1, z1);
+        GL11.glTexCoord2f(0, 1); GL11.glVertex3f(x2, y2, z1);
+        GL11.glTexCoord2f(1, 1); GL11.glVertex3f(x1, y2, z1);
+        GL11.glTexCoord2f(0, 1); GL11.glVertex3f(x1, y2, z1);
+        GL11.glTexCoord2f(0, 0); GL11.glVertex3f(x1, y2, z2);
+        GL11.glTexCoord2f(1, 0); GL11.glVertex3f(x2, y2, z2);
+        GL11.glTexCoord2f(1, 1); GL11.glVertex3f(x2, y2, z1);
+        GL11.glTexCoord2f(1, 1); GL11.glVertex3f(x1, y1, z1);
+        GL11.glTexCoord2f(1, 0); GL11.glVertex3f(x1, y1, z2);
+        GL11.glTexCoord2f(0, 0); GL11.glVertex3f(x2, y1, z2);
+        GL11.glTexCoord2f(0, 1); GL11.glVertex3f(x2, y1, z1);
+        GL11.glTexCoord2f(1, 0); GL11.glVertex3f(x1, y1, z1);
+        GL11.glTexCoord2f(0, 0); GL11.glVertex3f(x1, y1, z2);
+        GL11.glTexCoord2f(0, 1); GL11.glVertex3f(x1, y2, z2);
+        GL11.glTexCoord2f(1, 1); GL11.glVertex3f(x1, y2, z1);
+        GL11.glTexCoord2f(0, 0); GL11.glVertex3f(x2, y1, z1);
+        GL11.glTexCoord2f(1, 0); GL11.glVertex3f(x2, y1, z2);
+        GL11.glTexCoord2f(1, 1); GL11.glVertex3f(x2, y2, z2);
+        GL11.glTexCoord2f(0, 1); GL11.glVertex3f(x2, y2, z1);
         GL11.glEnd();
     }
 }
