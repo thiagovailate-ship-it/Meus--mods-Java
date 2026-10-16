@@ -63,15 +63,15 @@ Decompiling the srg jar with fernflower
 > Task :packageMcLauncher
 
 > Task :decompileSrgJar
-  Decompiling took 22143 ms
+  Decompiling took 36628 ms
 
 > Task :cleanupDecompSrgJar
 Fixup stage 1 - applying FF patches
-  Stage 1 took 1858 ms
+  Stage 1 took 3168 ms
 Fixup stage 2 - applying MCP patches
-  Stage 2 took 36 ms
+  Stage 2 took 58 ms
 Fixup stage 3 - applying MCP cleanup
-  Stage 3 took 3139 ms
+  Stage 3 took 4926 ms
 Saving the fixed-up jar
 
 > Task :patchDecompiledJar
@@ -98,15 +98,22 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :packagePatchedMc
 
 > Task :compileJava FAILED
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:43: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:56: error: method does not override or implement a method from a supertype
-    @Override
-    ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:90: error: incompatible types: possible lossy conversion from double to float
+        segment(0.34, 0.56, 1.00f, section, droop * 0.20f, light, FRINGE, BAND_ORANGE);
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:91: error: incompatible types: possible lossy conversion from double to float
+        segment(0.56, 0.76, 0.90f, section, droop * 0.45f, light, SEAM, BAND_WHITE);
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:92: error: incompatible types: possible lossy conversion from double to float
+        segment(0.76, 0.94, 0.76f, section, droop * 0.75f, light, SEAM, BAND_ORANGE_2);
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:93: error: incompatible types: possible lossy conversion from double to float
+        segment(0.94, 1.06, 0.58f, section, droop, light, SEAM, BAND_DARK);
+                ^
 Note: /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/gui/WindConfigGui.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-2 errors
+Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+4 errors
 
 [Incubating] Problems report is available at: file:///home/runner/work/Meus--mods-Java/Meus--mods-Java/build/reports/problems/problems-report.html
 
@@ -115,10 +122,10 @@ FAILURE: Build failed with an exception.
 * What went wrong:
 Execution failed for task ':compileJava'.
 > Compilation failed; see the compiler output below.
-  /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:43: error: method does not override or implement a method from a supertype
-      @Override
-      ^
-  2 errors
+  /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:90: error: incompatible types: possible lossy conversion from double to float
+          segment(0.34, 0.56, 1.00f, section, droop * 0.20f, light, FRINGE, BAND_ORANGE);
+                  ^
+  4 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -160,15 +167,22 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:90: error: incompatible types: possible lossy conversion from double to float
+        segment(0.34, 0.56, 1.00f, section, droop * 0.20f, light, FRINGE, BAND_ORANGE);
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:91: error: incompatible types: possible lossy conversion from double to float
+        segment(0.56, 0.76, 0.90f, section, droop * 0.45f, light, SEAM, BAND_WHITE);
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:92: error: incompatible types: possible lossy conversion from double to float
+        segment(0.76, 0.94, 0.76f, section, droop * 0.75f, light, SEAM, BAND_ORANGE_2);
+                ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:93: error: incompatible types: possible lossy conversion from double to float
+        segment(0.94, 1.06, 0.58f, section, droop, light, SEAM, BAND_DARK);
+                ^
 Note: /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/gui/WindConfigGui.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:43: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:56: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-2 errors
+Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+4 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.daemon.AbstractIsolatedCompilerWorkerExecutor$CompilerWorkAction.execute(AbstractIsolatedCompilerWorkerExecutor.java:79)
@@ -195,6 +209,6 @@ Note: Recompile with -Xlint:unchecked for details.
 	... 2 more
 
 
-BUILD FAILED in 1m 38s
+BUILD FAILED in 2m 27s
 23 actionable tasks: 23 executed
 Configuration cache entry stored.
