@@ -211,6 +211,37 @@ hemisfério, landfall, determinismo e ciclo de vida dos sistemas invocados.
 - ✅ Tile entities calculam angle/inflation
 - ✅ Wind vane e windsock têm TESRs com textura UV mapping
 
+## Rodada de revisão (céu, relevo e instrumentos)
+
+Três defeitos encontrados por leitura do código, não por teste falhando:
+
+1. **Renderizador do céu** (`client/storm/StormRenderer`) — reescrito. O defeito real era
+   abrir o lote de desenho (`startDrawingQuads`) e depois `return` numa condição de
+   degeneração: no 1.7.10 isso lança `Already tesselating!` e derruba a renderização. Agora
+   toda checagem vem antes do lote, e a unidade de textura é salva/devolvida em volta do
+   `bindTexture` (senão a nuvem é texturizada com o lightmap). Ver "Notas Técnicas".
+2. **Relevo do vento** (`integration/WindEngine`, `integration/HeightmapCache`) — o cache
+   existia, era atualizado e nunca lido, o refresh sorteava um ponto em `[0,100)` (perto da
+   origem do mundo) apesar de o comentário dizer "near player", e `refreshNear` calculava o
+   retângulo para depois limpar o cache inteiro. Agora o refresh gira em volta dos
+   jogadores, é incremental de verdade, e o cache é o fornecedor de relevo do modelo
+   (`Wind.SurfaceProvider`). A célula de 8x8 é lida pelo centro dos dois lados, para cliente
+   e servidor não divergirem.
+3. **Instrumentos** (`content/tileentities/*`) — o estado visual derivado (inflação da
+   manga, direção do catavento, velocidade suavizada do rotor) recomeçava de zero a cada
+   carregamento de chunk, o que aparecia como um salto: a manga desinflava e reinflava, a
+   seta girava até a posição. O primeiro tick depois da carga agora entra já com o valor do
+   vento, e o teste de volta completa do rotor é pulado nesse tick (ele dispararia um clique
+   falso de anemômetro). **NBT não é necessário aqui**: tudo o que o bloco mostra é
+   recalculado do campo determinístico, e a saída de redstone do anemômetro é calculada por
+   `BlockAnemometer` a partir do campo, não do tile entity — guardar os valores não mudaria
+   nada depois de uma recarga; o que faltava era continuidade visual, e é isso que o
+   primeiro tick descrito acima resolve.
+
+Também conferido: as quatro receitas de `ContentRegistry` (o molde foi espelhado em Python
+para ver a grade 3x3 resultante, e as quatro estão corretas; agora estão documentadas no
+README, em `## Receitas`).
+
 ## O que Precisa de Validação no Jogo
 
 - Renderização visual das texturas (não testável aqui)

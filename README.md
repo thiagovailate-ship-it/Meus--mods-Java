@@ -127,6 +127,34 @@ acompanha a física.
 - **Abrigo**: a profundidade sob o teto abafa (mais o agudo que o grave, por isso o trovão
   atenua pela raiz enquanto vento e chuva atenuam cheio).
 
+## Receitas
+
+As quatro receitas são moldes 3x3 comuns (bancada). O molde é lido de cima para baixo,
+como aparece na bancada; `·` é casa vazia.
+
+```
+Catavento (windVane)        Manga de vento (windsock)     Anemômetro (anemometer)
+·  V  ·                     ·  L  ·                       ·  R  ·
+·  V  ·                     ·  L  ·                       F  C  F
+B  B  B                     ·  V  ·                       ·  F  ·
+V = vara, B = barra de ferro  L = lã, V = vara             R = redstone, F = barra de ferro,
+                                                           C = comparador
+```
+
+```
+Cajado da Catástrofe
+·  ·  E
+·  A  ·
+P  ·  ·
+E = estrela do Nether, A = vara de blaze, P = pérola do Enderman
+```
+
+O molde do cajado é o único com as três casas na diagonal: a estrela do Nether dá o
+"toque final" no canto superior, a vara de blaze fica no centro (a energia térmica que o
+ciclone consome) e a pérola do Enderman no canto inferior. Como o `Items.comparator` do
+1.7.10 já exige duas barras de ferro laterais, o anemômetro é a receita mais cara das três
+de instrumento.
+
 ## Testes
 
 `src/test/java/com/dynamicwinds/core/StormPhysicsTest.java` trava o contrato da física:
