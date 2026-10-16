@@ -26,6 +26,21 @@ diga**. O raio do olho é o raio do vento máximo, o sense de rotação é o do 
 alcance dos efeitos é o raio externo do sistema, e a destruição consulta o mesmo campo de
 vento que o resto do mod.
 
+Os quatro sistemas, com os números que o código usa na maturidade (`StormKind`):
+
+| tipo | vento máximo | `Rmax` | raio externo | duração | categoria |
+| --- | --- | --- | --- | --- | --- |
+| vórtice (tornado / tromba d'água) | 28 m/s (100 km/h) | 9 b | 150 b | ~3,3 min | EF0-1 |
+| tempestade tropical | 24 m/s (86 km/h) | 55 b | 260 b | ~10 min | TS |
+| furacão | 46 m/s (166 km/h) | 85 b | 400 b | ~15 min | Cat 1-2 |
+| furacão maior | 72 m/s (259 km/h) | 130 b | 560 b | ~20 min | Cat 3+ |
+
+O pedido de "furacão de 3 níveis" é a coluna das categorias: tempestade tropical, furacão e
+furacão maior. O vórtice é o quarto tipo, de outra escala (`Rmax` de 9 blocos contra 55 a 130
+dos ciclones) — e por isso é o único que vira funil no céu, em vez de parede de olho. O
+rótulo do vórtice é EF e não "tornado categoria X" de propósito: a escala EF mede rajada de
+3 segundos, e 28 m/s sustentados no modelo ficam na casa dos 100 km/h.
+
 - **Perfil de vento** (`VortexBalance`): Rankine modificado — rotação de corpo sólido
   dentro do raio de vento máximo e decaimento em lei de potência fora, contínuo em
   `Rmax` e com pico exatamente `Vmax`.

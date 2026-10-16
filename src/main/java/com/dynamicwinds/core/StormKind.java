@@ -89,12 +89,23 @@ public final class StormKind {
     }
 
     /** Rotulo no estilo Saffir-Simpson, para exibir em comando/HUD. */
+    /**
+     * Categoria do sistema, no rotulo da escala correspondente.
+     *
+     * <p>O vortice leva rotulo EF e nao "tornado categoria X": a escala EF e
+     * medida por rajada de 3 segundos, e 28 m/s sustentados no modelo ficam na
+     * casa dos 100 km/h, ou seja EF0-1. Os ciclones usam a Saffir-Simpson de
+     * vento sustentado, que e a mesma grandeza que o modelo calcula.</p>
+     *
+     * @param kind tipo do sistema
+     * @return rotulo curto da categoria
+     */
     public static String category(int kind) {
         switch (kind) {
             case TROPICAL_STORM: return "TS";
             case HURRICANE: return "Cat 1-2";
             case MAJOR_HURRICANE: return "Cat 3+";
-            default: return "EF2-5";
+            default: return "EF0-1";
         }
     }
 }
