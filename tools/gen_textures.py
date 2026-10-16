@@ -920,9 +920,14 @@ def gen_staff_and_environment():
             alpha = alpha ** 0.7
             t = min(1.0, max(0.0, (v - 0.40) / 0.42))
             c = mix(DEEP, MID, t)
-            # as bordas superiores das celulas pegam luz; a base fica chumbo
-            lum = 0.72 + 0.42 * (1.0 - y / float(size - 1))
-            c = mix(c, TOP, min(1.0, max(0.0, (v - 0.58) / 0.42)) * 0.72 * lum)
+            # As bordas superiores das celulas pegam luz. O realce vem de uma
+            # terceira oitava de ruido, e NAO de um gradiente em y: a textura e
+            # repetida varias vezes pela malha (3x no anel, 2,4x no raio), entao
+            # qualquer gradiente assado se repete junto e vira faixa visivel. A
+            # luz geral quem faz e o renderizador, por vertice.
+            cell = _fbm(cv, x, y, 40.0, size, 2, s=203)
+            hi = min(1.0, max(0.0, (v - 0.58) / 0.42))
+            c = mix(c, TOP, hi * 0.72 * (0.72 + 0.56 * cell))
             cv.put(x, y, (c[0], c[1], c[2], int(alpha * 236)))
     out[1].append(("storm_clouds.png", cv))
 
@@ -937,15 +942,19 @@ def gen_staff_and_environment():
             streak = _fbm(cv, x, y * 0.22, 8.0, w, 3, s=131)
             mass = _fbm(cv, x, y, 20.0, w, 3, s=77)
             v = streak * 0.62 + mass * 0.38
-            bottom = y / float(h - 1)          # 0 no topo, 1 no chao
-            alpha = (v - 0.34) / 0.30 * (0.26 + 0.9 * bottom)
+            # So estrutura: a densidade que cai com a altura e do renderizador
+            # (alpha por vertice), nao da textura. A textura repete na vertical
+            # (1 unidade de UV por ~40 blocos de altura da parede), entao uma
+            # rampa de alpha aqui dentro apareceria repetida como faixas.
+            alpha = (v - 0.30) / 0.34
             if alpha <= 0.04:
                 continue
             if alpha > 1.0:
                 alpha = 1.0
-            alpha = alpha ** 0.85
-            t = min(1.0, max(0.0, (v - 0.32) / 0.5))
-            c = mix(W_DARK, W_LIGHT, t)
+            alpha = alpha ** 0.8
+            # um pouco mais de contraste: a cortina precisa ler como rajas
+            t = min(1.0, max(0.0, (v - 0.34) / 0.40))
+            c = mix(W_DARK, W_LIGHT, t ** 0.85)
             cv.put(x, y, (c[0], c[1], c[2], int(alpha * 224)))
     out[1].append(("storm_wall.png", cv))
 

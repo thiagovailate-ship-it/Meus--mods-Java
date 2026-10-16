@@ -74,11 +74,16 @@ hemisfério, landfall, determinismo e ciclo de vida dos sistemas invocados.
 
 ### VFX das tempestades
 
+- `client/storm/StormRenderer` (reescrito) - teto de nuvem em anel com o olho aberto
+  (alpha zera em `r < rmax`), rodapé pendurado na parede do olho, parede em cilindro duplo
+  (ou funil cônico inclinado para trás, no vórtice), 3 bandas espirais em espiral
+  logarítmica, camada alta de gelo quando intensidade > 0,35, LOD 72/48/24 a 160/420 b,
+  desaparecimento gradual por distância, clarão do relâmpago por vértice e desenho de trás
+  para frente. Todas as condições de degeneração são checadas **antes** de
+  `startDrawingQuads` (nenhum return com lote aberto) e a unidade de textura é salva e
+  devolvida em volta do `bindTexture`.
 - `client/storm/StormClientState` - sistema dominante recalculado uma vez por tick, para
   névoa, nuvem, som e partícula não pegarem instantes diferentes e tremerem entre si.
-- `client/storm/StormRenderer` - teto de nuvem em anel com o olho aberto, parede do olho em
-  cilindro duplo, funil inclinado para trás na direção da trajetória (vórtice) e bandas
-  espirais de chuva; desenho de trás para frente com escrita de profundidade desligada.
 - `client/storm/StormFogHandler` - névoa escurece e fecha dentro da tempestade, e o olho
   reabre a visibilidade.
 - `client/audio/StormAudio` - ronco contínuo e trovões com volume e frequência tirados do
@@ -171,6 +176,12 @@ hemisfério, landfall, determinismo e ciclo de vida dos sistemas invocados.
   ganhou value noise periódico e fbm, porque ruído comum não repete e apareceriam emendas
   retas atravessando o céu)
 - `textures/environment/storm_wall.png` (64x64, parede do olho / cortina de chuva)
+- **As duas são isentas de gradiente vertical, de propósito.** Elas repetem sobre a malha
+  (o teto repete ~3x no anel e ~2,4x no raio), então qualquer rampa de luminância ou de
+  alpha embutida na imagem vira faixa visível no céu — foi o caso até esta sessão. O
+  claro/escuro vem do renderizador, por vértice; a imagem dá só a estrutura. O "levantar"
+  da nuvem vem de uma terceira oitava de fbm (`_fbm(cv, x, y, 40.0, size, 2, s=203)`), não
+  de um degradê.
 
 ### Item
 - `textures/items/catastrophe_staff.png` (16x16, haste de obsidiana com enrolado e orbe em
@@ -203,6 +214,10 @@ hemisfério, landfall, determinismo e ciclo de vida dos sistemas invocados.
 ## O que Precisa de Validação no Jogo
 
 - Renderização visual das texturas (não testável aqui)
+- Céu das tempestades: forma, cor, ordem de desenho e clarão do relâmpago. A geometria foi
+  verificada por espelho em Python (`tools/preview_storm.py --check`, ver
+  `docs/storm_shape.png`), mas OpenGL não existe neste ambiente: o que falta é olhar
+  (`stormRenderSky=false` desliga sem remover o resto do VFX)
 - Girando do wind vane no jogo
 - Inflação visual da manga
 - Partículas aparecendo corretamente
@@ -261,10 +276,25 @@ hemisfério, landfall, determinismo e ciclo de vida dos sistemas invocados.
 ## Notas Técnicas
 
 ### API de Renderização 1.7.10
-- Tessellator: `Tessellator.instance`, `getWorldRenderer()`, `draw()`
+- Tessellator: `Tessellator.instance`, `startDrawingQuads()` (= `startDrawing(7)`), `draw()`,
+  `addVertexWithUV(x, y, z, u, v)`, `setNormal(x, y, z)`, `setColorRGBA_F(r, g, b, a)`
 - WorldRenderer: `begin(glMode, vertexFormat)`, `pos(double,double,double)`, `color(float,float,float,float)`, `endVertex()`
 - VertexFormat: pacote `net.minecraft.client.renderer.vertex` existe no MCP mas NÃO disponível no build (erro de compilação)
 - Portanto, usar GL11 direto com `glBegin(GL_QUADS)`, `glTexCoord2f()`, `glVertex3f()`, `glEnd()`, `glColor3f()`
+
+#### Duas armadilhas do Tessellator (conferidas no fonte, não por tentativa)
+1. `startDrawing` **lança** `IllegalStateException("Already tesselating!")` se já houver lote
+   aberto, e `draw()` **lança** `"Not tesselating!"` se não houver. Logo: **nenhum método pode
+   retornar entre `startDrawingQuads()` e `draw()`** — toda condição de degeneração (raio
+   nulo, altura nula, alpha zero) tem de ser checada **antes** de abrir o lote. Foi
+   exatamente esse o defeito corrigido no `StormRenderer`.
+2. `setNormal` é estado **persistente** do lote (vale até o `draw()`), então normal e
+   formato têm de ser definidos antes do primeiro vértice. Cor (`setColorRGBA_F`) é por
+   vértice e deve ser chamada antes de cada um — isso é uso correto, não erro.
+3. `bindTexture` liga na unidade de textura **ativa**, e durante o render do mundo a unidade
+   ativa é a do lightmap (`GL_TEXTURE1`). Sem `GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE)` +
+   `OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit)` (e devolver no fim), a nuvem
+   sai texturizada com o mapa de luz.
 
 ### Mixins
 - `dynamicwinds.mixins.json` vazio (sem mixins ativos)

@@ -24,6 +24,8 @@ public final class WindConfig {
     public static boolean northernHemisphere = true;
     public static boolean stormForceWeather = true;
     public static boolean stormLightning = true;
+    /** Desenhar nuvem, parede do olho e bandas de chuva das tempestades. */
+    public static boolean stormRenderSky = true;
     /** Distancia maxima de renderizacao das nuvens da tempestade, em blocos. */
     public static double stormMaxViewDistance = 420.0;
     /** Chuva inclinada pelo vento, em particulas por tick. */
@@ -73,6 +75,8 @@ public final class WindConfig {
         stormMaxViewDistance = pView.getDouble();
         stormRainRate = cfg.getInt("stormRainRate", "storms", 16, 0, 64,
                 "Particulas de chuva inclinada por tick dentro de uma tempestade");
+        stormRenderSky = cfg.getBoolean("stormRenderSky", "storms", true,
+                "Desenhar a nuvem, a parede do olho e as bandas de chuva das tempestades");
         stormLightning = cfg.getBoolean("stormLightning", "storms", true,
                 "Relâmpagos na parede do olho dos furacões");
 
@@ -105,4 +109,7 @@ public final class WindConfig {
 
     /** Chuva inclinada pelo vento, particulas por tick. */
     public static int stormRainRate() { return stormRainRate; }
+
+    /** Desenhar o ceu da tempestade (nuvem, olho e bandas). */
+    public static boolean stormRenderSky() { return stormRenderSky; }
 }

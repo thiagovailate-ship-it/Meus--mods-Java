@@ -57,6 +57,46 @@ vento que o resto do mod.
   destrutiva é a parede do olho e migra com ela, e o landfall enfraquece a destruição
   junto com o sistema.
 
+## Céu das tempestades
+
+A nuvem do sistema é geometria própria, desenhada no `RenderWorldLastEvent`, e **não** um
+disco fixo: cada peça sai das mesmas grandezas que o campo de vento usa, então a forma
+acompanha a física.
+
+| peça | de onde vem |
+| --- | --- |
+| parede do olho | cilindro duplo em `r = 1,02·rmax` e `1,45·rmax`, do solo ao teto |
+| funil (vórtice) | cone de `0,42·rmax` (base) a `2,6·rmax` (topo), perfil `f^0,75`, inclinado para **trás** em relação ao deslocamento |
+| bandas espirais | 3 braços em espiral logarítmica, `base + spin·ln(r/r_in)·1,6`, de `1,15·rmax` a `1,02·r_out` |
+| rodapé | cortina pendurada na parede do olho; é ela que dá volume ao teto visto de baixo |
+| teto | anel de `rmax·{1,35 (vórtice) \| 0,9}` até `1,04·r_out`, 5 anéis radiais com barriga de 18 blocos |
+| camada alta | concha de gelo acima do teto (`rmax·1,05` a `1,16·r_out`), só com intensidade > 0,35 |
+
+- **O olho é consequência, não desenho à parte.** O alpha do teto zera em `r < rmax`, a
+  mesma `rmax` que governa o vento máximo; quando o sistema enfraquece, `rmax` cresce e o
+  olho abre junto — como um furacão em dissipação.
+- **Sentido de rotação** é `spin = +1` no hemisfério norte e `−1` no sul, o mesmo `spin` do
+  campo de vento: nuvem e vento giram para o mesmo lado ou a cena se contradiz.
+- **Teto limitado pelo mundo**: `deckY = min(solo + 0,55·topo, 214)`. Em terreno muito alto
+  não sobra altura para o funil, e aí a guarda pula a peça em vez de gerar geometria
+  invertida.
+- **Nível de detalhe**: 72 / 48 / 24 segmentos a 160 / 420 blocos, com desaparecimento
+  gradual por distância em vez de corte seco.
+- **Clarão do relâmpago** entra por vértice e lava o tom para o branco; vem do mesmo
+  disparo que agenda o trovão — a luz chega na hora, o som a 343 m/s.
+- **Duas regras do `Tessellator` do 1.7.10** que custam caro: `startDrawing` *lança exceção*
+  se já houver lote aberto, então nenhum método retorna entre abrir e `draw()` (toda
+  condição de degeneração é checada antes); e `bindTexture` liga na unidade de textura
+  **ativa**, que no render do mundo é a do lightmap (`GL_TEXTURE1`) — por isso a unidade é
+  salva, trocada para a padrão e devolvida no fim, senão a nuvem sai texturizada com o mapa
+  de luz.
+- **Conferência sem abrir o jogo**: `tools/preview_storm.py` espelha essa geometria em
+  Python e gera `docs/storm_shape.png` (4 vistas de topo na mesma escala, 2 cortes
+  verticais e o perfil de alpha). `python3 tools/preview_storm.py --check` varre 252
+  combinações de tipo × intensidade × altura de solo e separa **guarda** (decisão de não
+  desenhar, sempre antes do lote) de **problema** (geometria invertida ou nula — erro). É o
+  substituto possível para rodar `runClient`, que não existe neste ambiente.
+
 ## Áudio
 
 - Os 14 sons do mod são **gerados por script** (`tools/gen_sounds.py`, numpy + soundfile):

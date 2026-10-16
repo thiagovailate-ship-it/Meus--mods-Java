@@ -6,9 +6,12 @@ import com.dynamicwinds.core.StormKind;
 import com.dynamicwinds.core.StormSystem;
 import com.dynamicwinds.integration.WindConfig;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,8 +19,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Desenha as tempestades no mundo: teto de nuvem, parede do olho (ou funil, no
- * caso do vortice) e bandas espirais de chuva.
+ * Desenha as tempestades no mundo: teto de nuvem, rodape da parede do olho,
+ * parede (ou funil, no vortice) e bandas espirais de chuva.
  *
  * <p><b>Por que desenhar a mao em vez de mudar as nuvens do Minecraft.</b> As
  * nuvens do vanilla sao um plano unico e global, sem relacao com nada; para
@@ -26,6 +29,15 @@ import java.util.List;
  * forma seja <i>derivada da fisica</i>: o raio do olho e o raio do vento maximo,
  * a altura do teto e o topo da coluna do tipo, e a rotacao e a mesma do campo de
  * vento. Quando o sistema se expande ao enfraquecer, a nuvem se expande junto.</p>
+ *
+ * <p><b>Duas regras do Tessellator do 1.7.10 que custam caro se ignoradas.</b>
+ * A primeira: {@code startDrawing} <i>lanca excecao</i> se ja houver um lote
+ * aberto, e o lote fica aberto enquanto nao houver {@code draw()}. Por isso
+ * nenhum metodo daqui retorna entre abrir e fechar o lote - toda condicao de
+ * degeneracao e checada <b>antes</b> do {@code startDrawingQuads}. A segunda: o
+ * formato do vertice e fixado por flags de estado ({@code setNormal} vale do
+ * ponto em que e chamado ate o fim do lote), entao normal e cor sao definidos
+ * antes do primeiro vertice, nunca no meio.</p>
  *
  * <p>Tudo e desenhado em coordenadas de mundo dentro do
  * {@code RenderWorldLastEvent}, com desenho de tras para frente e escrita de
@@ -37,22 +49,36 @@ public final class StormRenderer {
     /** Teto de nuvem (celulas, com estrutura de nuvem real). */
     private static final ResourceLocation CLOUD_TEX =
             new ResourceLocation("dynamicwinds:textures/environment/storm_clouds.png");
-    /** Parede do olho e cortina de chuva. */
+    /** Parede do olho, rodape da nuvem e cortina de chuva. */
     private static final ResourceLocation WALL_TEX =
             new ResourceLocation("dynamicwinds:textures/environment/storm_wall.png");
 
-    private static final int DECK_SEGMENTS = 72;
-    private static final int WALL_SEGMENTS = 56;
     private static final int BAND_ARMS = 3;
     private static final int BAND_STEPS = 22;
     private static final double TWO_PI = Math.PI * 2.0;
+
+    /** Segmentos da malha conforme a distancia da camera (LOD). */
+    private static final int SEG_NEAR = 72;
+    private static final int SEG_MID = 48;
+    private static final int SEG_FAR = 24;
+    private static final double LOD_NEAR = 160.0;
+    private static final double LOD_MID = 420.0;
+
+    /** Quanto o teto desce da parede do olho ate a borda externa, em blocos. */
+    private static final double DECK_DROP = 18.0;
+    /** Altura do rodape de nuvem pendurado na parede do olho. */
+    private static final double SKIRT_DROP = 24.0;
+    /** Teto pratico do mundo: a nuvem nunca sobe acima disso. */
+    private static final double SKY_LIMIT = 214.0;
+    /** Teto de nuvem como fracao do topo da coluna do tipo. */
+    private static final double DECK_FRACTION = 0.55;
 
     private StormRenderer() {}
 
     public static void render(float partialTicks) {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.theWorld == null || mc.thePlayer == null) return;
-        if (!WindConfig.enableParticles) return;
+        if (!WindConfig.stormRenderSky) return;
 
         StormField field = Wind.stormsFor(mc.theWorld);
         if (field == null) return;
@@ -95,7 +121,7 @@ public final class StormRenderer {
         beginTranslucent();
 
         for (int i = 0; i < visible.size(); i++) {
-            drawSystem(mc, visible.get(i), now, time, px, py, pz);
+            drawSystem(mc, visible.get(i), now, time, px, pz);
         }
 
         endTranslucent();
@@ -105,7 +131,7 @@ public final class StormRenderer {
     // ------------------------------------------------------------------
 
     private static void drawSystem(Minecraft mc, StormSystem s, double now, long time,
-                                   double px, double py, double pz) {
+                                   double px, double pz) {
         double intensity = s.intensityAt(time);
         if (intensity < 0.03) return;
 
@@ -118,16 +144,28 @@ public final class StormRenderer {
         double spin = s.north ? 1.0 : -1.0;
         double phase = spin * now * (narrow ? 0.09 : 0.020);
 
-        int ground = mc.theWorld.getHeightValue((int) Math.floor(cx), (int) Math.floor(cz));
-        double groundY = ground;
+        double camDist = Math.sqrt((cx - px) * (cx - px) + (cz - pz) * (cz - pz));
+        int segs = camDist < LOD_NEAR ? SEG_NEAR : (camDist < LOD_MID ? SEG_MID : SEG_FAR);
+
+        // o relevo sob o anel, e nao so sob o centro: uma tempestade sobre um
+        // morro enterraria parte da parede
+        double groundY = terrainTop(mc, cx, cz, narrow ? rmax * 2.0 : rmax * 1.45);
         double top = StormKind.columnTop(s.kind);
-        double deckY = Math.min(groundY + top * 0.55, 214.0);
+        double deckY = Math.min(groundY + top * DECK_FRACTION, SKY_LIMIT);
         double baseY = narrow ? groundY - 1.0 : groundY + 2.0;
 
         // perto, desenha inteiro; longe, desaparece sem corte seco
-        double camDist = Math.sqrt((cx - px) * (cx - px) + (cz - pz) * (cz - pz));
         double viewFade = 1.0 - max0(camDist - outer * 0.6) / Math.max(1.0, outer * 1.6);
         double fade = Math.max(0.0, Math.min(1.0, viewFade));
+
+        // o clarao do relampago acende a nuvem por dentro. Vem do mesmo disparo
+        // que agenda o trovao: a luz chega na hora, o som viaja a 343 m/s
+        float flash = StormClientState.flashStrength();
+
+        if (deckY <= baseY + 2.0) {
+            // terreno alto demais para caber nuvem: ainda desenha o que da
+            deckY = baseY + 2.0;
+        }
 
         // 1) cortina de chuva / parede do olho
         if (narrow) {
@@ -138,18 +176,63 @@ public final class StormRenderer {
             double tl = Math.sqrt(tx * tx + tz * tz);
             double leanX = tl > 1.0e-9 ? -tx / tl : 0.0;
             double leanZ = tl > 1.0e-9 ? -tz / tl : 0.0;
-            drawFunnel(mc, cx, cz, groundY, deckY, rmax, intensity, phase, fade, leanX, leanZ);
+            drawFunnel(mc, cx, cz, groundY, deckY, rmax, intensity, phase, fade, flash,
+                    leanX, leanZ, segs);
         } else {
-            drawCylinder(mc, cx, cz, baseY, deckY, rmax * 1.02, intensity, phase, fade, 0.60);
-            drawCylinder(mc, cx, cz, baseY, deckY * 0.99, rmax * 1.45, intensity, phase, fade, 0.26);
+            drawCylinder(mc, cx, cz, baseY, deckY, rmax * 1.02, intensity, phase, fade, flash,
+                    0.60, segs);
+            drawCylinder(mc, cx, cz, baseY, deckY * 0.99, rmax * 1.45, intensity, phase, fade, flash,
+                    0.26, segs);
         }
 
         // 2) bandas espirais de chuva, girando com o sistema
-        drawBands(mc, cx, cz, groundY, rmax, outer, intensity, phase, fade, spin);
+        drawBands(mc, cx, cz, groundY, deckY, rmax, outer, intensity, phase, fade, flash,
+                spin, narrow, segs);
 
-        // 3) teto de nuvem, deixando o olho aberto
+        // 3) rodape de nuvem pendurado na parede do olho: e ele que da volume ao
+        //    teto visto de baixo, em vez de um disco plano
+        drawSkirt(mc, cx, cz, deckY, rmax * (narrow ? 1.35 : 0.9), intensity, phase, fade,
+                flash, segs);
+
+        // 4) teto de nuvem, deixando o olho aberto
         drawDeck(mc, cx, cz, deckY, rmax * (narrow ? 1.35 : 0.9), outer * 1.04,
-                intensity, phase, fade);
+                intensity, phase, fade, flash, segs);
+
+        // 5) camada alta e mais clara, so quando o sistema e forte: da espessura
+        //    ao conjunto sem custo quando esta longe
+        if (intensity > 0.35 && camDist < LOD_MID) {
+            drawShell(mc, cx, cz, deckY, rmax, outer, top, intensity, phase, fade, flash, segs);
+        }
+    }
+
+    /**
+     * Altura do relevo sob o sistema, olhando oito pontos do anel.
+     */
+    private static double terrainTop(Minecraft mc, double cx, double cz, double radius) {
+        double top = mc.theWorld.getHeightValue((int) Math.floor(cx), (int) Math.floor(cz));
+        for (int i = 0; i < 8; i++) {
+            double a = i * Math.PI / 4.0;
+            int x = (int) Math.floor(cx + Math.cos(a) * radius);
+            int z = (int) Math.floor(cz + Math.sin(a) * radius);
+            double h = mc.theWorld.getHeightValue(x, z);
+            if (h > top) {
+                top = h;
+            }
+        }
+        return top;
+    }
+
+    /** Cor da nuvem ja com o clarao do relampago aplicado. */
+    private static float[] litColour(double shade, double flash) {
+        double s = shade + (0.92 - shade) * flash;
+        if (s > 1.0) s = 1.0;
+        // o clarao tambem lava o tom azulado: a nuvem acesa e quase branca
+        float r = (float) s;
+        float g = (float) (s * (1.02 + 0.05 * flash));
+        float b = (float) (s * (1.12 + 0.06 * flash));
+        if (g > 1.0F) g = 1.0F;
+        if (b > 1.0F) b = 1.0F;
+        return new float[] { r, g, b };
     }
 
     /**
@@ -160,46 +243,83 @@ public final class StormRenderer {
      */
     private static void drawDeck(Minecraft mc, double cx, double cz, double deckY,
                                  double rIn, double rOut, double intensity,
-                                 double phase, double fade) {
-        if (rOut <= rIn) return;
+                                 double phase, double fade, float flash, int segs) {
+        if (rOut <= rIn || segs < 6) return;
         mc.getTextureManager().bindTexture(CLOUD_TEX);
-        net.minecraft.client.renderer.Tessellator t = net.minecraft.client.renderer.Tessellator.instance;
+        Tessellator t = Tessellator.instance;
         t.startDrawingQuads();
         t.setNormal(0.0F, 1.0F, 0.0F);
 
         int rings = 5;
         double shade = 0.34 + 0.30 * intensity;
+        float[] col = litColour(shade, flash);
         for (int ring = 0; ring < rings; ring++) {
             double f0 = ring / (double) rings;
             double f1 = (ring + 1) / (double) rings;
             double ra = rIn + (rOut - rIn) * f0;
             double rb = rIn + (rOut - rIn) * f1;
             // a nuvem desce um pouco para fora (o teto nao e um disco plano)
-            double ya = deckY - f0 * f0 * 18.0;
-            double yb = deckY - f1 * f1 * 18.0;
+            double ya = deckY - f0 * f0 * DECK_DROP;
+            double yb = deckY - f1 * f1 * DECK_DROP;
             float aa = (float) (alphaDeck(f0) * fade * (0.55 + 0.45 * intensity));
             float ab = (float) (alphaDeck(f1) * fade * (0.55 + 0.45 * intensity));
-            for (int seg = 0; seg < DECK_SEGMENTS; seg++) {
-                double a0 = (seg / (double) DECK_SEGMENTS) * TWO_PI + phase;
-                double a1 = ((seg + 1) / (double) DECK_SEGMENTS) * TWO_PI + phase;
+            if (aa <= 0.004F && ab <= 0.004F) continue;
+            float ca = (float) (1.0 - f0 * 0.35);
+            float cb = (float) (1.0 - f1 * 0.35);
+            float va = (float) (f0 * 2.4);
+            float vb = (float) (f1 * 2.4);
+            for (int seg = 0; seg < segs; seg++) {
+                double a0 = (seg / (double) segs) * TWO_PI + phase;
+                double a1 = ((seg + 1) / (double) segs) * TWO_PI + phase;
                 double ca0 = Math.cos(a0), sa0 = Math.sin(a0);
                 double ca1 = Math.cos(a1), sa1 = Math.sin(a1);
+                double u0 = seg / (double) segs * 3.0;
+                double u1 = (seg + 1) / (double) segs * 3.0;
 
-                double u0 = seg / (double) DECK_SEGMENTS * 3.0;
-                double u1 = (seg + 1) / (double) DECK_SEGMENTS * 3.0;
-                float v0 = (float) (f0 * 2.4);
-                float v1 = (float) (f1 * 2.4);
-
-                // cores por vertice: a nuvem escurece para fora
-                float cA = (float) (shade * (1.0 - f0 * 0.35));
-                float cB = (float) (shade * (1.0 - f1 * 0.35));
-                t.setColorRGBA_F(cA, cA * 1.04F, cA * 1.16F, aa);
-                t.addVertexWithUV(cx + ca0 * ra, ya, cz + sa0 * ra, u0, v0);
-                t.addVertexWithUV(cx + ca1 * ra, ya, cz + sa1 * ra, u1, v0);
-                t.setColorRGBA_F(cB, cB * 1.04F, cB * 1.16F, ab);
-                t.addVertexWithUV(cx + ca1 * rb, yb, cz + sa1 * rb, u1, v1);
-                t.addVertexWithUV(cx + ca0 * rb, yb, cz + sa0 * rb, u0, v1);
+                t.setColorRGBA_F(col[0] * ca, col[1] * ca, col[2] * ca, aa);
+                t.addVertexWithUV(cx + ca0 * ra, ya, cz + sa0 * ra, u0, va);
+                t.addVertexWithUV(cx + ca1 * ra, ya, cz + sa1 * ra, u1, va);
+                t.setColorRGBA_F(col[0] * cb, col[1] * cb, col[2] * cb, ab);
+                t.addVertexWithUV(cx + ca1 * rb, yb, cz + sa1 * rb, u1, vb);
+                t.addVertexWithUV(cx + ca0 * rb, yb, cz + sa0 * rb, u0, vb);
             }
+        }
+        t.draw();
+    }
+
+    /**
+     * Camada alta e mais clara sobre o teto.
+     *
+     * <p>Nuvem de tempestade tem espessura: em cima dela ha uma camada de cirrus
+     * que sai da corrente de saida (o ar que subiu na parede do olho e se
+     * espalha no topo). Ela e mais clara porque e gelo fino, e fica de fora do
+     * olho - o buraco do olho atravessa a espessura toda.</p>
+     */
+    private static void drawShell(Minecraft mc, double cx, double cz, double deckY,
+                                  double rmax, double outer, double top, double intensity,
+                                  double phase, double fade, float flash, int segs) {
+        double y = Math.min(deckY + top * 0.18, SKY_LIMIT + 26.0);
+        double rIn = rmax * 1.05;
+        double rOut = outer * 1.16;
+        if (rOut <= rIn || segs < 6 || y <= deckY) return;
+        mc.getTextureManager().bindTexture(CLOUD_TEX);
+        Tessellator t = Tessellator.instance;
+        t.startDrawingQuads();
+        t.setNormal(0.0F, 1.0F, 0.0F);
+        float[] col = litColour(0.62 + 0.20 * intensity, flash);
+        for (int seg = 0; seg < segs; seg++) {
+            double a0 = (seg / (double) segs) * TWO_PI - phase * 0.5;
+            double a1 = ((seg + 1) / (double) segs) * TWO_PI - phase * 0.5;
+            double ca0 = Math.cos(a0), sa0 = Math.sin(a0);
+            double ca1 = Math.cos(a1), sa1 = Math.sin(a1);
+            double u0 = seg / (double) segs * 2.0;
+            double u1 = (seg + 1) / (double) segs * 2.0;
+            float a = (float) (fade * intensity * 0.34);
+            t.setColorRGBA_F(col[0], col[1], col[2], a);
+            t.addVertexWithUV(cx + ca0 * rIn, y, cz + sa0 * rIn, u0, 0.0);
+            t.addVertexWithUV(cx + ca1 * rIn, y, cz + sa1 * rIn, u1, 0.0);
+            t.addVertexWithUV(cx + ca1 * rOut, y, cz + sa1 * rOut, u1, 1.4);
+            t.addVertexWithUV(cx + ca0 * rOut, y, cz + sa0 * rOut, u0, 1.4);
         }
         t.draw();
     }
@@ -211,19 +331,62 @@ public final class StormRenderer {
         return 0.92 * in * out;
     }
 
+    /**
+     * Rodape de nuvem: cortina curta que desce da borda interna do teto.
+     *
+     * <p>Sem ela a nuvem e um disco visto de baixo, e disco nao tem volume. Com
+     * ela aparece a base da parede do olho, que e justamente o que se ve de
+     * dentro de uma tempestade.</p>
+     */
+    private static void drawSkirt(Minecraft mc, double cx, double cz, double deckY,
+                                  double radius, double intensity, double phase, double fade,
+                                  float flash, int segs) {
+        double bottom = deckY - SKIRT_DROP * (0.55 + 0.45 * intensity);
+        if (radius <= 0.5 || deckY - bottom <= 1.0 || segs < 6) return;
+        mc.getTextureManager().bindTexture(WALL_TEX);
+        Tessellator t = Tessellator.instance;
+        t.startDrawingQuads();
+        float[] col = litColour(0.30 + 0.26 * intensity, flash);
+        double vTop = (deckY - bottom) / 40.0;
+        // a cortina afina para baixo: em cima ela nasce da nuvem, embaixo ela
+        // se desfaz na chuva
+        double rBottom = radius * 1.04;
+        for (int seg = 0; seg < segs; seg++) {
+            double a0 = (seg / (double) segs) * TWO_PI + phase * 1.3;
+            double a1 = ((seg + 1) / (double) segs) * TWO_PI + phase * 1.3;
+            double x0t = cx + Math.cos(a0) * radius, z0t = cz + Math.sin(a0) * radius;
+            double x1t = cx + Math.cos(a1) * radius, z1t = cz + Math.sin(a1) * radius;
+            double x0b = cx + Math.cos(a0) * rBottom, z0b = cz + Math.sin(a0) * rBottom;
+            double x1b = cx + Math.cos(a1) * rBottom, z1b = cz + Math.sin(a1) * rBottom;
+            double u0 = seg / (double) segs * 4.0;
+            double u1 = (seg + 1) / (double) segs * 4.0;
+            float aB = (float) (fade * (0.10 + 0.30 * intensity));
+            float aT = (float) (fade * (0.35 + 0.30 * intensity));
+            t.setColorRGBA_F(col[0] * 0.9F, col[1] * 0.9F, col[2] * 0.9F, aB);
+            t.addVertexWithUV(x0b, bottom, z0b, u0, vTop);
+            t.addVertexWithUV(x1b, bottom, z1b, u1, vTop);
+            t.setColorRGBA_F(col[0], col[1], col[2], aT);
+            t.addVertexWithUV(x1t, deckY, z1t, u1, 0.0);
+            t.addVertexWithUV(x0t, deckY, z0t, u0, 0.0);
+        }
+        t.draw();
+    }
+
     /** Cilindro vertical: parede do olho ou cortina de chuva mais externa. */
     private static void drawCylinder(Minecraft mc, double cx, double cz, double baseY,
                                      double deckY, double radius, double intensity,
-                                     double phase, double fade, double alpha) {
-        mc.getTextureManager().bindTexture(WALL_TEX);
-        net.minecraft.client.renderer.Tessellator t = net.minecraft.client.renderer.Tessellator.instance;
-        t.startDrawingQuads();
-        double shade = 0.42 + 0.30 * intensity;
+                                     double phase, double fade, float flash,
+                                     double alpha, int segs) {
         double height = deckY - baseY;
-        if (height <= 1.0 || radius <= 0.5) return;
-        for (int seg = 0; seg < WALL_SEGMENTS; seg++) {
-            double a0 = (seg / (double) WALL_SEGMENTS) * TWO_PI + phase;
-            double a1 = ((seg + 1) / (double) WALL_SEGMENTS) * TWO_PI + phase;
+        if (height <= 1.0 || radius <= 0.5 || segs < 6) return;
+        mc.getTextureManager().bindTexture(WALL_TEX);
+        Tessellator t = Tessellator.instance;
+        t.startDrawingQuads();
+        float[] col = litColour(0.42 + 0.30 * intensity, flash);
+        double vTop = height / 40.0;
+        for (int seg = 0; seg < segs; seg++) {
+            double a0 = (seg / (double) segs) * TWO_PI + phase;
+            double a1 = ((seg + 1) / (double) segs) * TWO_PI + phase;
             double x0 = cx + Math.cos(a0) * radius;
             double z0 = cz + Math.sin(a0) * radius;
             double x1 = cx + Math.cos(a1) * radius;
@@ -231,16 +394,15 @@ public final class StormRenderer {
             // raio da malha: 1 unidade de UV por ~28 blocos
             double u0 = seg * radius / 28.0;
             double u1 = (seg + 1) * radius / 28.0;
-            double vTop = height / 40.0;
 
             float aBot = (float) (alpha * fade * (0.75 + 0.25 * intensity));
             float aTop = (float) (alpha * fade * 0.5 * (0.6 + 0.4 * intensity));
-            t.setColorRGBA_F((float) shade, (float) (shade * 1.02), (float) (shade * 1.12), aBot);
-            t.addVertexWithUV(x0, baseY, z0, u0, 0.0);
-            t.addVertexWithUV(x1, baseY, z1, u1, 0.0);
-            t.setColorRGBA_F((float) (shade * 0.85), (float) (shade * 0.88), (float) (shade * 0.98), aTop);
-            t.addVertexWithUV(x1, deckY, z1, u1, vTop);
-            t.addVertexWithUV(x0, deckY, z0, u0, vTop);
+            t.setColorRGBA_F(col[0], col[1], col[2], aBot);
+            t.addVertexWithUV(x0, baseY, z0, u0, vTop);
+            t.addVertexWithUV(x1, baseY, z1, u1, vTop);
+            t.setColorRGBA_F(col[0] * 0.85F, col[1] * 0.88F, col[2] * 0.98F, aTop);
+            t.addVertexWithUV(x1, deckY, z1, u1, 0.0);
+            t.addVertexWithUV(x0, deckY, z0, u0, 0.0);
         }
         t.draw();
     }
@@ -255,16 +417,16 @@ public final class StormRenderer {
      */
     private static void drawFunnel(Minecraft mc, double cx, double cz, double groundY,
                                    double deckY, double rmax, double intensity,
-                                   double phase, double fade, double leanX, double leanZ) {
-        mc.getTextureManager().bindTexture(WALL_TEX);
-        net.minecraft.client.renderer.Tessellator t = net.minecraft.client.renderer.Tessellator.instance;
-        t.startDrawingQuads();
+                                   double phase, double fade, float flash,
+                                   double leanX, double leanZ, int segs) {
         double height = deckY - groundY;
-        if (height <= 2.0) return;
         double rTop = rmax * 2.6;
         double rBottom = rmax * 0.42;
-        double shade = 0.40 + 0.32 * intensity;
-        int segs = WALL_SEGMENTS;
+        if (height <= 2.0 || rBottom <= 0.2 || segs < 6) return;
+        mc.getTextureManager().bindTexture(WALL_TEX);
+        Tessellator t = Tessellator.instance;
+        t.startDrawingQuads();
+        float[] col = litColour(0.40 + 0.32 * intensity, flash);
         int bands = 10;
         for (int b = 0; b < bands; b++) {
             double f0 = b / (double) bands;
@@ -282,6 +444,7 @@ public final class StormRenderer {
             double lx1 = leanX * lean1;
             double lz1 = leanZ * lean1;
             float alpha0 = (float) (fade * intensity * (0.30 + 0.55 * (1.0 - f0)));
+            float alpha1 = (float) (fade * intensity * (0.30 + 0.55 * (1.0 - f1)));
             for (int seg = 0; seg < segs; seg++) {
                 double a0 = (seg / (double) segs) * TWO_PI + phase;
                 double a1 = ((seg + 1) / (double) segs) * TWO_PI + phase;
@@ -297,9 +460,10 @@ public final class StormRenderer {
                 double u1 = (seg + 1) / (double) segs * 2.0;
                 float v0 = (float) f0;
                 float v1 = (float) f1;
-                t.setColorRGBA_F((float) shade, (float) (shade * 1.02), (float) (shade * 1.1), alpha0);
+                t.setColorRGBA_F(col[0], col[1], col[2], alpha0);
                 t.addVertexWithUV(x00, y0, z00, u0, v0);
                 t.addVertexWithUV(x10, y0, z10, u1, v0);
+                t.setColorRGBA_F(col[0] * 0.92F, col[1] * 0.94F, col[2] * 1.02F, alpha1);
                 t.addVertexWithUV(x11, y1, z11, u1, v1);
                 t.addVertexWithUV(x01, y1, z01, u0, v1);
             }
@@ -311,55 +475,58 @@ public final class StormRenderer {
      * Bandas espirais de chuva.
      *
      * <p>Sao espirais de verdade (raio e angulo crescem juntos), com o mesmo
-     * sentido de rotacao do campo de vento. E o que da a leitura de "furacao" em
-     * vez de "mancha cinza": as bandas entram girando na direcao da parede do
-     * olho.</p>
+     * sentido de rotacao do campo de vento, e descem da base da nuvem ate perto
+     * do chao: cada banda e uma cortina vertical, que e o que um setor de chuva
+     * de um ciclone e. E o que da a leitura de "furacao" em vez de "mancha
+     * cinza": as bandas entram girando na direcao da parede do olho.</p>
      */
     private static void drawBands(Minecraft mc, double cx, double cz, double groundY,
-                                  double rmax, double outer, double intensity,
-                                  double phase, double fade, double spin) {
-        mc.getTextureManager().bindTexture(WALL_TEX);
-        net.minecraft.client.renderer.Tessellator t = net.minecraft.client.renderer.Tessellator.instance;
-        double rIn = rmax * 1.15;
+                                  double deckY, double rmax, double outer, double intensity,
+                                  double phase, double fade, float flash, double spin,
+                                  boolean narrow, int segs) {
+        double rIn = narrow ? rmax * 6.0 : rmax * 1.15;
         double rOut = outer * 1.02;
-        if (rOut <= rIn) return;
-        double shade = 0.36 + 0.26 * intensity;
+        if (rOut <= rIn || segs < 6) return;
+        mc.getTextureManager().bindTexture(WALL_TEX);
+        Tessellator t = Tessellator.instance;
         t.startDrawingQuads();
-        t.setNormal(0.0F, 1.0F, 0.0F);
+        float[] col = litColour(0.36 + 0.26 * intensity, flash);
+        double yBottom = groundY + 2.0;
+        double yTop = Math.max(yBottom + 4.0, deckY - 30.0);
+        double weight = narrow ? 0.45 : 1.0;
+        int steps = narrow ? BAND_STEPS / 2 : BAND_STEPS;
         for (int arm = 0; arm < BAND_ARMS; arm++) {
             double base = (arm / (double) BAND_ARMS) * TWO_PI;
-            for (int step = 0; step < BAND_STEPS; step++) {
-                double f0 = step / (double) BAND_STEPS;
-                double f1 = (step + 1) / (double) BAND_STEPS;
+            for (int step = 0; step < steps; step++) {
+                double f0 = step / (double) steps;
+                double f1 = (step + 1) / (double) steps;
                 double r0 = rIn + (rOut - rIn) * f0;
                 double r1 = rIn + (rOut - rIn) * f1;
                 // espiral: o angulo cresce com o log do raio
                 double s0 = base + spin * Math.log(r0 / rIn) * 1.6 + phase * 0.6;
                 double s1 = base + spin * Math.log(r1 / rIn) * 1.6 + phase * 0.6;
-                double wide0 = rmax * (0.30 + 0.55 * f0);
-                double wide1 = rmax * (0.30 + 0.55 * f1);
-                double y = groundY + 14.0 + f0 * 26.0;
-                double y1 = groundY + 14.0 + f1 * 26.0;
+                double x0 = cx + Math.cos(s0) * r0;
+                double z0 = cz + Math.sin(s0) * r0;
+                double x1 = cx + Math.cos(s1) * r1;
+                double z1 = cz + Math.sin(s1) * r1;
+                // a banda desce da base da nuvem ate perto do chao; mais para
+                // fora ela nasce um pouco mais alta (a nuvem tambem sobe)
+                double t0 = yTop - f0 * 8.0;
+                double t1 = yTop - f1 * 8.0;
+                float a0 = (float) (intensity * fade * 0.26 * (1.0 - f0) * weight);
+                float a1 = (float) (intensity * fade * 0.26 * (1.0 - f1) * weight);
+                if (a0 <= 0.004F && a1 <= 0.004F) continue;
+                double u0 = f0 * 3.0;
+                double u1 = f1 * 3.0;
+                float vTop0 = (float) ((t0 - yBottom) / 40.0);
+                float vTop1 = (float) ((t1 - yBottom) / 40.0);
 
-                double ax0 = cx + Math.cos(s0) * r0;
-                double az0 = cz + Math.sin(s0) * r0;
-                double ax1 = cx + Math.cos(s1) * r1;
-                double az1 = cz + Math.sin(s1) * r1;
-                // largura da banda aplicada perpendicularmente ao raio
-                double nx0 = -Math.sin(s0), nz0 = Math.cos(s0);
-                double nx1 = -Math.sin(s1), nz1 = Math.cos(s1);
-
-                float a0 = (float) (intensity * fade * 0.30 * (1.0 - f0));
-                float a1 = (float) (intensity * fade * 0.30 * (1.0 - f1));
-                double u0 = f0 * 2.0, u1 = f1 * 2.0;
-
-                t.setColorRGBA_F((float) shade, (float) (shade * 1.03), (float) (shade * 1.14), a0);
-                t.addVertexWithUV(ax0 + nx0 * wide0, y, az0 + nz0 * wide0, u0, 0.0);
-                t.addVertexWithUV(ax1 + nx1 * wide1, y1, az1 + nz1 * wide1, u1, 0.0);
-                t.setColorRGBA_F((float) (shade * 0.9), (float) (shade * 0.93),
-                        (float) (shade * 1.02), a1);
-                t.addVertexWithUV(ax1 - nx1 * wide1, y1, az1 - nz1 * wide1, u1, 1.0);
-                t.addVertexWithUV(ax0 - nx0 * wide0, y, az0 - nz0 * wide0, u0, 1.0);
+                t.setColorRGBA_F(col[0] * 0.88F, col[1] * 0.9F, col[2] * 0.98F, a0 * 0.35F);
+                t.addVertexWithUV(x0, yBottom, z0, u0, 0.0);
+                t.addVertexWithUV(x1, yBottom, z1, u1, 0.0);
+                t.setColorRGBA_F(col[0], col[1], col[2], a0);
+                t.addVertexWithUV(x1, t1, z1, u1, vTop1);
+                t.addVertexWithUV(x0, t0, z0, u0, vTop0);
             }
         }
         t.draw();
@@ -373,13 +540,26 @@ public final class StormRenderer {
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glDepthMask(false);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        // O bindTexture liga na unidade ATIVA, e durante o mundo a unidade ativa
+        // costuma ser a do lightmap (GL_TEXTURE1): sem trocar, as nuvens sairiam
+        // texturizadas com o mapa de luz. Guardamos a unidade atual, desenhamos
+        // na padrao e devolvemos no fim.
+        previousUnit = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+        OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
     }
 
     private static void endTranslucent() {
+        if (previousUnit >= 0) {
+            GL13.glActiveTexture(previousUnit);
+            previousUnit = -1;
+        }
         GL11.glDepthMask(true);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         GL11.glPopAttrib();
     }
+
+    /** Unidade de textura ativa antes do desenho, para devolver no fim. */
+    private static int previousUnit = -1;
 
     private static double max0(double v) {
         return v < 0.0 ? 0.0 : v;
