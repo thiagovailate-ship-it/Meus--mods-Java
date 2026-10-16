@@ -6,6 +6,7 @@ import com.dynamicwinds.content.blocks.BlockWindsock;
 import com.dynamicwinds.content.tileentities.TileEntityAnemometer;
 import com.dynamicwinds.content.tileentities.TileEntityWindVane;
 import com.dynamicwinds.content.tileentities.TileEntityWindsock;
+import com.dynamicwinds.content.items.ItemCatastropheStaff;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -15,6 +16,7 @@ public final class ContentRegistry {
     public static BlockWindVane windVane;
     public static BlockWindsock windsock;
     public static BlockAnemometer anemometer;
+    public static ItemCatastropheStaff catastropheStaff;
 
     private ContentRegistry() {}
 
@@ -22,6 +24,7 @@ public final class ContentRegistry {
         windVane = new BlockWindVane();
         windsock = new BlockWindsock();
         anemometer = new BlockAnemometer();
+        catastropheStaff = new ItemCatastropheStaff();
 
         GameRegistry.registerBlock(windVane, "windVane");
         GameRegistry.registerBlock(windsock, "windsock");
@@ -31,6 +34,8 @@ public final class ContentRegistry {
         GameRegistry.registerTileEntity(TileEntityWindsock.class, "dynamicwinds:windsock");
         GameRegistry.registerTileEntity(TileEntityAnemometer.class, "dynamicwinds:anemometer");
 
+        GameRegistry.registerItem(catastropheStaff, "catastropheStaff");
+
         // recipes
         GameRegistry.addRecipe(new ItemStack(windVane), " S ", " S ", "III",
                 'S', Items.stick, 'I', Items.iron_ingot);
@@ -38,5 +43,10 @@ public final class ContentRegistry {
                 'W', Blocks.wool, 'S', Items.stick);
         GameRegistry.addRecipe(new ItemStack(anemometer), " R ", "ICI", " I ",
                 'R', Items.redstone, 'I', Items.iron_ingot, 'C', Items.comparator);
+
+        // Cajado da Catastrofe: o nucleo do Wither da o "toque final", a vara de
+        // blaze fornece a energia termica que a fisica do ciclone consome
+        GameRegistry.addRecipe(new ItemStack(catastropheStaff), "  N", " B ", "S  ",
+                'N', Items.nether_star, 'B', Items.blaze_rod, 'S', Items.ender_pearl);
     }
 }

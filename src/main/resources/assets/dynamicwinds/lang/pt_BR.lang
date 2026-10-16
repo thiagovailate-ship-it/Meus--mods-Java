@@ -7,3 +7,7 @@ block.anemometer.name=Anemômetro
 item.windVane.name=Cata-vento
 item.windsock.name=Manga de vento
 item.anemometer.name=Anemômetro
+
+# Cajado da Catastrofe
+item.catastropheStaff.name=Cajado da Catástrofe
+death.attack.dynamicwinds.storm=%1$s foi arremessado por uma tempestade

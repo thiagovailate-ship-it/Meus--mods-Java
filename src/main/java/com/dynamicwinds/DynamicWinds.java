@@ -22,6 +22,7 @@ public class DynamicWinds {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         WindConfig.load(e.getSuggestedConfigurationFile());
+        com.dynamicwinds.integration.network.StormNetwork.register();
         com.dynamicwinds.content.ContentRegistry.register();
     }
 

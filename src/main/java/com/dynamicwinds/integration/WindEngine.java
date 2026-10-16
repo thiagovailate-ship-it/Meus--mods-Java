@@ -37,6 +37,8 @@ public final class WindEngine {
         }
 
         EntityPushHandler.tick(world);
+        StormWeather.tick(world);
+        DestructionHandler.tick(world);
     }
 
     public static int cellOf(int coord) { return Math.floorDiv(coord, CELL); }
@@ -54,5 +56,6 @@ public final class WindEngine {
     public void unloadWorld(World world) {
         caches.remove((long) world.provider.dimensionId);
         lastRefresh.remove((long) world.provider.dimensionId);
+        StormWeather.forget(world);
     }
 }

@@ -87,6 +87,10 @@ public class ClientEvents {
                 rebound = true;
                 registerRenderers();
             }
+            // pacotes de tempestade invocada chegam pela thread do netty: aqui,
+            // no tick do cliente, eles sao aplicados no mundo
+            com.dynamicwinds.integration.network.StormNetwork.drainClient(
+                    net.minecraft.client.Minecraft.getMinecraft().theWorld);
             WindVFX.tick();
             TornadoVFX.tick();
             WindAudio.update();

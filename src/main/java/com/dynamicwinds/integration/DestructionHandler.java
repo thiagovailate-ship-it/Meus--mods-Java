@@ -1,0 +1,213 @@
+package com.dynamicwinds.integration;
+
+import com.dynamicwinds.api.Wind;
+import com.dynamicwinds.content.ContentRegistry;
+import com.dynamicwinds.core.StormField;
+import com.dynamicwinds.core.SurfaceRoughness;
+import com.dynamicwinds.core.WindSample;
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.DamageSource;
+import net.minecraft.world.World;
+
+import java.util.List;
+import java.util.Random;
+
+/**
+ * Dano pesado: o vento arranca blocos, derruba arvores e machuca o que estiver
+ * exposto.
+ *
+ * <p><b>Nada aqui usa tabela de "raio de destruicao".</b> Cada bloco candidato e
+ * consultado no <i>mesmo</i> campo de vento que o resto do mod usa
+ * ({@link Wind#getWindAt}), e quebra se a velocidade local passar da resistencia
+ * do material. Consequencias que caem de graca:</p>
+ * <ul>
+ *   <li>O olho do furacao e calmo, entao nada quebra ali no meio.</li>
+ *   <li>A parede do olho e a faixa mais destrutiva, e ela migra com o sistema.</li>
+ *   <li>A destruicao enfraquece no landfall junto com o proprio sistema, porque
+ *       a energia da superficie ja esta embutida no campo.</li>
+ *   <li>Uma tempestade tropical arranca folhas e vidro, mas nao derruba
+ *       estruturas; so um furacao maior chega a madeira e pedra.</li>
+ * </ul>
+ *
+ * <p><b>Escala da resistencia:</b> {@code v_critico = 9 + 24 * dureza} m/s. Com
+ * isso a folhagem (dureza 0.2) sai a ~14 m/s, terra e areia (0.5) a ~21 m/s,
+ * madeira e tronco (2.0) a ~57 m/s, e obsidiana (50) praticamente nunca - o que
+ * reproduz a escala de dano de um furacao real e ainda protege blocos que o
+ * jogador escolheu como cofre.</p>
+ *
+ * <p><b>Custo:</b> o trabalho e limitado por tick
+ * ({@link WindConfig#destructionBlocksPerTick}) e so ocorre perto de jogadores,
+ * onde os chunks ja estao carregados.</p>
+ */
+public final class DestructionHandler {
+
+    /** Blocos de tronco derrubados em cadeia quando a base cede. */
+    private static final int TRUNK_FALL = 12;
+    /** Distancia em blocos ao redor do jogador em que o dano e simulado. */
+    private static final double BASE_RADIUS = 48.0;
+    /** Blocos acima da superficie ainda atingidos (muros, telhados, arvores). */
+    private static final int REACH_UP = 16;
+    /** Blocos abaixo da superficie (o vento arranca o chao exposto). */
+    private static final int REACH_DOWN = 3;
+    /** Raio protegido ao redor do ponto de nascimento, em blocos. */
+    private static final double SPAWN_SAFE_RADIUS = 64.0;
+
+    private static final double TWO_PI = Math.PI * 2.0;
+
+    /** Fonte de dano propria, para a mensagem de morte fazer sentido. */
+    public static final DamageSource STORM_DAMAGE = new DamageSource("dynamicwinds.storm");
+
+    /** Velocidade minima para ferir uma entidade (m/s). */
+    private static final double HURT_THRESHOLD = 26.0;
+    /** Velocidade minima para ferir um jogador (m/s): so Cat 3 ou acima. */
+    private static final double HURT_THRESHOLD_PLAYER = 55.0;
+
+    private DestructionHandler() {}
+
+    public static void tick(World world) {
+        if (world.isRemote) return;
+        if (!WindConfig.enableDestruction) return;
+
+        long time = world.getTotalWorldTime();
+        StormField field = Wind.stormsFor(world);
+        if (field == null) return;
+        SurfaceRoughness energy = Wind.surfaceEnergyFor(world);
+        if (field.activeAt(time, energy).isEmpty()) return;
+
+        List players = world.playerEntities;
+        if (players.isEmpty()) return;
+
+        int perPlayer = Math.max(1, WindConfig.destructionBlocksPerTick / players.size());
+        for (int i = 0; i < players.size(); i++) {
+            EntityPlayer p = (EntityPlayer) players.get(i);
+            carve(world, p, perPlayer, field, time);
+        }
+        damageEntities(world);
+    }
+
+    // ------------------------------------------------------------------
+    // blocos
+    // ------------------------------------------------------------------
+
+    private static void carve(World world, EntityPlayer p, int budget, StormField field, long time) {
+        Random rand = world.rand;
+        double radius = BASE_RADIUS * WindConfig.destructionRadiusScale;
+        int pbx = (int) Math.floor(p.posX);
+        int pbz = (int) Math.floor(p.posZ);
+
+        for (int i = 0; i < budget; i++) {
+            double angle = rand.nextDouble() * TWO_PI;
+            double r = Math.sqrt(rand.nextDouble()) * radius; // uniforme em area
+            int x = pbx + (int) Math.round(Math.cos(angle) * r);
+            int z = pbz + (int) Math.round(Math.sin(angle) * r);
+            if (!world.blockExists(x, 64, z)) continue;
+            if (WindConfig.destructionProtectSpawn && nearSpawn(world, x, z)) continue;
+
+            int surface = world.getHeightValue(x, z);
+            int y = surface - REACH_DOWN + rand.nextInt(REACH_DOWN + REACH_UP);
+            tryBreak(world, x, y, z, rand);
+        }
+    }
+
+    /**
+     * Avalia um bloco. Este e o ponto onde o vento encontra a resistencia do
+     * material: nada e destruido sem passar pelo campo fisico.
+     */
+    private static boolean tryBreak(World world, int x, int y, int z, Random rand) {
+        Block block = world.getBlock(x, y, z);
+        if (block == null) return false;
+        if (world.isAirBlock(x, y, z)) return false;
+
+        Material mat = block.getMaterial();
+        if (mat == null || mat.isLiquid()) return false;
+
+        // blocos com inventario/estado (bau, forno, maquinas) sao preservados:
+        // destruir isso apagaria dados do jogador sem aviso
+        if (world.getTileEntity(x, y, z) != null) return false;
+        // os proprios instrumentos do mod tambem ficam de pe
+        if (block == ContentRegistry.windVane || block == ContentRegistry.windsock
+                || block == ContentRegistry.anemometer) {
+            return false;
+        }
+
+        float hardness = block.getBlockHardness(world, x, y, z);
+        if (hardness < 0.0F) return false; // indestrutivel (bedrock, portal, etc.)
+
+        double needed = criticalSpeed(hardness);
+        WindSample s = Wind.getWindAt(world, x + 0.5, y + 0.5, z + 0.5);
+        if (s.speed < needed) return false;
+
+        int meta = world.getBlockMetadata(x, y, z);
+        if (WindConfig.destructionDropItems) {
+            block.dropBlockAsItem(world, x, y, z, meta, 0);
+        }
+        world.setBlockToAir(x, y, z);
+        // efeito de impacto: poeira no ponto arrancado
+        world.playAuxSFX(2001, x, y, z, Block.getIdFromBlock(block) + (meta << 12));
+
+        if (isTrunk(block)) {
+            int felled = 0;
+            for (int dy = 1; dy <= TRUNK_FALL; dy++) {
+                Block up = world.getBlock(x, y + dy, z);
+                if (!isTrunk(up)) break;
+                if (WindConfig.destructionDropItems) {
+                    up.dropBlockAsItem(world, x, y + dy, z, world.getBlockMetadata(x, y + dy, z), 0);
+                }
+                world.setBlockToAir(x, y + dy, z);
+                if (++felled >= 3 + rand.nextInt(4)) break; // nem toda arvore cede inteira
+            }
+        }
+        return true;
+    }
+
+    /** Velocidade critica de arrancamento, em m/s, a partir da dureza do bloco. */
+    public static double criticalSpeed(float hardness) {
+        return 9.0 + 24.0 * Math.max(0.0F, hardness);
+    }
+
+    /** Tritoncos de qualquer especie (as duas familias de madeira do jogo). */
+    private static boolean isTrunk(Block b) {
+        return b == Blocks.log || b == Blocks.log2;
+    }
+
+    private static boolean nearSpawn(World world, int x, int z) {
+        net.minecraft.util.ChunkCoordinates spawn = world.getSpawnPoint();
+        if (spawn == null) return false;
+        double dx = x - spawn.posX;
+        double dz = z - spawn.posZ;
+        return dx * dx + dz * dz < SPAWN_SAFE_RADIUS * SPAWN_SAFE_RADIUS;
+    }
+
+    // ------------------------------------------------------------------
+    // entidades
+    // ------------------------------------------------------------------
+
+    /**
+     * Machuca o que esta exposto ao vento: destrocos voando, arrancados de
+     * estruturas, atingem quem estiver na faixa mais violenta.
+     */
+    private static void damageEntities(World world) {
+        List loaded = world.loadedEntityList;
+        for (int i = 0; i < loaded.size(); i++) {
+            Entity e = (Entity) loaded.get(i);
+            if (e.isDead) continue;
+            if (e.hurtResistantTime > 0) continue;
+
+            WindSample s = Wind.getWindAt(world, e.posX, e.posY, e.posZ);
+            boolean player = e instanceof EntityPlayer;
+            double threshold = player ? HURT_THRESHOLD_PLAYER : HURT_THRESHOLD;
+            if (s.speed < threshold) continue;
+
+            if (player && ((EntityPlayer) e).capabilities.isCreativeMode) continue;
+            // escalonamento quadratico: passar do limiar machuca, mas o pico de
+            // um furacao maior e o que mata
+            double over = s.speed - threshold;
+            float damage = (float) (1.0 + over * over * 0.02);
+            e.attackEntityFrom(STORM_DAMAGE, damage);
+        }
+    }
+}

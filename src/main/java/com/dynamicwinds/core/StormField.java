@@ -1,11 +1,12 @@
 package com.dynamicwinds.core;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Conjunto de sistemas de tempo severo ativos em um mundo.
@@ -46,9 +47,14 @@ public final class StormField {
     private final boolean north;
     private final double spawnChance;
     private final PerlinNoise noise;
-    private final Map<Long, StormSystem> naturalCache = new HashMap<Long, StormSystem>();
-    private final List<StormSystem> dynamic = new ArrayList<StormSystem>();
-    private long nextDynamicId = 1L;
+    // Em single-player o servidor integrado e o cliente rodam em threads
+    // diferentes e compartilham esta mesma instancia (o modelo e indexado pela
+    // seed do mundo). As estruturas abaixo sao seguras para leitura concorrente:
+    // o servidor escreve raramente (nasce/termina um sistema), mas o VFX le a
+    // cada quadro, e uma lista comum daria ConcurrentModificationException.
+    private final Map<Long, StormSystem> naturalCache = new ConcurrentHashMap<Long, StormSystem>();
+    private final List<StormSystem> dynamic = new CopyOnWriteArrayList<StormSystem>();
+    private final AtomicLong nextDynamicId = new AtomicLong(1L);
 
     /** Hemisferio norte, com chance padrao de um sistema por janela. */
     public StormField(long seed) {
@@ -248,8 +254,8 @@ public final class StormField {
      */
     public StormSystem spawn(int kind, long time, double x, double z, double headingRad,
                              double intensityMul) {
-        StormSystem s = new StormSystem(kind, nextDynamicId++, time, x, z, headingRad, 0.0,
-                north, intensityMul, true);
+        StormSystem s = new StormSystem(kind, nextDynamicId.getAndIncrement(), time, x, z,
+                headingRad, 0.0, north, intensityMul, true);
         dynamic.add(s);
         return s;
     }
@@ -264,7 +270,7 @@ public final class StormField {
             }
         }
         dynamic.add(s);
-        if (s.id >= nextDynamicId) nextDynamicId = s.id + 1L;
+        if (s.id >= nextDynamicId.get()) nextDynamicId.set(s.id + 1L);
     }
 
     public void removeDynamic(long id) {

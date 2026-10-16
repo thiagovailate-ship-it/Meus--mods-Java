@@ -7,3 +7,7 @@ block.anemometer.name=Anemometer
 item.windVane.name=Wind Vane
 item.windsock.name=Windsock
 item.anemometer.name=Anemometer
+
+# Catastrophe Staff
+item.catastropheStaff.name=Catastrophe Staff
+death.attack.dynamicwinds.storm=%1$s was thrown by a storm

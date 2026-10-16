@@ -70,6 +70,21 @@ public final class Wind {
         return modelFor(world).storms();
     }
 
+    /**
+     * Fator de energia da superficie deste mundo, derivado do bioma.
+     *
+     * <p>Pedido pela camada de integracao (arrasto de entidades, destruicao,
+     * clima) para consultar o campo de tempestade exatamente com a mesma
+     * energia que o modelo principal usa - se cada chamador passasse o seu
+     * proprio fator, o vento "da fisica" e o vento "do dano" divergiriam.</p>
+     *
+     * @param world mundo consultado
+     * @return fator de energia baseado em bioma (1.0 sobre oceano)
+     */
+    public static SurfaceRoughness surfaceEnergyFor(World world) {
+        return new BiomeRoughness(world);
+    }
+
     public static int surfaceClassFor(BiomeGenBase biome) {
         if (biome == null) return SurfaceClass.GRASS;
         String name = biome.biomeName.toLowerCase();
