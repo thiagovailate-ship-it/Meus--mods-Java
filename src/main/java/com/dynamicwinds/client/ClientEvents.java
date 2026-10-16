@@ -11,7 +11,7 @@ import com.dynamicwinds.client.render.tesr.TESRWindsock;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 
 import java.lang.reflect.Field;
 import java.util.Map;

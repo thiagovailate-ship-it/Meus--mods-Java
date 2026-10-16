@@ -8,7 +8,6 @@ import net.minecraft.world.World;
 public class BlockWindsock extends Block {
     public BlockWindsock() {
         super(Material.cloth);
-        setTextureName("dynamicwinds:blocks/windsock");
         setBlockName("windsock");
         setHardness(0.5f);
     }

@@ -14,7 +14,7 @@ public class TESRWindVane extends TileEntitySpecialRenderer {
         new ResourceLocation("dynamicwinds", "blocks/wind_vane");
 
     @Override
-    public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks) {
+    public void renderTileEntityAt(TileEntity te, double x, double y, double z, float partialTicks, int destroyStage) {
         TileEntityWindVane vane = (TileEntityWindVane) te;
         GL11.glPushMatrix();
         GL11.glTranslated(x + 0.5, y + 0.5, z + 0.5);
@@ -24,13 +24,12 @@ public class TESRWindVane extends TileEntitySpecialRenderer {
         
         bindTexture(TEX);
         
-        // Render a simple arrow shape
         Tessellator tess = Tessellator.instance;
         BufferBuilder buf = tess.getBuffer();
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
         
-        // Base cylinder (simplified as box)
-        renderBox(0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 1.0f, 0.8f, 0.8f, 0.8f, 1.0f);
+        // Base box
+        renderBox(0.4f, 0.0f, 0.4f, 1.0f, 1.0f, 1.0f, 0.8f, 0.8f, 0.8f, 1.0f);
         
         // Arrow shaft
         renderBox(0.4f, 0.1f, 0.9f, 0.5f, 1.2f, 1.1f, 0.6f, 0.6f, 0.6f, 1.0f);
@@ -46,7 +45,6 @@ public class TESRWindVane extends TileEntitySpecialRenderer {
                            float r, float g, float b, float a) {
         Tessellator tess = Tessellator.instance;
         BufferBuilder buf = tess.getBuffer();
-        // Simplified: just draw one face for demo
         buf.pos(x1, y1, z2).color(r, g, b, a).endVertex();
         buf.pos(x2, y1, z2).color(r, g, b, a).endVertex();
         buf.pos(x2, y2, z2).color(r, g, b, a).endVertex();
