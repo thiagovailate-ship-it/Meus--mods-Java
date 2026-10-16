@@ -49,26 +49,27 @@ Renamed 0 AT entries
 Applying Exceptor
 Cleaning up generated debuginfo
 
+> Task :compileInjectedTagsJava
+> Task :injectedTagsClasses
+
 > Task :decompileSrgJar
 Didn't find cached decompiled jar, decompiling and saving to /home/runner/.gradle/caches/retro_futura_gradle/fernflower-cache/f857d0a5dc440e9576a099ffe2dcf0f57f62ec6a9a90cdd7e8a27d4573e0504b-d253f2106b6c42cd09e68e3eb271a05bffc1063ab065ac1a7425f1586d3b5891.jar
 Decompiling the srg jar with fernflower
 
-> Task :compileInjectedTagsJava
-> Task :injectedTagsClasses
 > Task :compileMcLauncherJava
 > Task :mcLauncherClasses
 > Task :packageMcLauncher
 
 > Task :decompileSrgJar
-  Decompiling took 38326 ms
+  Decompiling took 41716 ms
 
 > Task :cleanupDecompSrgJar
 Fixup stage 1 - applying FF patches
-  Stage 1 took 3102 ms
+  Stage 1 took 3508 ms
 Fixup stage 2 - applying MCP patches
-  Stage 2 took 71 ms
+  Stage 2 took 73 ms
 Fixup stage 3 - applying MCP cleanup
-  Stage 3 took 5269 ms
+  Stage 3 took 5257 ms
 Saving the fixed-up jar
 
 > Task :patchDecompiledJar
@@ -95,16 +96,9 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :packagePatchedMc
 
 > Task :compileJava FAILED
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:14: error: cannot find symbol
-import net.minecraft.tileentity.TileEntitySpecialRenderer;
-                               ^
-  symbol:   class TileEntitySpecialRenderer
-  location: package net.minecraft.tileentity
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:28: error: cannot find symbol
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:28: error: type net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer does not take parameters
                                       TileEntitySpecialRenderer<?> renderer) {
-                                      ^
-  symbol:   class TileEntitySpecialRenderer
-  location: class com.dynamicwinds.client.ClientEvents
+                                                               ^
 /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:4: error: cannot find symbol
 import net.minecraft.client.renderer.BufferBuilder;
                                     ^
@@ -113,88 +107,94 @@ import net.minecraft.client.renderer.BufferBuilder;
 /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:7: error: package net.minecraft.client.renderer.vertex does not exist
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
                                            ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:33: error: cannot find symbol
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:4: error: cannot find symbol
+import net.minecraft.client.renderer.BufferBuilder;
+                                    ^
+  symbol:   class BufferBuilder
+  location: package net.minecraft.client.renderer
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:7: error: package net.minecraft.client.renderer.vertex does not exist
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+                                           ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:33: error: type net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer does not take parameters
             Map<Class<? extends net.minecraft.tileentity.TileEntity>, TileEntitySpecialRenderer<?>> map =
-                                                                      ^
-  symbol:   class TileEntitySpecialRenderer
-  location: class com.dynamicwinds.client.ClientEvents
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:34: error: cannot find symbol
+                                                                                               ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:34: error: type net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer does not take parameters
                 (Map<Class<? extends net.minecraft.tileentity.TileEntity>, TileEntitySpecialRenderer<?>>) field.get(null);
-                                                                           ^
-  symbol:   class TileEntitySpecialRenderer
-  location: class com.dynamicwinds.client.ClientEvents
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:29: error: cannot find symbol
+                                                                                                    ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:12: error: com.dynamicwinds.client.render.tesr.TESRWindVane is not abstract and does not override abstract method renderTileEntityAt(net.minecraft.tileentity.TileEntity,double,double,double,float) in net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
+public class TESRWindVane extends TileEntitySpecialRenderer {
+       ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:16: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:28: error: cannot find symbol
         BufferBuilder buf = tess.getBuffer();
         ^
   symbol:   class BufferBuilder
   location: class com.dynamicwinds.client.render.tesr.TESRWindVane
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:29: error: cannot find symbol
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:28: error: cannot find symbol
         BufferBuilder buf = tess.getBuffer();
                                 ^
   symbol:   method getBuffer()
   location: variable tess of type net.minecraft.client.renderer.Tessellator
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:30: error: cannot find symbol
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:29: error: cannot find symbol
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
                                  ^
   symbol:   variable DefaultVertexFormats
   location: class com.dynamicwinds.client.render.tesr.TESRWindVane
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:48: error: cannot find symbol
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:47: error: cannot find symbol
         BufferBuilder buf = tess.getBuffer();
         ^
   symbol:   class BufferBuilder
   location: class com.dynamicwinds.client.render.tesr.TESRWindVane
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:48: error: cannot find symbol
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:47: error: cannot find symbol
         BufferBuilder buf = tess.getBuffer();
                                 ^
   symbol:   method getBuffer()
   location: variable tess of type net.minecraft.client.renderer.Tessellator
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:56: error: method does not override or implement a method from a supertype
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindVane.java:54: error: method does not override or implement a method from a supertype
     @Override
     ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/blocks/BlockWindVane.java:11: error: cannot find symbol
-        setTextureName("dynamicwinds:blocks/wind_vane");
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:12: error: com.dynamicwinds.client.render.tesr.TESRWindsock is not abstract and does not override abstract method renderTileEntityAt(net.minecraft.tileentity.TileEntity,double,double,double,float) in net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer
+public class TESRWindsock extends TileEntitySpecialRenderer {
+       ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:16: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:27: error: cannot find symbol
+        BufferBuilder buf = tess.getBuffer();
         ^
-  symbol:   method setTextureName(java.lang.String)
-  location: class com.dynamicwinds.content.blocks.BlockWindVane
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/blocks/BlockWindsock.java:11: error: cannot find symbol
-        setTextureName("dynamicwinds:blocks/windsock");
+  symbol:   class BufferBuilder
+  location: class com.dynamicwinds.client.render.tesr.TESRWindsock
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:27: error: cannot find symbol
+        BufferBuilder buf = tess.getBuffer();
+                                ^
+  symbol:   method getBuffer()
+  location: variable tess of type net.minecraft.client.renderer.Tessellator
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:28: error: cannot find symbol
+        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
+                                 ^
+  symbol:   variable DefaultVertexFormats
+  location: class com.dynamicwinds.client.render.tesr.TESRWindsock
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:56: error: cannot find symbol
+        BufferBuilder buf = tess.getBuffer();
         ^
-  symbol:   method setTextureName(java.lang.String)
-  location: class com.dynamicwinds.content.blocks.BlockWindsock
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/blocks/BlockAnemometer.java:13: error: cannot find symbol
-        setTextureName("dynamicwinds:blocks/anemometer");
-        ^
-  symbol:   method setTextureName(java.lang.String)
-  location: class com.dynamicwinds.content.blocks.BlockAnemometer
+  symbol:   class BufferBuilder
+  location: class com.dynamicwinds.client.render.tesr.TESRWindsock
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:56: error: cannot find symbol
+        BufferBuilder buf = tess.getBuffer();
+                                ^
+  symbol:   method getBuffer()
+  location: variable tess of type net.minecraft.client.renderer.Tessellator
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/render/tesr/TESRWindsock.java:63: error: method does not override or implement a method from a supertype
+    @Override
+    ^
 Note: /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/gui/WindConfigGui.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-15 errors
+23 errors
 
 [Incubating] Problems report is available at: file:///home/runner/work/Meus--mods-Java/Meus--mods-Java/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileJava'.
-> Compilation failed; see the compiler output below.
-  /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/ClientEvents.java:14: error: cannot find symbol
-  import net.minecraft.tileentity.TileEntitySpecialRenderer;
-                                 ^
-    symbol:   class TileEntitySpecialRenderer
-    location: package net.minecraft.tileentity
-  15 errors
-
-* Try:
-> Check your code and dependencies to fix the compilation error(s)
-> Run with --scan to generate a Build Scan (powered by Develocity).
-
-* Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava'.
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
-	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:121)
-	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
-	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
