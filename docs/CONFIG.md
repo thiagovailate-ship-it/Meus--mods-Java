@@ -32,6 +32,6 @@ O arquivo é `config/dynamicwinds.cfg`. Comentários gerados no arquivo usam ing
 | `destruction.destructionWarnOnly` | `false` | boolean | Registra blocos que seriam quebrados, sem removê-los. Recomendado para ensaio inicial. |
 | `destruction.destructionProtectedBlocks` | bedrock, obsidian | IDs `mod:bloco` | Blocos sempre protegidos. Também pode editar com `/wind protect add/remove/list`. |
 | `destruction.destructionProtectedDimensions` | `[]` | lista de IDs | Dimensões completamente imunes à destruição. |
-| `perf.maxParticles` | `400` | 50–5000 partículas/tick | Teto das partículas do mod; folhas/pólen degradam primeiro, depois detritos/spray; chuva de tempestade tem reserva prioritária. |
+| `perf.maxParticles` | `400` | 50–5000 partículas/tick | Teto das partículas do mod; folhas/pólen degradam primeiro, depois detritos/spray; chuva de tempestade tem reserva prioritária. O cache de relevo também tem teto interno de 16.384 células. |
 
 A GUI de configuração pode ser aberta pela tela de Mods do Forge. Ao fechar, as opções são revalidadas e gravadas. Para servidor dedicado, edite o arquivo do lado servidor e reinicie para aplicar a configuração inicial.

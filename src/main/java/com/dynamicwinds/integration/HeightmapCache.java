@@ -46,6 +46,7 @@ public final class HeightmapCache {
         Integer h = heights.get(k);
         if (h == null) {
             h = computeHeight(Wind.cellCenter(cx), Wind.cellCenter(cz));
+            ensureCapacity();
             heights.put(k, h);
         } else {
             PerfTracker.recordHeightHit();
@@ -61,10 +62,24 @@ public final class HeightmapCache {
         if (s == null) {
             s = Wind.surfaceClassFor(world.getBiomeGenForCoords(Wind.cellCenter(cx),
                     Wind.cellCenter(cz)));
+            ensureCapacity();
             surfaceClasses.put(k, s);
         }
         return s;
     }
+
+    private void ensureCapacity() {
+        if (needsCapacityReset(heights.size(), surfaceClasses.size())) {
+            heights.clear();
+            surfaceClasses.clear();
+        }
+    }
+
+    static boolean needsCapacityReset(int heightCells, int classCells) {
+        return heightCells >= MAX_CELLS || classCells >= MAX_CELLS;
+    }
+
+    int cachedHeightCells() { return heights.size(); }
 
     private int computeHeight(int x, int z) {
         PerfTracker.recordHeightMiss();
@@ -104,6 +119,7 @@ public final class HeightmapCache {
                 int z = Wind.cellCenter(cz);
                 if (!world.blockExists(x, LOADED_CHECK_Y, z)) continue;
                 long k = key(cx, cz);
+                ensureCapacity();
                 heights.put(k, computeHeight(x, z));
                 surfaceClasses.put(k, Wind.surfaceClassFor(world.getBiomeGenForCoords(x, z)));
                 touched++;

@@ -45,6 +45,11 @@ public final class WindConfig {
     public static String[] destructionProtectedBlocks = new String[]{"minecraft:bedrock", "minecraft:obsidian"};
     public static int[] destructionProtectedDimensions = new int[0];
 
+    private static boolean serverOverrideActive;
+    private static boolean localNorth, localStormsEnabled, localForceWeather, localDestructionEnabled;
+    private static double localSpawnChance, localBaseSpeed;
+    private static int localRainRate;
+
     private WindConfig() {}
 
     public static void load(File file) {
@@ -236,6 +241,16 @@ public final class WindConfig {
                                            boolean stormsEnabled, boolean forceWeather,
                                            int rainRate, boolean destructionEnabled,
                                            double baseSpeed) {
+        if (!serverOverrideActive) {
+            localNorth = northernHemisphere;
+            localSpawnChance = stormSpawnChance;
+            localBaseSpeed = baseSpeedMultiplier;
+            localStormsEnabled = enableStorms;
+            localForceWeather = stormForceWeather;
+            localRainRate = stormRainRate;
+            localDestructionEnabled = enableDestruction;
+            serverOverrideActive = true;
+        }
         double safeChance = Math.max(0.0, Math.min(1.0, spawnChance));
         int safeRainRate = Math.max(0, Math.min(64, rainRate));
         double safeBaseSpeed = Math.max(0.0, Math.min(5.0, baseSpeed));
@@ -251,6 +266,20 @@ public final class WindConfig {
         stormRainRate = safeRainRate;
         enableDestruction = destructionEnabled;
         if (changed) com.dynamicwinds.api.Wind.invalidateModels();
+    }
+
+    /** Restore the local profile when a remote session disconnects. */
+    public static void clearServerSettings() {
+        if (!serverOverrideActive) return;
+        northernHemisphere = localNorth;
+        stormSpawnChance = localSpawnChance;
+        baseSpeedMultiplier = localBaseSpeed;
+        enableStorms = localStormsEnabled;
+        stormForceWeather = localForceWeather;
+        stormRainRate = localRainRate;
+        enableDestruction = localDestructionEnabled;
+        serverOverrideActive = false;
+        com.dynamicwinds.api.Wind.clearSyncedWorldState();
     }
 
     public static boolean stormsEnabled() { return enableStorms; }

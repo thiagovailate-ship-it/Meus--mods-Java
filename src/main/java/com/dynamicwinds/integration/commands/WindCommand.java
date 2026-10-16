@@ -43,7 +43,7 @@ public class WindCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/wind <get|profile|debug|storm> - 'storm' aceita spawn/clear";
+        return "/wind <get|profile|debug|storm|field|dump|perf|protect|destruction>";
     }
 
     @Override
@@ -96,7 +96,17 @@ public class WindCommand extends CommandBase {
                 return;
             }
         }
-        WindSample s = Wind.getWindAt(p.worldObj, values[0], values[1], values[2]);
+        long time = p.worldObj.getTotalWorldTime();
+        double storm = Wind.weatherStormAt(p.worldObj, time);
+        WindSample s = Wind.getWindAtTime(p.worldObj, values[0], values[1], values[2],
+                time, storm);
+        if (p instanceof net.minecraft.entity.player.EntityPlayerMP) {
+            com.dynamicwinds.integration.network.StormNetwork.sendWindCompare(
+                    (net.minecraft.entity.player.EntityPlayerMP) p,
+                    com.dynamicwinds.integration.network.PacketWindCompare.create(
+                            p.worldObj.provider.dimensionId, time, values[0], values[1], values[2],
+                            storm, s));
+        }
         p.addChatMessage(new ChatComponentText(String.format(
             "Vento em (%.1f, %.1f, %.1f): vec=(%.3f, %.3f, %.3f) velocidade=%.2f m/s rajada=%.2f",
             values[0], values[1], values[2], s.vector.x, s.vector.y, s.vector.z, s.speed, s.gust)));
@@ -141,14 +151,9 @@ public class WindCommand extends CommandBase {
                         + "furacao, maior (ou 0 a 3)."));
                 return;
             }
-            double dist = 40.0;
-            if (args.length > 3) {
-                try { dist = Double.parseDouble(args[3]); } catch (NumberFormatException e) { dist = 40.0; }
-            }
-            double mul = 1.0;
-            if (args.length > 4) {
-                try { mul = Double.parseDouble(args[4]); } catch (NumberFormatException e) { mul = 1.0; }
-            }
+            double dist = args.length > 3 ? parseFiniteDouble(args[3], 40.0) : 40.0;
+            double mul = args.length > 4 ? parseFiniteDouble(args[4], 1.0) : 1.0;
+            dist = Math.max(16.0, Math.min(2048.0, dist));
             mul = Math.max(0.1, Math.min(3.0, mul));
 
             double yaw = Math.toRadians(p.rotationYaw);
@@ -212,8 +217,22 @@ com.dynamicwinds.integration.DynamicWindsData.captureWorld(world, field);
         }
         int ground = Wind.surfaceHeightAt(world, (int) storm.centerX(time), (int) storm.centerZ(time));
         double energy = Wind.surfaceEnergyFor(world).energyAt(storm.centerX(time), storm.centerZ(time));
-        double[] radii = {0.0, storm.rmaxAt(time) * 0.5, storm.rmaxAt(time),
-                storm.rmaxAt(time) * 1.5, storm.outerRadius()};
+        double requestedRadius = storm.outerRadius();
+        if (args.length > 1) {
+            try {
+                double parsedRadius = Double.parseDouble(args[1]);
+                if (Double.isNaN(parsedRadius) || Double.isInfinite(parsedRadius)) {
+                    throw new NumberFormatException("finite radius required");
+                }
+                requestedRadius = Math.max(32.0,
+                        Math.min(storm.outerRadius(), parsedRadius));
+            } catch (NumberFormatException ex) {
+                player.addChatMessage(new ChatComponentText("Raio invalido; usando raio externo."));
+            }
+        }
+        double[] radii = {0.0, Math.min(requestedRadius, storm.rmaxAt(time) * 0.5),
+                Math.min(requestedRadius, storm.rmaxAt(time)),
+                Math.min(requestedRadius, storm.rmaxAt(time) * 1.5), requestedRadius};
         player.addChatMessage(new ChatComponentText("r  total  tangential  radial  vertical  deficit_hPa"));
         for (double radius : radii) {
             double x = storm.centerX(time) + radius;
@@ -351,6 +370,15 @@ com.dynamicwinds.integration.DynamicWindsData.captureWorld(world, field);
         com.dynamicwinds.integration.WindConfig.setProtectedBlocks(updated.toArray(new String[updated.size()]));
         player.addChatMessage(new ChatComponentText("Protected blocks saved: "
                 + java.util.Arrays.toString(com.dynamicwinds.integration.WindConfig.destructionProtectedBlocks)));
+    }
+
+    private static double parseFiniteDouble(String value, double fallback) {
+        try {
+            double parsed = Double.parseDouble(value);
+            return Double.isNaN(parsed) || Double.isInfinite(parsed) ? fallback : parsed;
+        } catch (NumberFormatException ex) {
+            return fallback;
+        }
     }
 
     private static double parsePhase(String phase) {

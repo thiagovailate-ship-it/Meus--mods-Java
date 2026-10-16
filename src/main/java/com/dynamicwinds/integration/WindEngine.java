@@ -59,10 +59,13 @@ public final class WindEngine {
     private void tickServer(World world) {
         tickCounter++;
         StormField stormField = Wind.stormsFor(world);
-        if (restoredWorlds.add(world)) {
+        boolean stormsAllowed = WindConfig.stormsAllowedInDimension(
+                world.provider.dimensionId);
+        if (restoredWorlds.add(world) && stormsAllowed) {
             DynamicWindsData.forWorld(world).restore(stormField);
         }
-        if (world.getTotalWorldTime() % 6000L == 0L) {
+        if (stormsAllowed) stormField.pruneExpired(world.getTotalWorldTime());
+        if (stormsAllowed && world.getTotalWorldTime() % 6000L == 0L) {
             DynamicWindsData.forWorld(world).capture(world, stormField);
         }
         if (world.getTotalWorldTime() % 20L == 0L) {
@@ -120,7 +123,8 @@ public final class WindEngine {
     /** Called when a world is unloaded to free resources. */
     /** Unload a world and free its cache. */
     public void unloadWorld(World world) {
-        if (!world.isRemote) {
+        if (!world.isRemote && WindConfig.stormsAllowedInDimension(
+                world.provider.dimensionId)) {
             DynamicWindsData.forWorld(world).capture(world, Wind.stormsFor(world));
         }
         restoredWorlds.remove(world);

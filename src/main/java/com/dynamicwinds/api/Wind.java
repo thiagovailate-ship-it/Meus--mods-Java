@@ -15,9 +15,9 @@ import net.minecraft.world.biome.BiomeGenBase;
  */
 public final class Wind {
     /**
-     * Um modelo por seed de mundo. O mapa e concorrente porque em single-player
-     * o servidor integrado e o cliente rodam em threads diferentes e ambos
-     * consultam o vento.
+     * Um modelo por seed/dimensao/lado. O mapa e concorrente porque em
+     * single-player o servidor integrado e o cliente rodam em threads diferentes
+     * e ambos consultam o vento com autoridade e snapshots distintos.
      */
     private static final java.util.concurrent.ConcurrentMap<String, WindModel> MODELS =
             new java.util.concurrent.ConcurrentHashMap<>();
@@ -132,6 +132,13 @@ public final class Wind {
     }
 
     public static WindSample getWindAt(World world, double x, double y, double z) {
+        long time = world.getTotalWorldTime();
+        return getWindAtTime(world, x, y, z, time, weatherStormAt(world, time));
+    }
+
+    /** Deterministic sample at an explicit tick/weather state, used by parity diagnostics. */
+    public static WindSample getWindAtTime(World world, double x, double y, double z,
+                                           long time, double storm) {
         com.dynamicwinds.integration.PerfTracker.recordWindSample();
         long seed = seedFor(world);
         WindModel model = modelFor(world);
@@ -139,25 +146,24 @@ public final class Wind {
         int sz = (int) Math.floor(z);
         int surfaceY = surfaceHeightAt(world, sx, sz);
         int surfaceClass = surfaceClassAt(world, sx, sz);
-        // storm intensity from world weather state (0..1)
-        double storm = 0.0;
-        if (world.isThundering()) {
-            storm = 1.0;
-        } else if (world.isRaining()) {
-            // interpolate rain strength for smoothness
-            float rs = world.rainingStrength;
-            float prs = world.prevRainingStrength;
-            float frac = (world.getTotalWorldTime() % 20) / 20.0f;
-            float cur = prs + (rs - prs) * frac;
-            storm = (cur > 0.05) ? (cur / 1.0f) : 0.0;
-        }
-        WorldContext ctx = new WorldContext(seed, world.getTotalWorldTime(), surfaceY, storm, surfaceClass, WindConfig.baseSpeedMultiplier);
+        WorldContext ctx = new WorldContext(seed, time, surfaceY, storm, surfaceClass,
+                WindConfig.baseSpeedMultiplier);
         return model.compute(ctx, x, y, z, new BiomeRoughness(world));
     }
 
+    /** Same interpolated 0..1 weather scalar consumed by the field model. */
+    public static double weatherStormAt(World world, long time) {
+        if (world.isThundering()) return 1.0;
+        if (!world.isRaining()) return 0.0;
+        float fraction = (time % 20L) / 20.0f;
+        float strength = world.prevRainingStrength
+                + (world.rainingStrength - world.prevRainingStrength) * fraction;
+        return strength > 0.05f ? strength : 0.0;
+    }
+
     /**
-     * Modelo de vento deste mundo (um por seed), criado com a configuracao atual
-     * de hemisferio e chance de geracao de tempestades.
+     * Modelo de vento deste mundo (seed, dimensão e lado), criado com a
+     * configuração local ou autoritativa sincronizada do servidor.
      */
     public static void setSyncedSeed(int dimensionId, long seed) {
         Long previous = SYNCED_SEEDS.put(Integer.valueOf(dimensionId), Long.valueOf(seed));

@@ -73,7 +73,17 @@ rótulo do vórtice é EF e não "tornado categoria X" de propósito: a escala E
   passar de `v_critico = 9 + 24·dureza` m/s (folhagem ≈ 14, terra ≈ 21, tronco ≈ 57,
   obsidiana praticamente nunca). Daí saem de graça: o olho fica intacto, a faixa
   destrutiva é a parede do olho e migra com ela, e o landfall enfraquece a destruição
-  junto com o sistema.
+  junto com o sistema. Os exemplos abaixo usam valores de dureza exercitados por
+  `DestructionRulesTest`, que imprime a tabela no log de Gradle:
+
+| dureza | `v_critico` |
+| ---: | ---: |
+| 0,0 (piso) | 9 m/s |
+| 0,2 (folhagem, aproximado) | 13,8 m/s |
+| 0,5 (terra, aproximado) | 21 m/s |
+| 1,5 (pedra, aproximado) | 45 m/s |
+| 2,0 (tronco, aproximado) | 57 m/s |
+| 50,0 (obsidiana, aproximado) | 1209 m/s |
 
 ## Céu das tempestades
 
@@ -258,6 +268,23 @@ mundo.
   era descartada pelo culling) e os limites do atlas.
 - Os instrumentos usam um tipo de render próprio: o bloco não entra na malha estática do
   chunk (quem desenha é o TESR) e o `ItemBlock` usa os ícones 2D `*_item.png`.
+
+## Servidor e multiplayer
+
+- O servidor é autoridade para tempestades naturais e envia snapshots por dimensão; sistemas invocados são replicados e persistidos em `WorldSavedData`.
+- `/wind get` apresenta a amostra do servidor e, em seguida, uma comparação cliente/servidor no mesmo tick (`rounded@0.1=MATCH` é o aceite numérico).
+- `stormsInDimensions` é `[0]` por padrão. Destruição só ocorre em dimensões habilitadas; use `destructionWarnOnly=true` antes de permitir quebra real.
+- `destructionProtectedDimensions=[]` mantém todas as dimensões sem exceção de proteção, e `destructionProtectedBlocks` protege blocos identificados por registry ID.
+- `perf.maxParticles=400` limita as partículas do mod por tick e reserva prioridade para a chuva da tempestade. `/wind perf` reporta partículas vivas quando cliente e servidor compartilham a JVM (integrated); num servidor dedicado, o contador do lado servidor não enxerga a JVM gráfica separada.
+
+| categoria | opções principais | padrão | faixa / observação |
+| --- | --- | --- | --- |
+| `general` | `baseSpeedMultiplier` | `1.0` | `0..5` |
+| `storms` | `stormSpawnChance`, `stormsInDimensions`, `stormRainRate` | `0.35`, `[0]`, `16` | chance `0..1`; chuva `0..64` |
+| `destruction` | `enableDestruction`, `destructionWarnOnly`, `destructionBlocksPerTick`, `destructionMaxPerStorm` | `true`, `false`, `24`, `60` | teto por tick `0..256`; por tempestade `0..10000` |
+| `perf` | `maxParticles` | `400` | `50..5000` partículas/tick |
+
+A tabela completa e os custos estão em [`docs/CONFIG.md`](docs/CONFIG.md); para os passos operacionais, veja [`MANUAL.md`](MANUAL.md).
 
 ## Limitações conhecidas
 

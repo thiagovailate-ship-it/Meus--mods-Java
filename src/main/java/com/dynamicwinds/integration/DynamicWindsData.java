@@ -83,8 +83,7 @@ public final class DynamicWindsData extends WorldSavedData {
         systems.clear();
         long time = world.getTotalWorldTime();
         for (StormSystem system : field.activeAt(time, Wind.surfaceEnergyFor(world))) {
-            // Natural systems are reproducible from seed/time; persist only dynamic ones.
-            if (system.playerSpawned) systems.add(system);
+            systems.add(system);
         }
         markDirty();
     }

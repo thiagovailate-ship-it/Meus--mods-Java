@@ -7,7 +7,6 @@ storm_speed and its radial/tangential/vertical components plus pressure deficit.
 """
 import csv
 import math
-import os
 import sys
 
 import preview_storm as mirror

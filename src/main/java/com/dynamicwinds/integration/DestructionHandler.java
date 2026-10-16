@@ -75,6 +75,8 @@ public final class DestructionHandler {
         int broken;
         int warned;
         final Map<String, Integer> blockTypes = new HashMap<String, Integer>();
+        final Map<String, Integer> brokenByStorm = new HashMap<String, Integer>();
+        final Map<String, Integer> warnedByStorm = new HashMap<String, Integer>();
         final Set<String> loggedWarnTypes = new HashSet<String>();
 
         void roll(long worldTime) {
@@ -83,6 +85,8 @@ public final class DestructionHandler {
                 minute = currentMinute;
                 broken = warned = 0;
                 blockTypes.clear();
+                brokenByStorm.clear();
+                warnedByStorm.clear();
                 loggedWarnTypes.clear();
             }
         }
@@ -99,6 +103,7 @@ public final class DestructionHandler {
         if (world.isRemote) return;
         blocksBrokenThisTick = 0;
         if (!WindConfig.enableDestruction) return;
+        if (!WindConfig.stormsAllowedInDimension(world.provider.dimensionId)) return;
         if (WindConfig.destructionProtectedDimension(world.provider.dimensionId)) return;
 
         long time = world.getTotalWorldTime();
@@ -196,6 +201,7 @@ public final class DestructionHandler {
         if (s.speed < needed) return false;
         if (WindConfig.destructionWarnOnly) {
             stats.warned++;
+            increment(stats.warnedByStorm, stormKey);
             stats.blockTypes.put(blockName, Integer.valueOf(stats.blockTypes.containsKey(blockName)
                     ? stats.blockTypes.get(blockName).intValue() + 1 : 1));
             if (stats.loggedWarnTypes.add(blockName)) {
@@ -213,6 +219,7 @@ public final class DestructionHandler {
         blocksBrokenThisTick++;
         BROKEN_BY_STORM.put(stormKey, Integer.valueOf(alreadyBroken + 1));
         stats.broken++;
+        increment(stats.brokenByStorm, stormKey);
         stats.blockTypes.put(blockName, Integer.valueOf(stats.blockTypes.containsKey(blockName)
                 ? stats.blockTypes.get(blockName).intValue() + 1 : 1));
         // efeito de impacto: poeira no ponto arrancado
@@ -236,6 +243,7 @@ public final class DestructionHandler {
                 alreadyBroken++;
                 BROKEN_BY_STORM.put(stormKey, Integer.valueOf(alreadyBroken));
                 stats.broken++;
+                increment(stats.brokenByStorm, stormKey);
                 stats.blockTypes.put(upName, Integer.valueOf(stats.blockTypes.containsKey(upName)
                         ? stats.blockTypes.get(upName).intValue() + 1 : 1));
                 if (++felled >= 3 + rand.nextInt(4)) break; // nem toda arvore cede inteira
@@ -268,9 +276,16 @@ public final class DestructionHandler {
         }
     }
 
+    private static void increment(Map<String, Integer> counts, String key) {
+        Integer value = counts.get(key);
+        counts.put(key, Integer.valueOf(value == null ? 1 : value.intValue() + 1));
+    }
+
     public static String statsSummary(int dimensionId, long time) {
         Stats stats = stats(dimensionId, time);
         return "last minute: broken=" + stats.broken + ", warnOnly=" + stats.warned
+                + ", brokenByStorm=" + stats.brokenByStorm
+                + ", warnedByStorm=" + stats.warnedByStorm
                 + ", blockTypes=" + stats.blockTypes;
     }
 

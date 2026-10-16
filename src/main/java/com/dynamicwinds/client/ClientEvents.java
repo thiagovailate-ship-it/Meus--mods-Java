@@ -99,9 +99,12 @@ public class ClientEvents {
     private static final class ClientNetworkLifecycle {
         @SubscribeEvent
         public void onDisconnect(cpw.mods.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+            com.dynamicwinds.integration.WindConfig.clearServerSettings();
             com.dynamicwinds.api.Wind.clearSyncedWorldState();
             com.dynamicwinds.integration.network.PacketWorldSync.reset();
+            com.dynamicwinds.integration.network.PacketWindCompare.reset();
             com.dynamicwinds.integration.network.StormNetwork.reset();
+            com.dynamicwinds.client.particles.ParticleBudget.reset();
         }
     }
 
@@ -117,6 +120,8 @@ public class ClientEvents {
             // pacotes de mundo e de tempestade chegam pela thread do netty;
             // aplicamos as alterações somente no tick do cliente
             com.dynamicwinds.integration.network.PacketWorldSync.drainClient(
+                    net.minecraft.client.Minecraft.getMinecraft().theWorld);
+            com.dynamicwinds.integration.network.PacketWindCompare.drainClient(
                     net.minecraft.client.Minecraft.getMinecraft().theWorld);
             com.dynamicwinds.integration.network.StormNetwork.drainClient(
                     net.minecraft.client.Minecraft.getMinecraft().theWorld);

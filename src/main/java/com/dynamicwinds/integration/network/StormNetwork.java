@@ -35,10 +35,17 @@ public final class StormNetwork {
         channel = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL);
         channel.registerMessage(Handler.class, PacketStormSync.class, 0, Side.CLIENT);
         channel.registerMessage(PacketWorldSync.Handler.class, PacketWorldSync.class, 1, Side.CLIENT);
+        channel.registerMessage(PacketWindCompare.Handler.class, PacketWindCompare.class, 2, Side.CLIENT);
     }
 
     public static boolean ready() {
         return channel != null;
+    }
+
+    /** Sends a server field sample only to the requesting player for parity diagnostics. */
+    public static void sendWindCompare(net.minecraft.entity.player.EntityPlayerMP player,
+                                       PacketWindCompare packet) {
+        if (channel != null && player != null && packet != null) channel.sendTo(packet, player);
     }
 
     /** Envia seed e parâmetros autoritativos do mundo aos clientes conectados. */

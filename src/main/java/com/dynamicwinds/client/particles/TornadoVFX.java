@@ -156,12 +156,15 @@ public final class TornadoVFX {
         double distToCenter = Math.hypot(cx - player.posX, cz - player.posZ);
         if (distToCenter > outer) return;
 
-        // dentro do olho a chuva para: o ar desce e as nuvens abrem
+        // No olho sobra apenas uma garoa escassa e vertical; na parede ela
+        // segue o escoamento horizontal calculado pelo campo.
         double rmax = system.rmaxAt(time);
-        if (distToCenter < rmax * 0.55) return;
-
+        boolean inEye = distToCenter < rmax * 0.55;
         double band = 1.0 - distToCenter / outer;      // 1 no centro, 0 na borda
-        int rate = (int) Math.round(baseRate * intensity * (0.35 + 0.65 * band));
+        int rate = inEye
+                ? (int) Math.round(baseRate * intensity * 0.15)
+                : (int) Math.round(baseRate * intensity * (0.35 + 0.65 * band));
+        if (rate <= 0 && inEye) rate = 1;
         if (rate <= 0) return;
 
         for (int i = 0; i < rate; i++) {
@@ -172,7 +175,8 @@ public final class TornadoVFX {
             double z = player.posZ + Math.sin(angle) * radius;
             WindSample s = Wind.getWindAt(mc.theWorld, x, y, z);
             ParticleBudget.submit(mc, new RainStreakParticle(mc.theWorld, x, y, z,
-                    s.vector.x, s.vector.y, s.vector.z), 3);
+                    inEye ? 0.0 : s.vector.x, inEye ? 0.0 : s.vector.y,
+                    inEye ? 0.0 : s.vector.z), 3);
         }
     }
 }

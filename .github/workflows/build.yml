@@ -24,6 +24,7 @@ jobs:
           python3 tools/check_mirror.py
           python3 tools/check_seams.py
           python3 tools/preview_storm.py --check
+          python3 tools/test_check_field.py
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5

@@ -14,11 +14,10 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * <p>Duas origens coexistem:</p>
  * <ul>
- *   <li><b>Naturais</b> - derivados apenas da seed do mundo e do relogio. O
- *       tempo e dividido em janelas ({@link #SLOT_TICKS}) e cada janela pode
- *       gerar um sistema, com tipo, posicao, rumo e curvatura sorteados de forma
- *       determinista. Como a derivacao e pura, cliente e servidor concordam sem
- *       trocar pacotes.</li>
+ *   <li><b>Naturais</b> - derivados no servidor apenas da seed do mundo e do
+ *       relogio. O tempo e dividido em janelas ({@link #SLOT_TICKS}) e cada
+ *       janela pode gerar um sistema de forma determinista; o servidor envia
+ *       snapshots ao cliente, que nao executa a geracao local.</li>
  *   <li><b>Invocados</b> - criados em tempo de execucao pelo Cajado da
  *       Catastrofe ou por comando. Estes <i>nao</i> podem ser derivados da seed,
  *       entao precisam ser transmitidos aos clientes (veja
@@ -48,11 +47,9 @@ public final class StormField {
     private final boolean north;
     private final double spawnChance;
     private final PerlinNoise noise;
-    // Em single-player o servidor integrado e o cliente rodam em threads
-    // diferentes e compartilham esta mesma instancia (o modelo e indexado pela
-    // seed do mundo). As estruturas abaixo sao seguras para leitura concorrente:
-    // o servidor escreve raramente (nasce/termina um sistema), mas o VFX le a
-    // cada quadro, e uma lista comum daria ConcurrentModificationException.
+    // As estruturas são concorrentes porque o servidor integrado escreve
+    // enquanto VFX/rede podem ler; snapshots substituem listas sem expor uma
+    // coleção em mutação a outra thread.
     private final Map<Long, StormSystem> naturalCache = new ConcurrentHashMap<Long, StormSystem>();
     private final List<StormSystem> dynamic = new CopyOnWriteArrayList<StormSystem>();
     /**
@@ -306,6 +303,13 @@ public final class StormField {
                 current = nextDynamicId.get();
                 if (candidate >= current) break;
             } while (!nextDynamicId.compareAndSet(current, candidate));
+        }
+    }
+
+    /** Remove expired replicated/persisted systems from the server-owned list. */
+    public void pruneExpired(long time) {
+        for (int i = dynamic.size() - 1; i >= 0; i--) {
+            if (!dynamic.get(i).isAlive(time)) dynamic.remove(i);
         }
     }
 

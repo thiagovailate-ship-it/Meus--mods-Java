@@ -13,14 +13,14 @@ DynamicWinds adiciona vento determinístico, instrumentos meteorológicos e sist
 
 Todos os comandos começam com `/wind` (alias `/w`).
 
-- `/wind get [x y z]`: vetor e velocidade no ponto. Use em conjunto com o HUD de debug para comparar amostras.
+- `/wind get [x y z]`: vetor e velocidade no ponto; em multiplayer envia também uma linha `Wind parity` com os vetores do servidor/cliente calculados no mesmo tick e o veredicto `rounded@0.1`.
 - `/wind profile`: resumo do modelo físico.
 - `/wind debug`: informa como habilitar o HUD de depuração.
 - `/wind storm list`: lista sistemas ativos e distâncias.
 - `/wind storm spawn <vortice|tropical|furacao|maior> [distância] [intensidade] [fase]`: invoca um sistema (OP nível 2). Fases: `genesis`, `maduro`, `maturo-dip`, `dissipacao`.
 - `/wind storm where`: distância, rumo, ETA aproximada e velocidade de translação do sistema mais próximo.
 - `/wind storm clear`: remove sistemas invocados da dimensão atual (OP nível 2).
-- `/wind field`: tabela radial para inspecionar o perfil do sistema próximo.
+- `/wind field [raio]`: tabela radial para inspecionar o perfil do sistema próximo (blocos; limitado ao raio externo).
 - `/wind dump [raio] [passo]`: grava CSV no diretório do save. Rode `python3 tools/check_field.py <arquivo.csv>` para comparar o componente de tempestade com a equação de referência.
 - `/wind protect add|remove|list <mod:bloco>`: edita a lista persistente de blocos protegidos.
 - `/wind destruction stats`: resumo de blocos quebrados/avisados no último minuto.
