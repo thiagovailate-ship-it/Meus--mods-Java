@@ -1,5 +1,6 @@
 package com.dynamicwinds.client;
 
+import com.dynamicwinds.client.audio.AudioBeds;
 import com.dynamicwinds.client.audio.StormAudio;
 import com.dynamicwinds.client.audio.WindAudio;
 import com.dynamicwinds.client.particles.ParticleIcons;
@@ -110,8 +111,12 @@ public class ClientEvents {
             StormClientState.tick();
             WindVFX.tick();
             TornadoVFX.tick();
+            // os leitos sao pedidos a cada tick: quem nao for pedido comeca a
+            // sumir. beginTick abre a janela, tick a fecha e recolhe o canal
+            AudioBeds.beginTick();
             WindAudio.update();
             StormAudio.update();
+            AudioBeds.tick();
         }
     }
 }

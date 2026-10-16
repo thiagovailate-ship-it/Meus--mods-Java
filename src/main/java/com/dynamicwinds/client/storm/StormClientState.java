@@ -32,16 +32,26 @@ public final class StormClientState {
     private static double intensity;
     /** Raio do vento maximo dividido pelo raio externo (o "tamanho do olho"). */
     private static double eyeRatio;
+    /** Intensidade da chuva no ponto da camera, de 0 a 1. */
+    private static double rain;
+    /** Duracao do clarao de um relampago, em ticks. */
+    private static final int FLASH_TICKS = 8;
+    private static int flashTicks;
+    private static float flashPower;
 
     private StormClientState() {}
 
     public static void tick() {
+        if (flashTicks > 0) {
+            flashTicks--;
+        }
         current = null;
         influence = 0.0;
         normalizedDistance = 1.0;
         localWind = 0.0;
         intensity = 0.0;
         eyeRatio = 0.0;
+        rain = 0.0;
 
         Minecraft mc = Minecraft.getMinecraft();
         World world = mc.theWorld;
@@ -78,6 +88,17 @@ public final class StormClientState {
         normalizedDistance = bestNorm;
         intensity = best.intensityAt(time);
         eyeRatio = best.rmaxAt(time) / Math.max(1.0, best.outerRadius());
+
+        // chuva: cresce para dentro, mais rapido perto da parede, e seca no olho
+        // - la o ar esta descendo e nao ha nuvem carregada em cima. O expoente
+        // 0,8 deixa a chuva entrar cedo nos primeiros aneis do sistema, que e o
+        // comportamento observado num ciclone real.
+        double band = 1.0D - bestNorm;
+        if (band < 0.0D) band = 0.0D;
+        double eyeDry = bestNorm < eyeRatio
+                ? 0.15D + 0.85D * (bestNorm / Math.max(1.0e-4D, eyeRatio))
+                : 1.0D;
+        rain = Math.pow(band, 0.8D) * intensity * eyeDry;
     }
 
     /** Sistema dominante, ou null se nenhum alcanca a camera. */
@@ -94,6 +115,51 @@ public final class StormClientState {
 
     /** Intensidade do sistema dominante. */
     public static double intensity() { return intensity; }
+
+    /**
+     * Intensidade da chuva no ponto da camera, de 0 a 1.
+     *
+     * <p>A chuva do sistema e a protagonista; a chuva do proprio jogo entra como
+     * camada secundaria e menor, porque quando a tempestade e quem esta forcando
+     * o clima as duas sao o mesmo evento - somar as duas em igual peso seria
+     * contar a mesma chuva duas vezes.</p>
+     */
+    public static float rainStrength() {
+        double r = rain;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.theWorld != null) {
+            double vanilla = mc.theWorld.getRainStrength(1.0F);
+            if (vanilla > 0.0D) {
+                r = Math.min(1.0D, r + vanilla * 0.45D);
+            }
+        }
+        if (r <= 0.0D) return 0.0F;
+        if (r >= 1.0D) return 1.0F;
+        return (float) r;
+    }
+
+    /**
+     * Acende o clarao de um relampago.
+     *
+     * <p>A luz nao espera: ela chega no mesmo instante da descarga, enquanto o
+     * som fica preso na velocidade do som. Por isso o clarao e disparado na hora
+     * e o trovao e agendado.</p>
+     *
+     * @param power forca do clarao, de 0 a 1 (proximidade da descarga)
+     */
+    public static void flash(float power) {
+        flashTicks = FLASH_TICKS;
+        flashPower = power < 0.0F ? 0.0F : (power > 1.0F ? 1.0F : power);
+    }
+
+    /** Forca do clarao, de 0 a 1, com queda rapida depois do pico. */
+    public static float flashStrength() {
+        if (flashTicks <= 0) {
+            return 0.0F;
+        }
+        float t = flashTicks / (float) FLASH_TICKS;
+        return flashPower * t * t;
+    }
 
     /**
      * Densidade da nevoa dentro da tempestade, de 0 a 1.

@@ -1,9 +1,128 @@
 {
-  "wind_ambience": { "category": "weather", "sounds": [ { "name": "dynamicwinds:wind_ambience", "stream": true } ] },
-  "wind_gust": { "category": "weather", "sounds": [ { "name": "dynamicwinds:wind_gust" } ] },
-  "anemometer_tick": { "category": "block", "sounds": [ { "name": "dynamicwinds:anemometer_tick" } ] },
-  "windsock_flap": { "category": "block", "sounds": [ { "name": "dynamicwinds:windsock_flap" } ] },
-  "rain_wind": { "category": "weather", "sounds": [ { "name": "dynamicwinds:rain_wind", "stream": true } ] },
-  "thunder_rumble": { "category": "weather", "sounds": [ { "name": "dynamicwinds:thunder_rumble" } ] },
-  "leaf_rustle": { "category": "weather", "sounds": [ { "name": "dynamicwinds:leaf_rustle" } ] }
+  "wind_ambience": {
+    "category": "weather",
+    "sounds": [
+      {
+        "name": "dynamicwinds:wind_ambience",
+        "stream": false
+      }
+    ]
+  },
+  "wind_strong": {
+    "category": "weather",
+    "sounds": [
+      {
+        "name": "dynamicwinds:wind_strong",
+        "stream": false
+      }
+    ]
+  },
+  "wind_storm": {
+    "category": "weather",
+    "sounds": [
+      {
+        "name": "dynamicwinds:wind_storm",
+        "stream": false
+      }
+    ]
+  },
+  "wind_gust": {
+    "category": "weather",
+    "sounds": [
+      {
+        "name": "dynamicwinds:wind_gust",
+        "stream": false
+      }
+    ]
+  },
+  "leaf_rustle": {
+    "category": "weather",
+    "sounds": [
+      {
+        "name": "dynamicwinds:leaf_rustle",
+        "stream": false
+      }
+    ]
+  },
+  "rain_light": {
+    "category": "weather",
+    "sounds": [
+      {
+        "name": "dynamicwinds:rain_light",
+        "stream": false
+      }
+    ]
+  },
+  "rain_heavy": {
+    "category": "weather",
+    "sounds": [
+      {
+        "name": "dynamicwinds:rain_heavy",
+        "stream": false
+      }
+    ]
+  },
+  "rain_wind": {
+    "category": "weather",
+    "sounds": [
+      {
+        "name": "dynamicwinds:rain_wind",
+        "stream": false
+      }
+    ]
+  },
+  "thunder_close": {
+    "category": "weather",
+    "sounds": [
+      {
+        "name": "dynamicwinds:thunder_close",
+        "stream": false
+      }
+    ]
+  },
+  "thunder_rumble": {
+    "category": "weather",
+    "sounds": [
+      {
+        "name": "dynamicwinds:thunder_rumble",
+        "stream": false
+      }
+    ]
+  },
+  "thunder_far": {
+    "category": "weather",
+    "sounds": [
+      {
+        "name": "dynamicwinds:thunder_far",
+        "stream": false
+      }
+    ]
+  },
+  "debris_rattle": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "dynamicwinds:debris_rattle",
+        "stream": false
+      }
+    ]
+  },
+  "anemometer_tick": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "dynamicwinds:anemometer_tick",
+        "stream": false
+      }
+    ]
+  },
+  "windsock_flap": {
+    "category": "block",
+    "sounds": [
+      {
+        "name": "dynamicwinds:windsock_flap",
+        "stream": false
+      }
+    ]
+  }
 }

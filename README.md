@@ -57,6 +57,36 @@ vento que o resto do mod.
   destrutiva é a parede do olho e migra com ela, e o landfall enfraquece a destruição
   junto com o sistema.
 
+## Áudio
+
+- Os 14 sons do mod são **gerados por script** (`tools/gen_sounds.py`, numpy + soundfile):
+  nenhum arquivo binário vem de fora do repositório e rodar o script reproduz os mesmos
+  bytes. Todos são Vorbis 44,1 kHz mono.
+- O espectro não é chute: o gerador é ajustado **por medida** contra um alvo de energia por
+  faixa (vento e trovão pesados no grave, chuva e folhagem no agudo). Duas armadilhas reais
+  foram corrigidas assim — o ruído branco fazia as faixas agudas dominarem só por largura de
+  banda, e o contínuo (offset DC) do ruído moldado concentrava energia nos primeiros bins,
+  deixando o trovão "próximo" com 80% da energia abaixo de 100 Hz e quase nada de estalo.
+- Os leitos (vento, chuva) são **loops de verdade**: `canRepeat()` com `getRepeatDelay() == 0`
+  faz o gerenciador de som do 1.7.10 criar a fonte já em repetição — sem re-disparar o
+  arquivo e sem emenda. Por isso os arquivos não são "steamados": fonte em fluxo relê o
+  arquivo a cada volta e a emenda reaparece.
+- O volume é mixado em tempo real: cada leito é um `ITickableSound`, e o gerenciador
+  reaplica volume, altura e posição do canal a cada tick.
+- A escolha de faixa é uma **interpolação**, não um degrau: a velocidade do vento vira uma
+  posição contínua entre brisa / vento forte / tempestade, com pesos triangulares (no máximo
+  duas faixas soando, somando 1). A chuva segue a intensidade no ponto, que cresce para
+  dentro e **seca no olho** — onde o ar desce e não há nuvem carregada em cima.
+- O trovão respeita a física da propagação: o clarão é instantâneo e o som sai **a 343 m/s**,
+  então uma descarga na parede do olho é vista agora e ouvida quase um segundo depois, do
+  lado onde caiu, com o nível caindo com a distância e o timbre trocando de estalo (perto)
+  para rolar (médio) e só grave (longe) — que é o que a absorção do ar faz.
+- O rugido fica mais grave quando a tempestade é maior: um vórtice de centenas de blocos
+  desloca a turbulência para frequências mais baixas, pelo mesmo motivo que o jato de um
+  avião é agudo e o de um furacão é grave.
+- **Abrigo**: a profundidade sob o teto abafa (mais o agudo que o grave, por isso o trovão
+  atenua pela raiz enquanto vento e chuva atenuam cheio).
+
 ## Testes
 
 `src/test/java/com/dynamicwinds/core/StormPhysicsTest.java` trava o contrato da física:
