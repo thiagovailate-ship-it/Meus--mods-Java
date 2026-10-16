@@ -26,7 +26,14 @@ public class TileEntityWindsock extends TileEntity {
         float target = (float) Math.min(1.0, s.speed / 8.0);
         inflation += (target - inflation) * 0.12f;
 
+        float previousYaw = yaw;
         yaw = (float) Math.atan2(s.vector.x, s.vector.z);
+
+        // giro brusco = escoamento desprendendo e voltando a grudar no tecido
+        if (worldObj.isRemote) {
+            com.dynamicwinds.client.audio.InstrumentAudio.windsockFlap(
+                    worldObj, xCoord + 0.5, yCoord + 1.5, zCoord + 0.5, Math.abs(yaw - previousYaw));
+        }
 
         // quase sem vento a manga cai; estufada ela fica na horizontal
         droop = 0.22f * (1.0f - inflation);

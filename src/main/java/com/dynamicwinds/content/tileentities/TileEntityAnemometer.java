@@ -39,7 +39,15 @@ public class TileEntityAnemometer extends TileEntity {
 
         // ~28 graus por (unidade de vento * tick): gira visivelmente a partir de
         // vento fraco, sem parecer um ventilador em ventania.
+        float previous = rotation;
         rotation = wrap(rotation + smoothedSpeed * 28.0f);
+
+        // o angulo so da a volta quando passa de 360: ai o ima do rotor passou
+        // pelo sensor, que e o clique de um anemometro de conchas de verdade
+        if (worldObj.isRemote && rotation < previous) {
+            com.dynamicwinds.client.audio.InstrumentAudio.anemometerPulse(
+                    worldObj, xCoord + 0.5, yCoord + 0.95, zCoord + 0.5, smoothedSpeed);
+        }
 
         float target = (float) Math.toDegrees(Math.atan2(sample.vector.z, sample.vector.x));
         direction = target;
