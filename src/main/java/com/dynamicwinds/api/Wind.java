@@ -19,8 +19,10 @@ public final class Wind {
      * o servidor integrado e o cliente rodam em threads diferentes e ambos
      * consultam o vento.
      */
-    private static final java.util.Map<Long, WindModel> MODELS =
+    private static final java.util.concurrent.ConcurrentMap<String, WindModel> MODELS =
             new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.util.Map<Integer, Long> SYNCED_SEEDS =
+            new java.util.concurrent.ConcurrentHashMap<Integer, Long>();
 
     /**
      * Lado da celula de relevo, em blocos. O vento le o solo <i>pelo centro da
@@ -130,7 +132,7 @@ public final class Wind {
     }
 
     public static WindSample getWindAt(World world, double x, double y, double z) {
-        long seed = world.getSeed();
+        long seed = seedFor(world);
         WindModel model = modelFor(world);
         int sx = (int) Math.floor(x);
         int sz = (int) Math.floor(z);
@@ -156,14 +158,44 @@ public final class Wind {
      * Modelo de vento deste mundo (um por seed), criado com a configuracao atual
      * de hemisferio e chance de geracao de tempestades.
      */
+    public static void setSyncedSeed(int dimensionId, long seed) {
+        Long previous = SYNCED_SEEDS.put(Integer.valueOf(dimensionId), Long.valueOf(seed));
+        if (previous != null && previous.longValue() == seed) return;
+        // Evict only this dimension. Repeated world-sync packets must not erase
+        // other dimensions' dynamic storm state.
+        String prefix = dimensionId + ":";
+        for (String key : MODELS.keySet()) {
+            if (key.startsWith(prefix)) MODELS.remove(key);
+        }
+    }
+
+    public static void invalidateModels() {
+        MODELS.clear();
+    }
+
+    private static long seedFor(World world) {
+        Long synced = SYNCED_SEEDS.get(Integer.valueOf(world.provider.dimensionId));
+        return synced == null ? world.getSeed() : synced.longValue();
+    }
+
     public static WindModel modelFor(World world) {
-        long seed = world.getSeed();
-        WindModel existing = MODELS.get(Long.valueOf(seed));
-        if (existing != null) return existing;
-        double chance = WindConfig.stormsEnabled() ? WindConfig.stormSpawnChance() : 0.0;
+        long seed = seedFor(world);
+        int dimension = world.provider.dimensionId;
+        String key = dimension + ":" + seed + (world.isRemote ? ":client" : ":server");
+        WindModel existing = MODELS.get(key);
+        if (existing != null) {
+            existing.storms().setAuthoritative(!world.isRemote);
+            return existing;
+        }
+        double chance = WindConfig.stormsEnabled()
+                && WindConfig.stormsAllowedInDimension(dimension)
+                ? WindConfig.stormSpawnChance() : 0.0;
         WindModel created = new WindModel(seed, WindConfig.north(), chance);
-        MODELS.put(Long.valueOf(seed), created);
-        return created;
+        created.storms().setAuthoritative(!world.isRemote);
+        WindModel raced = MODELS.putIfAbsent(key, created);
+        WindModel result = raced == null ? created : raced;
+        result.storms().setAuthoritative(!world.isRemote);
+        return result;
     }
 
     /**

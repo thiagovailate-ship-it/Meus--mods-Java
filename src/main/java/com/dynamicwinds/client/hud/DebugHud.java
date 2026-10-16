@@ -44,7 +44,8 @@ public class DebugHud {
         double outer = storm.outerRadius();
         double dist = storm.distanceTo(time, mc.thePlayer.posX, mc.thePlayer.posZ);
         e.left.add(String.format("Tempestade: %s [%s] #%d",
-                StormKind.name(storm.kind), StormKind.category(storm.kind), storm.id));
+                com.dynamicwinds.integration.StormLanguage.name(storm.kind),
+                com.dynamicwinds.integration.StormLanguage.category(storm.kind), storm.id));
         e.left.add(String.format("  vmax=%.1f m/s  deficit=%.1f hPa  rmax=%.0f",
                 storm.vmaxAt(time), storm.centralDeficitHpa(time), storm.rmaxAt(time)));
         e.left.add(String.format("  centro a %.0f blocos (%.0f%% do raio externo)",

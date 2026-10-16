@@ -21,6 +21,9 @@ import os
 import struct
 import zlib
 
+# Single source for the seam threshold consumed by tools/check_seams.py.
+SEAM_RATIO_LIMIT = 1.6
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BLOCKS = os.path.join(ROOT, "src/main/resources/assets/dynamicwinds/textures/blocks")
 PARTICLES = os.path.join(ROOT, "src/main/resources/assets/dynamicwinds/textures/particle")
@@ -933,6 +936,17 @@ def gen_staff_and_environment():
     cv.disc(cx, cy, 1.2, EYE, soft=1.0)                    # olho do furacao
     cv.disc(cx - 2.0, cy - 2.2, 0.5, (244, 250, 255, 255), soft=1.0)
     out[0].append(("catastrophe_staff.png", cv))
+
+    # ---- barometro: caixa metalica, mostrador e agulha ----------------------
+    cv = Canvas(16, 16)
+    cv.rect(3, 2, 13, 15, (62, 68, 78, 255))
+    cv.rect(4, 3, 12, 14, (166, 176, 184, 255))
+    cv.rect(5, 4, 11, 10, (226, 226, 210, 255))
+    cv.ring(8, 7, 2.6, 0.6, (56, 64, 72, 255), soft=0.8)
+    cv.line(8, 8, 9.8, 5.7, (174, 46, 38, 255), thick=0.9)
+    cv.disc(8, 8, 0.8, (60, 64, 68, 255), soft=0.8)
+    cv.rect(6, 11, 10, 13, (70, 76, 84, 255))
+    out[0].append(("barometer.png", cv))
 
     # ---- teto de nuvem: massa escura, repetivel ---------------------------
     size = 128

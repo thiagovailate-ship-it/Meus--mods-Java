@@ -43,6 +43,9 @@ VMAX = [28.0, 24.0, 46.0, 72.0]
 RMAX = [9.0, 55.0, 85.0, 130.0]
 ROUT = [150.0, 260.0, 400.0, 560.0]
 TOP = [110.0, 150.0, 180.0, 210.0]
+ALPHA = [0.75, 0.62, 0.60, 0.58]
+DURATION = [4000, 12000, 18000, 24000]
+SPEED = [0.030, 0.035, 0.050, 0.065]
 
 # Constantes espelhadas de client/storm/StormRenderer.java
 DECK_FRACTION = 0.55
@@ -51,6 +54,11 @@ DECK_DROP = 18.0
 SKIRT_DROP = 24.0
 BAND_ARMS = 3
 BAND_STEPS = 22
+SEG_NEAR = 72
+SEG_MID = 48
+SEG_FAR = 24
+LOD_NEAR = 160.0
+LOD_MID = 420.0
 
 CW, CH = 1240, 720          # tamanho da prancha
 GROUND = 63.0               # altura de terreno usada nos desenhos

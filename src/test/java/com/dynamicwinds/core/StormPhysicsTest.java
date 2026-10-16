@@ -430,6 +430,75 @@ class StormPhysicsTest {
                 "o furacao maior a 2000 blocos nao deveria alcancar o ponto");
     }
 
+    @Test
+    void idsDinamicosSaoNegativosUnicosESeparadosDosNaturais() {
+        StormField field = new StormField(91L, NORTH, 1.0);
+        StormSystem first = field.spawn(StormKind.HURRICANE, 24000L, 0.0, 0.0, 0.0, 1.0);
+        StormSystem second = field.spawn(StormKind.HURRICANE, 24000L, 10.0, 0.0, 0.0, 1.0);
+
+        assertTrue(first.id < 0L);
+        assertTrue(second.id < 0L);
+        assertTrue(first.id != second.id);
+        for (StormSystem system : field.activeAt(24000L)) {
+            if (!system.playerSpawned) {
+                assertTrue(system.id >= 0L, "IDs naturais ocupam o espaco nao-negativo");
+                assertTrue(system.id != first.id && system.id != second.id,
+                        "ID natural nao pode colidir com ID dinamico");
+            }
+        }
+        assertEquals(first.id, field.dynamicSystems().get(0).id);
+        assertEquals(second.id, field.dynamicSystems().get(1).id);
+    }
+
+    @Test
+    void sistemaNaturalRestauradoNaoDuplicaGeracaoDeterministica() {
+        StormField original = new StormField(94L, NORTH, 1.0);
+        StormSystem natural = null;
+        long foundAt = -1L;
+        for (long time = 0L; time < 100000L && natural == null; time += 1000L) {
+            for (StormSystem system : original.activeAt(time)) {
+                if (!system.playerSpawned) {
+                    natural = system;
+                    foundAt = time;
+                    break;
+                }
+            }
+        }
+        assertNotNull(natural, "seed/chance 100% deve produzir um natural ativo na busca");
+
+        StormField restored = new StormField(94L, NORTH, 1.0);
+        restored.addDynamic(natural);
+        int copies = 0;
+        for (StormSystem system : restored.activeAt(foundAt)) {
+            if (system.id == natural.id) copies++;
+        }
+        assertEquals(1, copies, "registro persistido deve sobrepor o natural calculado");
+    }
+
+    @Test
+    void clienteNaoGeraNaturaisEUsaSistemasRecebidosDoServidor() {
+        StormField field = new StormField(93L, NORTH, 1.0);
+        field.setAuthoritative(false);
+        assertTrue(field.activeAt(24000L).isEmpty(),
+                "campo nao autoritativo nao deve inventar tempestades naturais");
+
+        StormSystem replicated = new StormSystem(StormKind.HURRICANE, 1L, 24000L,
+                0.0, 0.0, 0.0, 0.0, NORTH, 1.0, false);
+        field.addDynamic(replicated);
+        assertEquals(1, field.activeAt(24000L).size(),
+                "o cliente deve expor o sistema replicado do servidor");
+        assertEquals(replicated.id, field.activeAt(24000L).get(0).id);
+    }
+
+    @Test
+    void idDinamicoRecebidoAvancaContadorSemReutilizarId() {
+        StormField field = isolatedField(92L);
+        field.addDynamic(new StormSystem(StormKind.HURRICANE, -42L, 0L, 0.0, 0.0,
+                0.0, 0.0, NORTH, 1.0, true));
+        StormSystem spawned = field.spawn(StormKind.HURRICANE, 0L, 0.0, 0.0, 0.0, 1.0);
+        assertTrue(spawned.id < -42L, "ID local deve ficar abaixo do maior ID recebido");
+    }
+
     // ------------------------------------------------------------------
 
     /** Campo sem geracao natural, para testar so os sistemas invocados. */

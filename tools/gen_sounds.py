@@ -48,6 +48,16 @@ SOUNDS = os.path.join(ROOT, "src/main/resources/assets/dynamicwinds/sounds")
 SR = 44100
 SEED = 20261015   # fixo: mesma saida a cada execucao
 
+# Constantes de reprodução espelhadas de client/audio/StormAudio.java.
+MIRROR_AUDIO = {
+    "THUNDER_PERIOD": 70,
+    "THUNDER_RANGE": 620.0,
+    "RANGE_PER_VOLUME": 16.0,
+    "CLOSE_DISTANCE": 90.0,
+    "MID_DISTANCE": 300.0,
+    "SOUND_SPEED": 343.0,
+}
+
 rng = np.random.default_rng(SEED)
 
 

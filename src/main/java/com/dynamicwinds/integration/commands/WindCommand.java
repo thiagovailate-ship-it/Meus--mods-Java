@@ -14,6 +14,9 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -64,6 +67,14 @@ public class WindCommand extends CommandBase {
                 "Debug mode: enable via config (debugHud=true) to see HUD overlay."));
         } else if ("storm".equals(sub)) {
             doStorm(p, args);
+        } else if ("protect".equals(sub)) {
+            doProtect(p, args);
+        } else if ("destruction".equals(sub)) {
+            doDestruction(p, args);
+        } else if ("field".equals(sub)) {
+            doField(p, args);
+        } else if ("dump".equals(sub)) {
+            doDump(p, args);
         } else {
             p.addChatMessage(new ChatComponentText(getCommandUsage(sender)));
         }
@@ -99,8 +110,29 @@ public class WindCommand extends CommandBase {
         }
         long time = world.getTotalWorldTime();
 
+        if ("where".equals(action)) {
+            StormSystem nearest = field.nearest(time, p.posX, p.posZ);
+            if (nearest == null) {
+                p.addChatMessage(new ChatComponentText("Nenhuma tempestade ativa."));
+            } else {
+                double distance = nearest.distanceTo(time, p.posX, p.posZ);
+                double speed = StormKind.translationSpeed(nearest.kind);
+                double eta = speed > 0.0 ? distance / (speed * 20.0) : Double.POSITIVE_INFINITY;
+                p.addChatMessage(new ChatComponentText(String.format(
+                        "#%d distance=%.1f bearing=%.1fdeg ETA=%.1fs translation=%.3fm/s Vmax=%.1fm/s",
+                        nearest.id, distance, Math.toDegrees(nearest.headingAt(time)), eta,
+                        speed * 20.0, nearest.vmaxAt(time))));
+            }
+            return;
+        }
+
         if ("spawn".equals(action)) {
             if (!senderHasPermission(p)) return;
+            if (!com.dynamicwinds.integration.WindConfig.stormsAllowedInDimension(
+                    world.provider.dimensionId)) {
+                p.addChatMessage(new ChatComponentText("Tempestades desativadas nesta dimensao."));
+                return;
+            }
             int kind = args.length > 2 ? parseKind(args[2]) : StormKind.HURRICANE;
             if (kind < 0) {
                 p.addChatMessage(new ChatComponentText("Tipo invalido. Use: vortice, tropical, "
@@ -120,8 +152,13 @@ public class WindCommand extends CommandBase {
             double yaw = Math.toRadians(p.rotationYaw);
             double x = p.posX - Math.sin(yaw) * dist;
             double z = p.posZ + Math.cos(yaw) * dist;
-            StormSystem s = field.spawn(kind, time, x, z, yaw, mul);
-            StormNetwork.broadcastSpawn(s);
+            double progress = args.length > 5 ? parsePhase(args[5]) : 0.0;
+            if (progress < 0.0) {
+                p.addChatMessage(new ChatComponentText("Fase invalida: genesis, maduro, maturo-dip ou dissipacao."));
+                return;
+            }
+            StormSystem s = field.spawnAtProgress(kind, time, x, z, yaw, mul, progress);
+            StormNetwork.broadcastSpawn(s, world.provider.dimensionId);
             p.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "Sistema #" + s.id
                     + " (" + StormKind.name(kind) + ") formado em "
                     + String.format("%.0f, %.0f", x, z)
@@ -134,7 +171,7 @@ public class WindCommand extends CommandBase {
             if (!senderHasPermission(p)) return;
             int removed = field.dynamicCount();
             field.clearDynamic();
-            StormNetwork.broadcastClear();
+            StormNetwork.broadcastClear(world.provider.dimensionId);
             p.addChatMessage(new ChatComponentText("Sistemas invocados removidos: " + removed + "."));
             return;
         }
@@ -158,6 +195,135 @@ public class WindCommand extends CommandBase {
                     + s.describe(time) + " a " + String.format("%.0f",
                         s.distanceTo(time, p.posX, p.posZ)) + " blocos"));
         }
+    }
+
+    private void doField(EntityPlayer player, String[] args) {
+        World world = player.worldObj;
+        StormField field = Wind.stormsFor(world);
+        long time = world.getTotalWorldTime();
+        StormSystem storm = field == null ? null : field.nearest(time, player.posX, player.posZ);
+        if (storm == null) {
+            player.addChatMessage(new ChatComponentText("Nenhuma tempestade ativa para inspecionar."));
+            return;
+        }
+        int ground = Wind.surfaceHeightAt(world, (int) storm.centerX(time), (int) storm.centerZ(time));
+        double energy = Wind.surfaceEnergyFor(world).energyAt(storm.centerX(time), storm.centerZ(time));
+        double[] radii = {0.0, storm.rmaxAt(time) * 0.5, storm.rmaxAt(time),
+                storm.rmaxAt(time) * 1.5, storm.outerRadius()};
+        player.addChatMessage(new ChatComponentText("r  total  tangential  radial  vertical  deficit_hPa"));
+        for (double radius : radii) {
+            double x = storm.centerX(time) + radius;
+            double z = storm.centerZ(time);
+            com.dynamicwinds.core.Vec3 v = storm.wind(time, x, ground + 10.0, z, ground, energy);
+            double radial = v.x;
+            double tangential = v.z;
+            player.addChatMessage(new ChatComponentText(String.format(
+                    "%.1f  %.3f  %.3f  %.3f  %.3f  %.4f", radius, v.length(),
+                    tangential, radial, v.y, storm.deficitHpa(time, x, z))));
+        }
+    }
+
+    private void doDump(EntityPlayer player, String[] args) {
+        if (!senderHasPermission(player)) return;
+        int radius = args.length > 1 ? parseInteger(args[1], 32) : 32;
+        int step = args.length > 2 ? parseInteger(args[2], 8) : 8;
+        radius = Math.max(4, Math.min(128, radius));
+        step = Math.max(2, Math.min(32, step));
+        World world = player.worldObj;
+        File file = new File(world.getSaveHandler().getWorldDirectory(), "dynamicwinds-dump.csv");
+        try {
+            PrintWriter out = new PrintWriter(new FileWriter(file));
+            out.println("x,z,y,v_total,v_tangential,v_radial,wind_vertical,deficit_hpa");
+            long time = world.getTotalWorldTime();
+            int centerX = (int) Math.floor(player.posX), centerZ = (int) Math.floor(player.posZ);
+            StormField field = Wind.stormsFor(world);
+            SurfaceRoughness energy = Wind.surfaceEnergyFor(world);
+            for (int x = centerX - radius; x <= centerX + radius; x += step) {
+                for (int z = centerZ - radius; z <= centerZ + radius; z += step) {
+                    double y = player.posY;
+                    WindSample sample = Wind.getWindAt(world, x + 0.5, y, z + 0.5);
+                    StormSystem storm = field == null ? null : field.strongestAt(time, x + 0.5, z + 0.5);
+                    double tan = 0.0, radial = 0.0, vertical = 0.0, deficit = 0.0;
+                    if (storm != null) {
+                        int surface = Wind.surfaceHeightAt(world, x, z);
+                        double e = energy.energyAt(storm.centerX(time), storm.centerZ(time));
+                        com.dynamicwinds.core.Vec3 v = storm.wind(time, x + 0.5, y, z + 0.5, surface, e);
+                        double dx = x + 0.5 - storm.centerX(time), dz = z + 0.5 - storm.centerZ(time);
+                        double length = Math.sqrt(dx * dx + dz * dz);
+                        double ux = length == 0.0 ? 1.0 : dx / length;
+                        double uz = length == 0.0 ? 0.0 : dz / length;
+                        radial = v.x * ux + v.z * uz;
+                        tan = -v.x * uz + v.z * ux;
+                        vertical = v.y;
+                        deficit = storm.deficitHpa(time, x + 0.5, z + 0.5);
+                    }
+                    out.println((x + 0.5) + "," + (z + 0.5) + "," + y + "," + sample.speed
+                            + "," + tan + "," + radial + "," + vertical + "," + deficit);
+                }
+            }
+            out.close();
+            player.addChatMessage(new ChatComponentText("CSV salvo: " + file.getAbsolutePath()));
+        } catch (Exception ex) {
+            player.addChatMessage(new ChatComponentText("Falha ao gravar CSV: " + ex.getMessage()));
+        }
+    }
+
+    private static int parseInteger(String text, int fallback) {
+        try { return Integer.parseInt(text); } catch (NumberFormatException ex) { return fallback; }
+    }
+
+    private void doDestruction(EntityPlayer player, String[] args) {
+        if (!senderHasPermission(player)) return;
+        if (args.length < 2 || !"stats".equalsIgnoreCase(args[1])) {
+            player.addChatMessage(new ChatComponentText("Use: /wind destruction stats"));
+            return;
+        }
+        player.addChatMessage(new ChatComponentText(com.dynamicwinds.integration.DestructionHandler
+                .statsSummary(player.worldObj.provider.dimensionId, player.worldObj.getTotalWorldTime())));
+    }
+
+    private void doProtect(EntityPlayer player, String[] args) {
+        if (!senderHasPermission(player)) return;
+        if (args.length < 2) {
+            player.addChatMessage(new ChatComponentText("Use: /wind protect <add|remove|list> [mod:id]"));
+            return;
+        }
+        String action = args[1].toLowerCase();
+        String[] current = com.dynamicwinds.integration.WindConfig.destructionProtectedBlocks;
+        if ("list".equals(action)) {
+            player.addChatMessage(new ChatComponentText("Protected blocks: " + java.util.Arrays.toString(current)));
+            return;
+        }
+        if (!"add".equals(action) && !"remove".equals(action)) {
+            player.addChatMessage(new ChatComponentText("Use: /wind protect <add|remove|list> [mod:id]"));
+            return;
+        }
+        if (args.length < 3) {
+            player.addChatMessage(new ChatComponentText("Informe um ID de bloco, ex.: minecraft:obsidian"));
+            return;
+        }
+        String name = args[2].toLowerCase();
+        if ("add".equals(action) && net.minecraft.block.Block.blockRegistry.getObject(name) == null) {
+            player.addChatMessage(new ChatComponentText("Bloco desconhecido: " + name));
+            return;
+        }
+        java.util.ArrayList<String> updated = new java.util.ArrayList<String>(java.util.Arrays.asList(current));
+        if ("add".equals(action)) {
+            if (!updated.contains(name)) updated.add(name);
+        } else {
+            updated.remove(name);
+        }
+        com.dynamicwinds.integration.WindConfig.setProtectedBlocks(updated.toArray(new String[updated.size()]));
+        player.addChatMessage(new ChatComponentText("Protected blocks saved: "
+                + java.util.Arrays.toString(com.dynamicwinds.integration.WindConfig.destructionProtectedBlocks)));
+    }
+
+    private static double parsePhase(String phase) {
+        if ("genesis".equalsIgnoreCase(phase) || "genese".equalsIgnoreCase(phase)) return 0.02;
+        if ("maduro".equalsIgnoreCase(phase) || "mature".equalsIgnoreCase(phase)) return 0.50;
+        if ("maturo-dip".equalsIgnoreCase(phase) || "mature-dip".equalsIgnoreCase(phase)) return 0.60;
+        if ("dissipacao".equalsIgnoreCase(phase) || "dissipation".equalsIgnoreCase(phase)) return 0.88;
+        return -1.0;
     }
 
     /** Traduz nome ou numero de tipo. Retorna -1 se nao reconhecer. */
@@ -193,7 +359,7 @@ public class WindCommand extends CommandBase {
     @Override
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, new String[]{"get", "profile", "debug", "storm"});
+            return getListOfStringsMatchingLastWord(args, new String[]{"get", "profile", "debug", "storm", "protect", "destruction", "field", "dump"});
         }
         if (args.length == 2 && "storm".equals(args[0])) {
             return getListOfStringsMatchingLastWord(args, new String[]{"list", "spawn", "clear"});

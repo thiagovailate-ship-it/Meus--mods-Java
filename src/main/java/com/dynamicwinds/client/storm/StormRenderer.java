@@ -56,6 +56,14 @@ public final class StormRenderer {
     private static final int BAND_ARMS = 3;
     private static final int BAND_STEPS = 22;
     private static final double TWO_PI = Math.PI * 2.0;
+    private static final float[] LIT_COLOUR = new float[3];
+    private static final java.util.Map<String, TerrainCache> TERRAIN_CACHE =
+            new java.util.HashMap<String, TerrainCache>();
+
+    private static final class TerrainCache {
+        long tick;
+        double x, z, radius, height;
+    }
 
     /** Segmentos da malha conforme a distancia da camera (LOD). */
     private static final int SEG_NEAR = 72;
@@ -149,7 +157,8 @@ public final class StormRenderer {
 
         // o relevo sob o anel, e nao so sob o centro: uma tempestade sobre um
         // morro enterraria parte da parede
-        double groundY = terrainTop(mc, cx, cz, narrow ? rmax * 2.0 : rmax * 1.45);
+        double terrainRadius = narrow ? rmax * 2.0 : rmax * 1.45;
+        double groundY = terrainTop(mc, storm, cx, cz, terrainRadius, time);
         double top = StormKind.columnTop(s.kind);
         double deckY = Math.min(groundY + top * DECK_FRACTION, SKY_LIMIT);
         double baseY = narrow ? groundY - 1.0 : groundY + 2.0;
@@ -208,17 +217,36 @@ public final class StormRenderer {
     /**
      * Altura do relevo sob o sistema, olhando oito pontos do anel.
      */
-    private static double terrainTop(Minecraft mc, double cx, double cz, double radius) {
+    private static double terrainTop(Minecraft mc, StormSystem storm, double cx, double cz,
+                                     double radius, long tick) {
+        String key = System.identityHashCode(mc.theWorld) + ":"
+                + mc.theWorld.provider.dimensionId + ":" + storm.id;
+        TerrainCache cached = TERRAIN_CACHE.get(key);
+        double dx = cached == null ? Double.MAX_VALUE : cx - cached.x;
+        double dz = cached == null ? Double.MAX_VALUE : cz - cached.z;
+        if (cached != null && tick >= cached.tick && tick - cached.tick < 20L
+                && dx * dx + dz * dz < 256.0
+                && Math.abs(radius - cached.radius) < 16.0) return cached.height;
+
         double top = mc.theWorld.getHeightValue((int) Math.floor(cx), (int) Math.floor(cz));
         for (int i = 0; i < 8; i++) {
             double a = i * Math.PI / 4.0;
             int x = (int) Math.floor(cx + Math.cos(a) * radius);
             int z = (int) Math.floor(cz + Math.sin(a) * radius);
             double h = mc.theWorld.getHeightValue(x, z);
-            if (h > top) {
-                top = h;
-            }
+            if (h > top) top = h;
         }
+        if (TERRAIN_CACHE.size() > 128) {
+            java.util.Iterator<java.util.Map.Entry<String, TerrainCache>> it = TERRAIN_CACHE.entrySet().iterator();
+            while (it.hasNext()) if (tick - it.next().getValue().tick > 1200L) it.remove();
+        }
+        TerrainCache value = cached == null ? new TerrainCache() : cached;
+        value.tick = tick;
+        value.x = cx;
+        value.z = cz;
+        value.radius = radius;
+        value.height = top;
+        TERRAIN_CACHE.put(key, value);
         return top;
     }
 
@@ -227,12 +255,10 @@ public final class StormRenderer {
         double s = shade + (0.92 - shade) * flash;
         if (s > 1.0) s = 1.0;
         // o clarao tambem lava o tom azulado: a nuvem acesa e quase branca
-        float r = (float) s;
-        float g = (float) (s * (1.02 + 0.05 * flash));
-        float b = (float) (s * (1.12 + 0.06 * flash));
-        if (g > 1.0F) g = 1.0F;
-        if (b > 1.0F) b = 1.0F;
-        return new float[] { r, g, b };
+        LIT_COLOUR[0] = (float) s;
+        LIT_COLOUR[1] = (float) Math.min(1.0, s * (1.02 + 0.05 * flash));
+        LIT_COLOUR[2] = (float) Math.min(1.0, s * (1.12 + 0.06 * flash));
+        return LIT_COLOUR;
     }
 
     /**

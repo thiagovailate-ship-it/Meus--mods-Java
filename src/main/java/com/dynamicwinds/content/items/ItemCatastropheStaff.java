@@ -58,6 +58,12 @@ public class ItemCatastropheStaff extends Item {
         // o servidor decide tudo; o cliente apenas recebe o resultado pela rede,
         // que evita duas invocacoes diferentes rodando em paralelo
         if (world.isRemote) return stack;
+        if (!com.dynamicwinds.integration.WindConfig.stormsAllowedInDimension(
+                world.provider.dimensionId)) {
+            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED
+                    + "Tempestades desativadas nesta dimensao."));
+            return stack;
+        }
 
         NBTTagCompound tag = stack.getTagCompound();
         if (tag == null) {
@@ -72,7 +78,7 @@ public class ItemCatastropheStaff extends Item {
             tag.setInteger(TAG_KIND, kind);
             player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA
                     + "[Cajado da Catastrofe] Tipo escolhido: "
-                    + EnumChatFormatting.WHITE + StormKind.name(kind)
++ EnumChatFormatting.WHITE + com.dynamicwinds.integration.StormLanguage.name(kind)
                     + EnumChatFormatting.GRAY + " (" + StormKind.category(kind) + ")"));
             return stack;
         }
@@ -95,11 +101,11 @@ public class ItemCatastropheStaff extends Item {
         StormField field = Wind.stormsFor(world);
         if (field == null) return stack;
         StormSystem s = field.spawn(kind, now, x, z, yaw, INTENSITY);
-        StormNetwork.broadcastSpawn(s);
+        StormNetwork.broadcastSpawn(s, world.provider.dimensionId);
         tag.setLong(TAG_LAST, now);
 
         player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD
-                + "[Cajado da Catastrofe] " + StormKind.name(kind)
+                + "[Cajado da Catastrofe] " + com.dynamicwinds.integration.StormLanguage.name(kind)
                 + " formado a frente: deficit central de "
                 + String.format("%.1f", s.centralDeficitHpa(now)) + " hPa, vento de "
                 + String.format("%.1f", s.vmaxAt(now)) + " m/s."));
@@ -117,7 +123,7 @@ public class ItemCatastropheStaff extends Item {
             if (kind < 0 || kind >= StormKind.COUNT) kind = StormKind.HURRICANE;
         }
         list.add(EnumChatFormatting.GRAY + "Invoca: "
-                + EnumChatFormatting.WHITE + StormKind.name(kind));
+                + EnumChatFormatting.WHITE + com.dynamicwinds.integration.StormLanguage.name(kind));
         list.add(EnumChatFormatting.DARK_GRAY + "Vento de pico: "
                 + String.format("%.1f", StormKind.vmax(kind)) + " m/s ("
                 + StormKind.category(kind) + ")");

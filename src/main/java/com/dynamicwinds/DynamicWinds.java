@@ -7,9 +7,14 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.event.FMLServerStoppingEvent;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
 
 @Mod(modid = DynamicWinds.MODID, name = DynamicWinds.NAME, version = DynamicWinds.VERSION, guiFactory = "com.dynamicwinds.client.gui.WindGuiFactory")
 public class DynamicWinds {
@@ -29,6 +34,7 @@ public class DynamicWinds {
     @Mod.EventHandler
     public void init(FMLInitializationEvent e) {
         MinecraftForge.EVENT_BUS.register(this);
+        FMLCommonHandler.instance().bus().register(new ServerStoppingHandler(engine));
         if (cpw.mods.fml.common.FMLCommonHandler.instance().getSide() == cpw.mods.fml.relauncher.Side.CLIENT) {
             com.dynamicwinds.client.ClientEvents.register();
         }
@@ -37,6 +43,25 @@ public class DynamicWinds {
     @SubscribeEvent
     public void onWorldTick(TickEvent.WorldTickEvent e) {
         if (e.phase == TickEvent.Phase.END) engine.tick(e.world);
+    }
+
+    @SubscribeEvent
+    public void onWorldUnload(WorldEvent.Unload e) {
+        if (e.world != null && !e.world.isRemote) engine.unloadWorld(e.world);
+    }
+
+    private static final class ServerStoppingHandler {
+        private final WindEngine engine;
+
+        private ServerStoppingHandler(WindEngine engine) {
+            this.engine = engine;
+        }
+
+        @SubscribeEvent
+        public void onServerStopping(FMLServerStoppingEvent event) {
+            WorldServer[] worlds = DimensionManager.getWorlds();
+            for (WorldServer world : worlds) engine.unloadWorld(world);
+        }
     }
 
     @Mod.EventHandler

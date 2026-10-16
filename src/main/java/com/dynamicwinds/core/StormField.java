@@ -55,7 +55,13 @@ public final class StormField {
     // cada quadro, e uma lista comum daria ConcurrentModificationException.
     private final Map<Long, StormSystem> naturalCache = new ConcurrentHashMap<Long, StormSystem>();
     private final List<StormSystem> dynamic = new CopyOnWriteArrayList<StormSystem>();
-    private final AtomicLong nextDynamicId = new AtomicLong(1L);
+    /**
+     * IDs dinâmicos ocupam o espaço negativo; os IDs naturais são slots de
+     * tempo (não-negativos para o tempo normal de jogo). Assim um sistema
+     * invocado nunca colide com uma tempestade natural.
+     */
+    private final AtomicLong nextDynamicId = new AtomicLong(-1L);
+    private volatile boolean authoritative = true;
 
     /** Hemisferio norte, com chance padrao de um sistema por janela. */
     public StormField(long seed) {
@@ -75,6 +81,13 @@ public final class StormField {
 
     public double spawnChance() { return spawnChance; }
 
+    /** Only the server derives natural systems; clients consume server snapshots. */
+    public void setAuthoritative(boolean authoritative) {
+        this.authoritative = authoritative;
+    }
+
+    public boolean isAuthoritative() { return authoritative; }
+
     // ------------------------------------------------------------------
     // consulta
     // ------------------------------------------------------------------
@@ -93,7 +106,7 @@ public final class StormField {
         long slot = Math.floorDiv(time, SLOT_TICKS);
         for (long i = slot - CHECK_BACK; i <= slot + CHECK_AHEAD; i++) {
             StormSystem s = natural(i);
-            if (s != null && s.isAlive(time)) out.add(s);
+            if (s != null && s.isAlive(time) && !hasDynamicId(s.id)) out.add(s);
         }
         for (int i = 0; i < dynamic.size(); i++) {
             StormSystem s = dynamic.get(i);
@@ -113,7 +126,7 @@ public final class StormField {
         long slot = Math.floorDiv(time, SLOT_TICKS);
         for (long i = slot - CHECK_BACK; i <= slot + CHECK_AHEAD; i++) {
             StormSystem s = natural(i);
-            if (s == null || !s.isAlive(time)) continue;
+            if (s == null || !s.isAlive(time) || hasDynamicId(s.id)) continue;
             sum = sum.add(s.wind(time, x, y, z, surfaceY, centerEnergy(s, time, roughness)));
         }
         for (int i = 0; i < dynamic.size(); i++) {
@@ -181,7 +194,7 @@ public final class StormField {
     // ------------------------------------------------------------------
 
     private StormSystem natural(long slot) {
-        if (spawnChance <= 0.0) return null;
+        if (!authoritative || spawnChance <= 0.0) return null;
         Long key = Long.valueOf(slot);
         StormSystem cached = naturalCache.get(key);
         if (cached != null) return cached;
@@ -255,10 +268,19 @@ public final class StormField {
      */
     public StormSystem spawn(int kind, long time, double x, double z, double headingRad,
                              double intensityMul) {
-        StormSystem s = new StormSystem(kind, nextDynamicId.getAndIncrement(), time, x, z,
-                headingRad, 0.0, north, intensityMul, true);
-        dynamic.add(s);
-        return s;
+        return spawnAtProgress(kind, time, x, z, headingRad, intensityMul, 0.0);
+    }
+
+    /** Spawn with a chosen normalized life-cycle progress (0..1). */
+    public StormSystem spawnAtProgress(int kind, long time, double x, double z,
+                                       double headingRad, double intensityMul,
+                                       double progress) {
+        double bounded = Math.max(0.0, Math.min(0.999, progress));
+        long birth = time - Math.round(bounded * StormKind.durationTicks(kind));
+        StormSystem system = new StormSystem(kind, nextDynamicId.getAndDecrement(), birth,
+                x, z, headingRad, 0.0, north, intensityMul, true);
+        dynamic.add(system);
+        return system;
     }
 
     /** Registra um sistema vindo da rede (o id ja vem definido pelo servidor). */
@@ -271,7 +293,16 @@ public final class StormField {
             }
         }
         dynamic.add(s);
-        if (s.id >= nextDynamicId.get()) nextDynamicId.set(s.id + 1L);
+        // Pacotes/estado carregado podem trazer IDs dinâmicos atribuídos por
+        // outra instância. Mantém o contador no próximo valor negativo livre.
+        if (s.id < 0L) {
+            long candidate = s.id - 1L;
+            long current;
+            do {
+                current = nextDynamicId.get();
+                if (candidate >= current) break;
+            } while (!nextDynamicId.compareAndSet(current, candidate));
+        }
     }
 
     public void removeDynamic(long id) {
@@ -284,15 +315,38 @@ public final class StormField {
     }
 
     public void clearDynamic() {
+        for (int i = dynamic.size() - 1; i >= 0; i--) {
+            if (dynamic.get(i).playerSpawned) dynamic.remove(i);
+        }
+    }
+
+    /** Replaces every replicated system, including server-generated naturals. */
+    public void replaceSystems() {
         dynamic.clear();
     }
 
+    private boolean hasDynamicId(long id) {
+        for (int i = 0; i < dynamic.size(); i++) {
+            if (dynamic.get(i).id == id) return true;
+        }
+        return false;
+    }
+
     public int dynamicCount() {
-        return dynamic.size();
+        int count = 0;
+        for (int i = 0; i < dynamic.size(); i++) {
+            if (dynamic.get(i).playerSpawned) count++;
+        }
+        return count;
     }
 
     public List<StormSystem> dynamicSystems() {
-        return Collections.unmodifiableList(dynamic);
+        List<StormSystem> invoked = new ArrayList<StormSystem>();
+        for (int i = 0; i < dynamic.size(); i++) {
+            StormSystem system = dynamic.get(i);
+            if (system.playerSpawned) invoked.add(system);
+        }
+        return Collections.unmodifiableList(invoked);
     }
 
     // ------------------------------------------------------------------

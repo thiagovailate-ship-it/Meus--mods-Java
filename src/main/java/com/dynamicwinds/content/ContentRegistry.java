@@ -7,6 +7,7 @@ import com.dynamicwinds.content.tileentities.TileEntityAnemometer;
 import com.dynamicwinds.content.tileentities.TileEntityWindVane;
 import com.dynamicwinds.content.tileentities.TileEntityWindsock;
 import com.dynamicwinds.content.items.ItemCatastropheStaff;
+import com.dynamicwinds.content.items.ItemBarometer;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -17,6 +18,7 @@ public final class ContentRegistry {
     public static BlockWindsock windsock;
     public static BlockAnemometer anemometer;
     public static ItemCatastropheStaff catastropheStaff;
+    public static ItemBarometer barometer;
 
     private ContentRegistry() {}
 
@@ -25,6 +27,7 @@ public final class ContentRegistry {
         windsock = new BlockWindsock();
         anemometer = new BlockAnemometer();
         catastropheStaff = new ItemCatastropheStaff();
+        barometer = new ItemBarometer();
 
         GameRegistry.registerBlock(windVane, "windVane");
         GameRegistry.registerBlock(windsock, "windsock");
@@ -35,6 +38,7 @@ public final class ContentRegistry {
         GameRegistry.registerTileEntity(TileEntityAnemometer.class, "dynamicwinds:anemometer");
 
         GameRegistry.registerItem(catastropheStaff, "catastropheStaff");
+        GameRegistry.registerItem(barometer, "barometer");
 
         // recipes
         GameRegistry.addRecipe(new ItemStack(windVane), " S ", " S ", "III",
@@ -48,5 +52,7 @@ public final class ContentRegistry {
         // blaze fornece a energia termica que a fisica do ciclone consome
         GameRegistry.addRecipe(new ItemStack(catastropheStaff), "  N", " B ", "S  ",
                 'N', Items.nether_star, 'B', Items.blaze_rod, 'S', Items.ender_pearl);
+        GameRegistry.addRecipe(new ItemStack(barometer), "IRI", "RCR", "IRI",
+                'I', Items.iron_ingot, 'R', Items.redstone, 'C', Items.compass);
     }
 }

@@ -3,6 +3,8 @@ package com.dynamicwinds.integration;
 import com.dynamicwinds.api.Wind;
 import com.dynamicwinds.content.ContentRegistry;
 import com.dynamicwinds.core.StormField;
+import com.dynamicwinds.core.StormSystem;
+import com.dynamicwinds.core.StormKind;
 import com.dynamicwinds.core.SurfaceRoughness;
 import com.dynamicwinds.core.WindSample;
 import net.minecraft.block.Block;
@@ -14,6 +16,10 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Random;
 
 /**
@@ -60,6 +66,27 @@ public final class DestructionHandler {
 
     /** Fonte de dano propria, para a mensagem de morte fazer sentido. */
     public static final DamageSource STORM_DAMAGE = new DamageSource("dynamicwinds.storm");
+    private static final Map<String, Integer> BROKEN_BY_STORM = new HashMap<String, Integer>();
+    private static final Map<Integer, Stats> STATS = new HashMap<Integer, Stats>();
+    private static int blocksBrokenThisTick;
+
+    private static final class Stats {
+        long minute = Long.MIN_VALUE;
+        int broken;
+        int warned;
+        final Map<String, Integer> blockTypes = new HashMap<String, Integer>();
+        final Set<String> loggedWarnTypes = new HashSet<String>();
+
+        void roll(long worldTime) {
+            long currentMinute = worldTime / 1200L;
+            if (minute != currentMinute) {
+                minute = currentMinute;
+                broken = warned = 0;
+                blockTypes.clear();
+                loggedWarnTypes.clear();
+            }
+        }
+    }
 
     /** Velocidade minima para ferir uma entidade (m/s). */
     private static final double HURT_THRESHOLD = 26.0;
@@ -70,13 +97,26 @@ public final class DestructionHandler {
 
     public static void tick(World world) {
         if (world.isRemote) return;
+        blocksBrokenThisTick = 0;
         if (!WindConfig.enableDestruction) return;
+        if (WindConfig.destructionProtectedDimension(world.provider.dimensionId)) return;
 
         long time = world.getTotalWorldTime();
         StormField field = Wind.stormsFor(world);
         if (field == null) return;
         SurfaceRoughness energy = Wind.surfaceEnergyFor(world);
-        if (field.activeAt(time, energy).isEmpty()) return;
+        List<StormSystem> active = field.activeAt(time, energy);
+        Stats stats = stats(world.provider.dimensionId, time);
+        Set<String> activeKeys = new HashSet<String>();
+        for (StormSystem system : active) {
+            activeKeys.add(stormKey(world.provider.dimensionId, system.id));
+        }
+        java.util.Iterator<String> broken = BROKEN_BY_STORM.keySet().iterator();
+        while (broken.hasNext()) {
+            String key = broken.next();
+            if (key.startsWith(world.provider.dimensionId + ":") && !activeKeys.contains(key)) broken.remove();
+        }
+        if (active.isEmpty()) return;
 
         List players = world.playerEntities;
         if (players.isEmpty()) return;
@@ -84,16 +124,16 @@ public final class DestructionHandler {
         int perPlayer = Math.max(1, WindConfig.destructionBlocksPerTick / players.size());
         for (int i = 0; i < players.size(); i++) {
             EntityPlayer p = (EntityPlayer) players.get(i);
-            carve(world, p, perPlayer, field, time);
+            carve(world, p, perPlayer, field, time, stats);
         }
-        damageEntities(world);
+        damageEntities(world, field, time);
     }
 
     // ------------------------------------------------------------------
     // blocos
     // ------------------------------------------------------------------
 
-    private static void carve(World world, EntityPlayer p, int budget, StormField field, long time) {
+    private static void carve(World world, EntityPlayer p, int budget, StormField field, long time, Stats stats) {
         Random rand = world.rand;
         double radius = BASE_RADIUS * WindConfig.destructionRadiusScale;
         int pbx = (int) Math.floor(p.posX);
@@ -111,7 +151,7 @@ public final class DestructionHandler {
             // cache do servidor em vez de uma leitura de mundo por bloco candidato)
             int surface = Wind.surfaceHeightAt(world, x, z);
             int y = surface - REACH_DOWN + rand.nextInt(REACH_DOWN + REACH_UP);
-            tryBreak(world, x, y, z, rand);
+            tryBreak(world, x, y, z, rand, field, time, stats);
         }
     }
 
@@ -119,10 +159,15 @@ public final class DestructionHandler {
      * Avalia um bloco. Este e o ponto onde o vento encontra a resistencia do
      * material: nada e destruido sem passar pelo campo fisico.
      */
-    private static boolean tryBreak(World world, int x, int y, int z, Random rand) {
+    private static boolean tryBreak(World world, int x, int y, int z, Random rand,
+                                    StormField field, long time, Stats stats) {
         Block block = world.getBlock(x, y, z);
         if (block == null) return false;
         if (world.isAirBlock(x, y, z)) return false;
+        if (blocksBrokenThisTick >= WindConfig.destructionBlocksPerTick) return false;
+        Object registryKey = Block.blockRegistry.getNameForObject(block);
+        String blockName = registryKey == null ? block.getUnlocalizedName() : registryKey.toString();
+        if (WindConfig.isProtectedBlock(blockName)) return false;
 
         Material mat = block.getMaterial();
         if (mat == null || mat.isLiquid()) return false;
@@ -139,31 +184,94 @@ public final class DestructionHandler {
         float hardness = block.getBlockHardness(world, x, y, z);
         if (hardness < 0.0F) return false; // indestrutivel (bedrock, portal, etc.)
 
+        StormSystem cause = field.strongestAt(time, x + 0.5, z + 0.5);
+        if (cause == null) return false;
+        String stormKey = stormKey(world.provider.dimensionId, cause.id);
+        int alreadyBroken = BROKEN_BY_STORM.containsKey(stormKey)
+                ? BROKEN_BY_STORM.get(stormKey).intValue() : 0;
+        if (alreadyBroken >= WindConfig.destructionMaxPerStorm) return false;
+
         double needed = criticalSpeed(hardness);
         WindSample s = Wind.getWindAt(world, x + 0.5, y + 0.5, z + 0.5);
         if (s.speed < needed) return false;
+        if (WindConfig.destructionWarnOnly) {
+            stats.warned++;
+            stats.blockTypes.put(blockName, Integer.valueOf(stats.blockTypes.containsKey(blockName)
+                    ? stats.blockTypes.get(blockName).intValue() + 1 : 1));
+            if (stats.loggedWarnTypes.add(blockName)) {
+                System.out.println("DynamicWinds warn-only: would break " + blockName
+                        + " at " + x + "," + y + "," + z + " (" + s.speed + " m/s)");
+            }
+            return false;
+        }
 
         int meta = world.getBlockMetadata(x, y, z);
         if (WindConfig.destructionDropItems) {
             block.dropBlockAsItem(world, x, y, z, meta, 0);
         }
         world.setBlockToAir(x, y, z);
+        blocksBrokenThisTick++;
+        BROKEN_BY_STORM.put(stormKey, Integer.valueOf(alreadyBroken + 1));
+        stats.broken++;
+        stats.blockTypes.put(blockName, Integer.valueOf(stats.blockTypes.containsKey(blockName)
+                ? stats.blockTypes.get(blockName).intValue() + 1 : 1));
         // efeito de impacto: poeira no ponto arrancado
         world.playAuxSFX(2001, x, y, z, Block.getIdFromBlock(block) + (meta << 12));
 
         if (isTrunk(block)) {
             int felled = 0;
             for (int dy = 1; dy <= TRUNK_FALL; dy++) {
+                if (blocksBrokenThisTick >= WindConfig.destructionBlocksPerTick
+                        || alreadyBroken >= WindConfig.destructionMaxPerStorm) break;
                 Block up = world.getBlock(x, y + dy, z);
                 if (!isTrunk(up)) break;
+                Object upKey = Block.blockRegistry.getNameForObject(up);
+                String upName = upKey == null ? up.getUnlocalizedName() : upKey.toString();
+                if (WindConfig.isProtectedBlock(upName)) break;
                 if (WindConfig.destructionDropItems) {
                     up.dropBlockAsItem(world, x, y + dy, z, world.getBlockMetadata(x, y + dy, z), 0);
                 }
                 world.setBlockToAir(x, y + dy, z);
+                blocksBrokenThisTick++;
+                alreadyBroken++;
+                BROKEN_BY_STORM.put(stormKey, Integer.valueOf(alreadyBroken));
+                stats.broken++;
+                stats.blockTypes.put(upName, Integer.valueOf(stats.blockTypes.containsKey(upName)
+                        ? stats.blockTypes.get(upName).intValue() + 1 : 1));
                 if (++felled >= 3 + rand.nextInt(4)) break; // nem toda arvore cede inteira
             }
         }
         return true;
+    }
+
+    private static Stats stats(int dimensionId, long time) {
+        Integer key = Integer.valueOf(dimensionId);
+        Stats stats = STATS.get(key);
+        if (stats == null) {
+            stats = new Stats();
+            STATS.put(key, stats);
+        }
+        stats.roll(time);
+        return stats;
+    }
+
+    private static String stormKey(int dimensionId, long id) {
+        return dimensionId + ":" + id;
+    }
+
+    private static String stormSlug(int kind) {
+        switch (kind) {
+            case StormKind.TROPICAL_STORM: return "tropical";
+            case StormKind.HURRICANE: return "hurricane";
+            case StormKind.MAJOR_HURRICANE: return "major";
+            default: return "vortex";
+        }
+    }
+
+    public static String statsSummary(int dimensionId, long time) {
+        Stats stats = stats(dimensionId, time);
+        return "last minute: broken=" + stats.broken + ", warnOnly=" + stats.warned
+                + ", blockTypes=" + stats.blockTypes;
     }
 
     /** Velocidade critica de arrancamento, em m/s, a partir da dureza do bloco. */
@@ -192,7 +300,7 @@ public final class DestructionHandler {
      * Machuca o que esta exposto ao vento: destrocos voando, arrancados de
      * estruturas, atingem quem estiver na faixa mais violenta.
      */
-    private static void damageEntities(World world) {
+    private static void damageEntities(World world, StormField field, long time) {
         List loaded = world.loadedEntityList;
         for (int i = 0; i < loaded.size(); i++) {
             Entity e = (Entity) loaded.get(i);
@@ -209,7 +317,10 @@ public final class DestructionHandler {
             // um furacao maior e o que mata
             double over = s.speed - threshold;
             float damage = (float) (1.0 + over * over * 0.02);
-            e.attackEntityFrom(STORM_DAMAGE, damage);
+            StormSystem cause = field.strongestAt(time, e.posX, e.posZ);
+            String damageKey = cause == null ? "dynamicwinds.storm"
+                    : "dynamicwinds.storm." + stormSlug(cause.kind);
+            e.attackEntityFrom(new DamageSource(damageKey), damage);
         }
     }
 }

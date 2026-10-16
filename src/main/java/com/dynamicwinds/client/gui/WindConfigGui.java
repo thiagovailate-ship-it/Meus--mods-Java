@@ -24,4 +24,10 @@ public class WindConfigGui extends GuiConfig {
         }
         return list;
     }
+
+    @Override
+    public void onGuiClosed() {
+        super.onGuiClosed();
+        WindConfig.saveAndReload();
+    }
 }

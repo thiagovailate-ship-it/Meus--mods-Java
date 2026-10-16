@@ -8,6 +8,7 @@ import com.dynamicwinds.client.storm.StormClientState;
 import com.dynamicwinds.client.storm.StormFogHandler;
 import com.dynamicwinds.client.storm.StormRenderer;
 import com.dynamicwinds.client.hud.DebugHud;
+import com.dynamicwinds.client.hud.StormAlertHud;
 import com.dynamicwinds.client.particles.WindVFX;
 import com.dynamicwinds.client.particles.TornadoVFX;
 import com.dynamicwinds.client.render.tesr.TESRAnemometer;
@@ -40,6 +41,7 @@ public class ClientEvents {
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new StormFogHandler());
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new ParticleIcons());
         DebugHud.register();
+        StormAlertHud.register();
         registerRenderers();
     }
 
@@ -102,8 +104,10 @@ public class ClientEvents {
                 rebound = true;
                 registerRenderers();
             }
-            // pacotes de tempestade invocada chegam pela thread do netty: aqui,
-            // no tick do cliente, eles sao aplicados no mundo
+            // pacotes de mundo e de tempestade chegam pela thread do netty;
+            // aplicamos as alterações somente no tick do cliente
+            com.dynamicwinds.integration.network.PacketWorldSync.drainClient(
+                    net.minecraft.client.Minecraft.getMinecraft().theWorld);
             com.dynamicwinds.integration.network.StormNetwork.drainClient(
                     net.minecraft.client.Minecraft.getMinecraft().theWorld);
             // o estado do sistema dominante e recalculado uma vez por tick; o

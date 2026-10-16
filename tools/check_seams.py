@@ -20,12 +20,13 @@ import os
 import struct
 import sys
 import zlib
+from gen_textures import SEAM_RATIO_LIMIT
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENVIRONMENT = os.path.join(ROOT, "src/main/resources/assets/dynamicwinds/textures/environment")
 
-# Razao a partir da qual a costura aparece como linha reta.
-LIMITE = 1.6
+# Razao a partir da qual a costura aparece como linha reta (fonte no gerador).
+LIMITE = SEAM_RATIO_LIMIT
 
 
 def read_png(path):

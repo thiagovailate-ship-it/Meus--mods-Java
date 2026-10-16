@@ -1,6 +1,7 @@
 package com.dynamicwinds.integration;
 
 import com.dynamicwinds.api.Wind;
+import com.dynamicwinds.core.StormField;
 import com.dynamicwinds.core.WindSample;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
@@ -8,6 +9,8 @@ import net.minecraft.world.World;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Server-side engine: ticks every 5 ticks, caches heightmaps in 8x8 cells.
@@ -21,6 +24,7 @@ public final class WindEngine {
 
     private final Map<Long, HeightmapCache> caches = new HashMap<>();
     private final Map<Long, Integer> lastRefresh = new HashMap<>();
+    private final Set<World> restoredWorlds = new HashSet<World>();
     private int tickCounter = 0;
 
     /**
@@ -45,6 +49,16 @@ public final class WindEngine {
     public void tick(World world) {
         if (world.isRemote) return;
         tickCounter++;
+        StormField stormField = Wind.stormsFor(world);
+        if (restoredWorlds.add(world)) {
+            DynamicWindsData.forWorld(world).restore(stormField);
+        }
+        if (world.getTotalWorldTime() % 6000L == 0L) {
+            DynamicWindsData.forWorld(world).capture(world, stormField);
+        }
+        if (world.getTotalWorldTime() % 20L == 0L) {
+            com.dynamicwinds.integration.network.StormNetwork.syncWorld(world);
+        }
         if (tickCounter % 5 != 0) return;
 
         long key = world.provider.dimensionId;
@@ -97,6 +111,10 @@ public final class WindEngine {
     /** Called when a world is unloaded to free resources. */
     /** Unload a world and free its cache. */
     public void unloadWorld(World world) {
+        if (!world.isRemote) {
+            DynamicWindsData.forWorld(world).capture(world, Wind.stormsFor(world));
+        }
+        restoredWorlds.remove(world);
         caches.remove((long) world.provider.dimensionId);
         lastRefresh.remove((long) world.provider.dimensionId);
         StormWeather.forget(world);

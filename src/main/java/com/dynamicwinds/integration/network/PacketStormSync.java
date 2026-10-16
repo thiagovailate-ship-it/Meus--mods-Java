@@ -5,8 +5,8 @@ import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import io.netty.buffer.ByteBuf;
 
 /**
- * Pacote que sincroniza sistemas de tempo severo <b>invocados</b> (Cajado da
- * Catastrofe / comando) com os clientes.
+ * Replicates immutable storm birth parameters from the server to clients, scoped
+ * by dimension. Systems may be naturally generated or player-invoked.
  *
  * <p>So trafega os parametros de nascimento (tipo, id, tick, posicao, rumo,
  * curvatura, intensidade e hemisferio). A evolucao do sistema - intensidade,
@@ -14,8 +14,9 @@ import io.netty.buffer.ByteBuf;
  * mais o relogio do mundo, entao o cliente recalcula tudo sozinho. Isso evita
  * pacotes por tick e mantem o VFX exatamente igual a fisica do servidor.</p>
  *
- * <p>Sistemas naturais nao aparecem aqui: eles sao derivados da seed e do
- * relogio, e cliente e servidor chegam ao mesmo resultado sem trocar nada.</p>
+ * <p>Natural systems are included in periodic per-dimension snapshots. Clients
+ * do not generate their own natural storms, so the server's field is the source
+ * of truth even if client configuration or world seed differs.</p>
  */
 public class PacketStormSync implements IMessage {
 
@@ -25,8 +26,11 @@ public class PacketStormSync implements IMessage {
     public static final byte REMOVE = 1;
     /** Remove todos os sistemas invocados (troca de mundo / limpeza). */
     public static final byte CLEAR = 2;
+    /** Replace the client's complete view of this dimension before following ADDs. */
+    public static final byte REPLACE = 3;
 
     public byte action;
+    public int dimensionId;
     public int kind;
     public long id;
     public long spawnTick;
@@ -36,13 +40,15 @@ public class PacketStormSync implements IMessage {
     public double turnRate;
     public double intensityMul;
     public boolean north;
+    public boolean playerSpawned;
 
     public PacketStormSync() {}
 
     /** Pacote de criacao, montado a partir do proprio sistema. */
-    public static PacketStormSync of(StormSystem s) {
+    public static PacketStormSync of(StormSystem s, int dimensionId) {
         PacketStormSync p = new PacketStormSync();
         p.action = ADD;
+        p.dimensionId = dimensionId;
         p.kind = s.kind;
         p.id = s.id;
         p.spawnTick = s.spawnTick;
@@ -52,26 +58,37 @@ public class PacketStormSync implements IMessage {
         p.turnRate = s.turnRate;
         p.intensityMul = s.intensityMul;
         p.north = s.north;
+        p.playerSpawned = s.playerSpawned;
         return p;
     }
 
-    public static PacketStormSync remove(long id) {
+    public static PacketStormSync remove(long id, int dimensionId) {
         PacketStormSync p = new PacketStormSync();
         p.action = REMOVE;
+        p.dimensionId = dimensionId;
         p.id = id;
         return p;
     }
 
-    public static PacketStormSync clear() {
+    public static PacketStormSync clear(int dimensionId) {
         PacketStormSync p = new PacketStormSync();
         p.action = CLEAR;
+        p.dimensionId = dimensionId;
+        return p;
+    }
+
+    public static PacketStormSync replace(int dimensionId) {
+        PacketStormSync p = new PacketStormSync();
+        p.action = REPLACE;
+        p.dimensionId = dimensionId;
         return p;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
         action = buf.readByte();
-        if (action == CLEAR) return;
+        dimensionId = buf.readInt();
+        if (action == CLEAR || action == REPLACE) return;
         id = buf.readLong();
         if (action == REMOVE) return;
         kind = buf.readByte();
@@ -80,14 +97,16 @@ public class PacketStormSync implements IMessage {
         z = buf.readDouble();
         heading = buf.readDouble();
         turnRate = buf.readDouble();
-        intensityMul = buf.readFloat();
+        intensityMul = buf.readDouble();
         north = buf.readBoolean();
+        playerSpawned = buf.readBoolean();
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeByte(action);
-        if (action == CLEAR) return;
+        buf.writeInt(dimensionId);
+        if (action == CLEAR || action == REPLACE) return;
         buf.writeLong(id);
         if (action == REMOVE) return;
         buf.writeByte(kind);
@@ -96,7 +115,8 @@ public class PacketStormSync implements IMessage {
         buf.writeDouble(z);
         buf.writeDouble(heading);
         buf.writeDouble(turnRate);
-        buf.writeFloat((float) intensityMul);
+        buf.writeDouble(intensityMul);
         buf.writeBoolean(north);
+        buf.writeBoolean(playerSpawned);
     }
 }
