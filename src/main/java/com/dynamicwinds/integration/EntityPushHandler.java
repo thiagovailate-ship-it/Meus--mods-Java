@@ -6,7 +6,7 @@ import com.dynamicwinds.core.SurfaceRoughness;
 import com.dynamicwinds.core.Vec3;
 import com.dynamicwinds.core.WindSample;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityFallingBlock;
+import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
