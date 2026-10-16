@@ -342,8 +342,10 @@ tem `BlockPos`/`ITickableSound`/`SoundCategory` que enganam.
 - Não há `silence.ogg`: sem como parar canal com fade no 1.7.10, o arquivo era peso morto.
 
 ### Pendências de áudio
-- `wind_wind`... o leito `rain_wind` agora é a terceira faixa da chuva (cortina da parede do olho), não
-  mais o "ronco" — o ronco sai da faixa forte do vento, com a altura amarrada ao déficit.
+- `rain_wind` mudou de papel: agora é a terceira faixa da chuva (a cortina da parede do olho), não mais o
+  "ronco" do sistema. O rugido sai da faixa forte do vento, com a altura amarrada ao déficit central.
+- O clique do anemômetro tem intervalo mínimo de 5 ticks: acima de ~4 voltas por segundo os cliques reais
+  se fundem num zumbido, e um motor de som não faz essa fusão.
 
 ## Links Úteis
 
