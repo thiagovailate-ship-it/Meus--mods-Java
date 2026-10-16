@@ -25,13 +25,14 @@ Download https://piston-meta.mojang.com/v1/packages/ed5d8789ed29872ea2ef1c348302
 > Task :downloadFernflower
 Download https://files.minecraftforge.net/fernflower-fix-1.0.zip
 
+> Task :extractNatives2
+> Task :processInjectedTagsResources NO-SOURCE
+> Task :processMcLauncherResources NO-SOURCE
+
 > Task :downloadVanillaJars
 Download https://launcher.mojang.com/v1/objects/e80d9b3bf5085002218d4be59e668bac718abbc6/client.jar
 Download https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar
 
-> Task :extractNatives2
-> Task :processInjectedTagsResources NO-SOURCE
-> Task :processMcLauncherResources NO-SOURCE
 > Task :generateForgeSrgMappings
 > Task :createMcLauncherFiles
 > Task :processResources
@@ -46,11 +47,13 @@ Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftfor
 Loading AccessTransformer /home/runner/.gradle/caches/minecraft/net/minecraftforge/forge/1.7.10-10.13.4.1614-1.7.10/unpacked/src/main/resources/forge_at.cfg
 INFO: merging AccessMap net/minecraft/item/ItemBlock/field_150939_a from AccessChange(clear=0, set=0, vis=1) with AccessChange(clear=0, set=0, vis=1)
 Renamed 0 AT entries
-Applying Exceptor
-Cleaning up generated debuginfo
 
 > Task :compileInjectedTagsJava
 > Task :injectedTagsClasses
+
+> Task :deobfuscateMergedJarToSrg
+Applying Exceptor
+Cleaning up generated debuginfo
 
 > Task :decompileSrgJar
 Didn't find cached decompiled jar, decompiling and saving to /home/runner/.gradle/caches/retro_futura_gradle/fernflower-cache/f857d0a5dc440e9576a099ffe2dcf0f57f62ec6a9a90cdd7e8a27d4573e0504b-d253f2106b6c42cd09e68e3eb271a05bffc1063ab065ac1a7425f1586d3b5891.jar
@@ -61,15 +64,15 @@ Decompiling the srg jar with fernflower
 > Task :packageMcLauncher
 
 > Task :decompileSrgJar
-  Decompiling took 29452 ms
+  Decompiling took 30240 ms
 
 > Task :cleanupDecompSrgJar
 Fixup stage 1 - applying FF patches
-  Stage 1 took 2660 ms
+  Stage 1 took 3414 ms
 Fixup stage 2 - applying MCP patches
-  Stage 2 took 68 ms
+  Stage 2 took 74 ms
 Fixup stage 3 - applying MCP cleanup
-  Stage 3 took 3823 ms
+  Stage 3 took 4328 ms
 Saving the fixed-up jar
 
 > Task :patchDecompiledJar
@@ -95,306 +98,124 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :apiClasses UP-TO-DATE
 > Task :packagePatchedMc
 
-> Task :compileJava
-Note: /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/client/gui/WindConfigGui.java uses unchecked or unsafe operations.
+> Task :compileJava FAILED
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/EntityPushHandler.java:9: error: cannot find symbol
+import net.minecraft.entity.EntityFallingBlock;
+                           ^
+  symbol:   class EntityFallingBlock
+  location: package net.minecraft.entity
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:91: error: cannot find symbol
+        List<StormSystem> out = new ArrayList<StormSystem>(2);
+                                    ^
+  symbol:   class ArrayList
+  location: class com.dynamicwinds.core.StormField
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/EntityPushHandler.java:118: error: cannot find symbol
+        } else if (e instanceof EntityFallingBlock) {
+                                ^
+  symbol:   class EntityFallingBlock
+  location: class com.dynamicwinds.integration.EntityPushHandler
+Note: Some input files use unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-
-> Task :classes
-> Task :jar
-> Task :compileTestJava
-> Task :testClasses
-> Task :reobfJar
-> Task :test
-> Task :check
-
-> Task :javadoc
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityAnemometer.java:49: warning: no @param for partialTicks
-    public float renderDirection(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityAnemometer.java:49: warning: no @return
-    public float renderDirection(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityAnemometer.java:54: warning: no @param for partialTicks
-    public float renderRotation(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityAnemometer.java:54: warning: no @return
-    public float renderRotation(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityWindsock.java:36: warning: no @param for partialTicks
-    public float renderInflation(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityWindsock.java:36: warning: no @return
-    public float renderInflation(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityWindsock.java:41: warning: no @param for partialTicks
-    public float renderYaw(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityWindsock.java:41: warning: no @return
-    public float renderYaw(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityWindsock.java:51: warning: no @param for partialTicks
-    public float renderDroop(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityWindsock.java:51: warning: no @return
-    public float renderDroop(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityWindVane.java:23: warning: no @param for partialTicks
-    public float renderAngle(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/content/tileentities/TileEntityWindVane.java:23: warning: no @return
-    public float renderAngle(float partialTicks) {
-                 ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @param for uStar
-    public static double speed(double uStar, double z, double z0) {
-                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @param for z
-    public static double speed(double uStar, double z, double z0) {
-                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @param for z0
-    public static double speed(double uStar, double z, double z0) {
-                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/LogProfile.java:15: warning: no @return
-    public static double speed(double uStar, double z, double z0) {
-                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @param for x
-    public Vec3 direction(double x, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @param for z
-    public Vec3 direction(double x, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @param for timeTicks
-    public Vec3 direction(double x, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/PressureField.java:14: warning: no @return
-    public Vec3 direction(double x, double z, long timeTicks) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:79: warning: no @param for time
-    public List<StormSystem> activeAt(long time) {
-                             ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:79: warning: no @return
-    public List<StormSystem> activeAt(long time) {
-                             ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:84: warning: no @param for time
-    public List<StormSystem> activeAt(long time, SurfaceRoughness roughness) {
-                             ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:84: warning: no @param for roughness
-    public List<StormSystem> activeAt(long time, SurfaceRoughness roughness) {
-                             ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:84: warning: no @return
-    public List<StormSystem> activeAt(long time, SurfaceRoughness roughness) {
-                             ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:103: warning: no @param for time
-    public Vec3 sampleWind(long time, double x, double y, double z, int surfaceY,
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:103: warning: no @param for x
-    public Vec3 sampleWind(long time, double x, double y, double z, int surfaceY,
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:103: warning: no @param for y
-    public Vec3 sampleWind(long time, double x, double y, double z, int surfaceY,
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:103: warning: no @param for z
-    public Vec3 sampleWind(long time, double x, double y, double z, int surfaceY,
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:103: warning: no @param for surfaceY
-    public Vec3 sampleWind(long time, double x, double y, double z, int surfaceY,
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:103: warning: no @param for roughness
-    public Vec3 sampleWind(long time, double x, double y, double z, int surfaceY,
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:103: warning: no @return
-    public Vec3 sampleWind(long time, double x, double y, double z, int surfaceY,
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:121: warning: no @param for time
-    public double sampleDeficitHpa(long time, double x, double z) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:121: warning: no @param for x
-    public double sampleDeficitHpa(long time, double x, double z) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:121: warning: no @param for z
-    public double sampleDeficitHpa(long time, double x, double z) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:121: warning: no @return
-    public double sampleDeficitHpa(long time, double x, double z) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:132: warning: no @param for time
-    public StormSystem nearest(long time, double x, double z) {
-                       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:132: warning: no @param for x
-    public StormSystem nearest(long time, double x, double z) {
-                       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:132: warning: no @param for z
-    public StormSystem nearest(long time, double x, double z) {
-                       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:132: warning: no @return
-    public StormSystem nearest(long time, double x, double z) {
-                       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:151: warning: no @param for time
-    public StormSystem strongestAt(long time, double x, double z) {
-                       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:151: warning: no @param for x
-    public StormSystem strongestAt(long time, double x, double z) {
-                       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:151: warning: no @param for z
-    public StormSystem strongestAt(long time, double x, double z) {
-                       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:151: warning: no @return
-    public StormSystem strongestAt(long time, double x, double z) {
-                       ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:258: warning: no @param for s
-    public void addDynamic(StormSystem s) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:54: warning: no @param for seed
-    public StormField(long seed) {
-           ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormKind.java:87: warning: no @param for kind
-    public static boolean isCyclone(int kind) {
-                          ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormKind.java:87: warning: no @return
-    public static boolean isCyclone(int kind) {
-                          ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormKind.java:92: warning: no @param for kind
-    public static String category(int kind) {
-                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormKind.java:92: warning: no @return
-    public static String category(int kind) {
-                         ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:89: warning: no @param for time
-    public double progress(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:89: warning: no @return
-    public double progress(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:102: warning: no @param for time
-    public double intensityAt(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:102: warning: no @return
-    public double intensityAt(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:121: warning: no @param for time
-    public double vmaxAt(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:121: warning: no @return
-    public double vmaxAt(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:130: warning: no @param for time
-    public double rmaxAt(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:130: warning: no @return
-    public double rmaxAt(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:144: warning: no @param for time
-    public double headingAt(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:144: warning: no @return
-    public double headingAt(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:181: warning: no @param for time
-    public double translationX(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:181: warning: no @return
-    public double translationX(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:186: warning: no @param for time
-    public double translationZ(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:186: warning: no @return
-    public double translationZ(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:273: warning: no @param for time
-    public double deficitHpa(long time, double x, double z) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:273: warning: no @param for x
-    public double deficitHpa(long time, double x, double z) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:273: warning: no @param for z
-    public double deficitHpa(long time, double x, double z) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:273: warning: no @return
-    public double deficitHpa(long time, double x, double z) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:283: warning: no @param for time
-    public double centralDeficitHpa(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:283: warning: no @return
-    public double centralDeficitHpa(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:312: warning: no @param for time
-    public String describe(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:312: warning: no @return
-    public String describe(long time) {
-                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormSystem.java:51: error: bad use of '>'
-    /** Multiplicador de intensidade (1.0 = natural, o Cajado usa > 1). */
-                                                                  ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/WindModel.java:34: warning: no @return
-    public StormField storms() {
-                      ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/WindModel.java:42: warning: no @param for ctx
-    public WindSample compute(WorldContext ctx, double x, double y, double z) {
-                      ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/WindModel.java:42: warning: no @param for x
-    public WindSample compute(WorldContext ctx, double x, double y, double z) {
-                      ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/WindModel.java:42: warning: no @param for y
-    public WindSample compute(WorldContext ctx, double x, double y, double z) {
-                      ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/WindModel.java:42: warning: no @param for z
-    public WindSample compute(WorldContext ctx, double x, double y, double z) {
-                      ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/WindModel.java:42: warning: no @return
-    public WindSample compute(WorldContext ctx, double x, double y, double z) {
-                      ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/WindModel.java:16: warning: no @param for seed
-    public WindModel(long seed) {
-           ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for w
-    public void refreshNear(World w, double px, double pz, int radius) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for px
-    public void refreshNear(World w, double px, double pz, int radius) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for pz
-    public void refreshNear(World w, double px, double pz, int radius) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/HeightmapCache.java:60: warning: no @param for radius
-    public void refreshNear(World w, double px, double pz, int radius) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/WindEngine.java:54: warning: no @param for world
-    public void unloadWorld(World world) {
-                ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/api/Wind.java:54: warning: no @param for world
-    public static WindModel modelFor(World world) {
-                            ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/api/Wind.java:54: warning: no @return
-    public static WindModel modelFor(World world) {
-                            ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/api/Wind.java:69: warning: no @param for world
-    public static StormField stormsFor(World world) {
-                             ^
-/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/api/Wind.java:69: warning: no @return
-    public static StormField stormsFor(World world) {
-                             ^
-1 error
-88 warnings
-
-> Task :javadoc FAILED
+3 errors
 
 [Incubating] Problems report is available at: file:///home/runner/work/Meus--mods-Java/Meus--mods-Java/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':javadoc'.
-> Javadoc generation failed. Generated Javadoc options file (useful for troubleshooting): '/home/runner/work/Meus--mods-Java/Meus--mods-Java/build/tmp/javadoc/javadoc.options'
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler output below.
+  /home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/EntityPushHandler.java:9: error: cannot find symbol
+  import net.minecraft.entity.EntityFallingBlock;
+                             ^
+    symbol:   class EntityFallingBlock
+    location: package net.minecraft.entity
+  3 errors
 
 * Try:
-> Run with --info or --debug option to get more log output.
+> Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to generate a Build Scan (powered by Develocity).
-> Get more help at https://help.gradle.org.
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':javadoc'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:121)
+	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.DefaultNodeExecutor.executeLocalTaskNode(DefaultNodeExecutor.java:55)
+	at org.gradle.execution.plan.DefaultNodeExecutor.execute(DefaultNodeExecutor.java:34)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:355)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:343)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:339)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:339)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:328)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/EntityPushHandler.java:9: error: cannot find symbol
+import net.minecraft.entity.EntityFallingBlock;
+                           ^
+  symbol:   class EntityFallingBlock
+  location: package net.minecraft.entity
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/core/StormField.java:91: error: cannot find symbol
+        List<StormSystem> out = new ArrayList<StormSystem>(2);
+                                    ^
+  symbol:   class ArrayList
+  location: class com.dynamicwinds.core.StormField
+/home/runner/work/Meus--mods-Java/Meus--mods-Java/src/main/java/com/dynamicwinds/integration/EntityPushHandler.java:118: error: cannot find symbol
+        } else if (e instanceof EntityFallingBlock) {
+                                ^
+  symbol:   class EntityFallingBlock
+  location: class com.dynamicwinds.integration.EntityPushHandler
+Note: Recompile with -Xlint:unchecked for details.
+Note: Some input files use unchecked or unsafe operations.
+3 errors
+	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
+	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
+	at org.gradle.api.internal.tasks.compile.daemon.AbstractIsolatedCompilerWorkerExecutor$CompilerWorkAction.execute(AbstractIsolatedCompilerWorkerExecutor.java:79)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:68)
+	at org.gradle.workers.internal.AbstractClassLoaderWorker$1.create(AbstractClassLoaderWorker.java:54)
+	at org.gradle.workers.internal.AbstractClassLoaderWorker$1.create(AbstractClassLoaderWorker.java:48)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.AbstractClassLoaderWorker.executeInClassLoader(AbstractClassLoaderWorker.java:48)
+	at org.gradle.workers.internal.FlatClassLoaderWorker.run(FlatClassLoaderWorker.java:32)
+	at org.gradle.workers.internal.FlatClassLoaderWorker.run(FlatClassLoaderWorker.java:22)
+	at org.gradle.workers.internal.WorkerDaemonServer.run(WorkerDaemonServer.java:109)
+	at org.gradle.workers.internal.WorkerDaemonServer.run(WorkerDaemonServer.java:78)
+	at org.gradle.process.internal.worker.request.WorkerAction.lambda$run$1(WorkerAction.java:150)
+	at org.gradle.process.internal.worker.child.WorkerLogEventListener.withWorkerLoggingProtocol(WorkerLogEventListener.java:41)
+	at org.gradle.process.internal.worker.request.WorkerAction.lambda$run$2(WorkerAction.java:150)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
+	at org.gradle.process.internal.worker.request.WorkerAction.run(WorkerAction.java:142)
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+	at org.gradle.internal.remote.internal.hub.MessageHubBackedObjectConnection$DispatchWrapper.dispatch(MessageHubBackedObjectConnection.java:182)
+	at org.gradle.internal.remote.internal.hub.MessageHubBackedObjectConnection$DispatchWrapper.dispatch(MessageHubBackedObjectConnection.java:164)
+	at org.gradle.internal.remote.internal.hub.MessageHub$Handler.run(MessageHub.java:414)
+	... 2 more
+
+
+BUILD FAILED in 2m 17s
+23 actionable tasks: 23 executed
+Configuration cache entry stored.
