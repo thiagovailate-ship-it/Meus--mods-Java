@@ -1,46 +1,28 @@
 package com.dynamicwinds.integration;
 
-import net.minecraftforge.common.config.Configuration;
 import org.junit.jupiter.api.Test;
-
-import java.io.File;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ConfigSanitizeTest {
     @Test
-    void outOfRangeNumericPropertiesAreLoggedAndResetToDefaults() {
-        File file = new File(System.getProperty("java.io.tmpdir"), "dynamicwinds-sanitize-test.cfg");
-        Configuration previous = WindConfig.cfg;
-        try {
-            WindConfig.cfg = new Configuration(file);
-            WindConfig.cfg.get("general", "baseSpeedMultiplier", 1.0).set(8.0);
-            WindConfig.cfg.get("storms", "stormSpawnChance", 0.35).set(-2.0);
-            WindConfig.cfg.get("destruction", "destructionBlocksPerTick", 24).set(1000);
-            WindConfig.sanitize();
-            assertEquals(1.0, WindConfig.baseSpeedMultiplier, 0.0);
-            assertEquals(0.35, WindConfig.stormSpawnChance, 0.0);
-            assertEquals(24, WindConfig.destructionBlocksPerTick);
-        } finally {
-            WindConfig.cfg = previous;
-            file.delete();
-        }
+    void outOfRangeNumericValuesResetToDocumentedDefaults() {
+        assertEquals(1.0, WindConfig.sanitizeDoubleValue(8.0, 0.0, 5.0, 1.0), 0.0);
+        assertEquals(0.35, WindConfig.sanitizeDoubleValue(-2.0, 0.0, 1.0, 0.35), 0.0);
+        assertEquals(24, WindConfig.sanitizeIntValue(1000, 0, 256, 24));
     }
 
     @Test
-    void validNumericPropertiesArePreserved() {
-        File file = new File(System.getProperty("java.io.tmpdir"), "dynamicwinds-sanitize-valid.cfg");
-        Configuration previous = WindConfig.cfg;
-        try {
-            WindConfig.cfg = new Configuration(file);
-            WindConfig.cfg.get("general", "baseSpeedMultiplier", 1.0).set(2.5);
-            WindConfig.cfg.get("storms", "stormSpawnChance", 0.35).set(0.7);
-            WindConfig.sanitize();
-            assertEquals(2.5, WindConfig.baseSpeedMultiplier, 0.0);
-            assertEquals(0.7, WindConfig.stormSpawnChance, 0.0);
-        } finally {
-            WindConfig.cfg = previous;
-            file.delete();
-        }
+    void validNumericValuesArePreserved() {
+        assertEquals(2.5, WindConfig.sanitizeDoubleValue(2.5, 0.0, 5.0, 1.0), 0.0);
+        assertEquals(0.7, WindConfig.sanitizeDoubleValue(0.7, 0.0, 1.0, 0.35), 0.0);
+        assertEquals(180, WindConfig.sanitizeIntValue(180, 0, 256, 24));
+    }
+
+    @Test
+    void nonFiniteValuesResetToDefault() {
+        assertEquals(1.0, WindConfig.sanitizeDoubleValue(Double.NaN, 0.0, 5.0, 1.0), 0.0);
+        assertEquals(1.0, WindConfig.sanitizeDoubleValue(Double.POSITIVE_INFINITY,
+                0.0, 5.0, 1.0), 0.0);
     }
 }

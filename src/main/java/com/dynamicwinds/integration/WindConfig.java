@@ -157,24 +157,35 @@ public final class WindConfig {
     private static double boundedDouble(String key, Property property, double min,
                                          double max, double fallback) {
         double value = property.getDouble();
+        double sanitized = sanitizeDoubleValue(value, min, max, fallback);
         if (Double.isNaN(value) || Double.isInfinite(value) || value < min || value > max) {
             System.err.println("DynamicWinds: config " + key + "=" + value
-                    + " out of range [" + min + ", " + max + " ]; reset to " + fallback);
-            property.set(fallback);
-            value = fallback;
+                    + " out of range [" + min + ", " + max + "]; reset to " + fallback);
+            property.set(sanitized);
         }
-        return value;
+        return sanitized;
     }
 
     private static int boundedInt(String key, Property property, int min, int max, int fallback) {
         int value = property.getInt();
-        if (value < min || value > max) {
+        int sanitized = sanitizeIntValue(value, min, max, fallback);
+        if (value != sanitized) {
             System.err.println("DynamicWinds: config " + key + "=" + value
                     + " out of range [" + min + ", " + max + "]; reset to " + fallback);
-            property.set(fallback);
-            value = fallback;
+            property.set(sanitized);
+        }
+        return sanitized;
+    }
+
+    static double sanitizeDoubleValue(double value, double min, double max, double fallback) {
+        if (Double.isNaN(value) || Double.isInfinite(value) || value < min || value > max) {
+            return fallback;
         }
         return value;
+    }
+
+    static int sanitizeIntValue(int value, int min, int max, int fallback) {
+        return value < min || value > max ? fallback : value;
     }
 
     private static int[] parseDimensions(String[] values) {
