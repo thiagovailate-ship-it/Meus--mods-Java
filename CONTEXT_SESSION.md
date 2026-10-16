@@ -7,8 +7,8 @@ DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa
 ## Branch e Commit Atual
 
 - **Branch**: `arena/3ea9d885-meus-mods-java`
-- **Commit verificado pelo CI**: `3d951c0` - fix: correct parity packet chat formatting
-- **Estado do workspace**: alterações de documentação e relatório de estado ainda não commitadas.
+- **Commit verificado pelo CI**: `492d08d` - docs: record 1.3.0 validation status and playtest blockers
+- **Estado do workspace**: limpo; alterações salvas na branch fixa.
 - **Repo**: https://github.com/thiagovailate-ship-it/Meus--mods-Java
 
 ## Build e CI
@@ -17,8 +17,8 @@ DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa
 - **JDK**: 25 (necessário para RFG 2.0.2)
 - **Gradle**: 9.2.0 (via wrapper incluído no repo)
 - **Build**: `./gradlew build --no-daemon --stacktrace`
-- **Status CI**: ✅ run `38892649192` success no head `3d951c0`; build/reobf e 71 testes passaram junto com parity/seams e self-test do CSV.
-- **Link CI**: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38892649192
+- **Status CI**: ✅ run `38893003649` success no head `492d08d`; build/reobf e 71 testes passaram junto com parity/seams e self-test do CSV.
+- **Link CI**: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38893003649
 - **Checks locais**: `py_compile`, `check_mirror.py`, `check_seams.py`, `preview_storm.py --check`, `test_check_field.py` e `git diff --check` passam.
 - **Playtest**: pendente; nove cenários e capturas reais ainda não existem. Não declarar release concluída.
 - **Leitura de falhas**: em run que falha, o workflow commita `build_head.log` na própria
@@ -441,7 +441,7 @@ Não há toolchain Java nem OpenGL nesta sandbox. O CI usa JDK 25, compila e rod
 | `tools/preview_textures.py` | monta `docs/textures_preview.png` com a grade do atlas, para olhar a textura sem abrir o jogo | — |
 | `tools/check_seams.py` | salto na emenda das texturas de ambiente (elas repetem na malha) | razão ≤ 0,74 depois da correção; antes, 1,97/2,85 nas nuvens e 11,93 na parede |
 | `tools/preview_storm.py` | geometria do céu espelhada do `StormRenderer`, mais a varredura `--check` de 252 combinações | nenhum problema de geometria; só a guarda do funil dispara, em solo acima de y≈200 |
-| `tools/check_mirror.py` | constantes Java ↔ Python para tempestades, céu, áudio e limite das texturas | passou no CI `38892649192` |
+| `tools/check_mirror.py` | constantes Java ↔ Python para tempestades, céu, áudio e limite das texturas | passou no CI `38893003649` |
 | `tools/check_field.py` | CSV do `/wind dump` contra o campo fechado, com tolerância relativa `1e-6` | self-test aprovado; CSV real aguarda playtest |
 | `tools/gen_sounds.py` | gera o banco de 14 sons e mede espectro por banda e RMS para escolher filtros e níveis | 1.017.308 bytes, valores na seção de áudio |
 | `tools/gen_textures.py` | gera texturas de bloco, item, partícula e ambiente (determinístico: os mesmos bytes se repetem) | total atual 97.772 bytes |
@@ -449,12 +449,12 @@ Não há toolchain Java nem OpenGL nesta sandbox. O CI usa JDK 25, compila e rod
 ## Links Úteis
 
 - CI: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions
-- Run mais recente validado (1.3.0 em desenvolvimento): https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38892649192
+- Run mais recente validado (1.3.0 em desenvolvimento): https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38893003649
 - Repo: https://github.com/thiagovailate-ship-it/Meus--mods-Java
 
 ## Estado da fase 1.3.0 — 2026-10-16
 
-- CI run `38892649192` passou para `3d951c0` (build/reobf, 71 testes, verificadores Python e self-test do CSV). Os avisos restantes são Javadoc/actions, não falhas.
+- CI run `38893003649` passou para `492d08d` (build/reobf, 71 testes, verificadores Python e self-test do CSV). Os avisos restantes são Javadoc/actions, não falhas.
 - D1: sincronização e comando de comparação no mesmo tick implementados; falta observar `rounded@0.1=MATCH` em execução real.
 - D2/D3: persistência de sistemas vivos, autoridade server-side, snapshots completos e escopo por dimensão implementados; o restart e o Nether precisam de playtest.
 - D4/D5: espelho/paridade no CI; configuração agrupada, documentada, limitada e revalidada.

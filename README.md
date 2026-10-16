@@ -300,7 +300,7 @@ A tabela completa e os custos estão em [`docs/CONFIG.md`](docs/CONFIG.md); para
 
 ## Estado da validação de release
 
-A fase 1.3.0 está em andamento. O CI `38892649192` passou no head `3d951c0` (build, 71 testes e verificações Python); a versão permanece 1.2.0. O playtest real de Minecraft/Forge, as nove capturas e os veredictos ainda estão pendentes. Não considere a release concluída até preencher `docs/PLAYTEST.md` com evidência de jogo.
+A fase 1.3.0 está em andamento. O CI `38893003649` passou no head `492d08d` (build, 71 testes e verificações Python); a versão permanece 1.2.0. O playtest real de Minecraft/Forge, as nove capturas e os veredictos ainda estão pendentes. Não considere a release concluída até preencher `docs/PLAYTEST.md` com evidência de jogo.
 
 ## Repositório
 

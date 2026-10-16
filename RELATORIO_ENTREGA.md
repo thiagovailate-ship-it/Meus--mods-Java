@@ -160,8 +160,8 @@ Relatório histórico: os resultados acima descrevem a fase anterior e não repr
 
 ## 9. Fase 1.3.0 em andamento — 2026-10-16
 
-- Branch fixa: `arena/3ea9d885-meus-mods-java`; commit verificado: `3d951c0`.
-- GitHub Actions run `38892649192` concluiu **success** para o head `3d951c003aa468f2e4a1ac76ecb74a76e5d849a0`: parity/seams, self-test do CSV, build, reobf e suíte Gradle passaram. Há 71 métodos `@Test` no workspace. Link: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38892649192
+- Branch fixa: `arena/3ea9d885-meus-mods-java`; commit verificado: `492d08d`.
+- GitHub Actions run `38893003649` concluiu **success** para o head `492d08d2ed634664196c2cd1570d943548dcbef3`: parity/seams, self-test do CSV, build, reobf e suíte Gradle passaram. Há 71 métodos `@Test` no workspace. Link: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38893003649
 - Verificações locais Python (`py_compile`, `check_mirror.py`, `check_seams.py`, `preview_storm.py --check`, `test_check_field.py`) e `git diff --check` passaram.
 - `./gradlew build` continua indisponível localmente: não há `java` nem `JAVA_HOME`; a validação compilável foi feita pelo runner JDK 25.
 - Implementados desde o último estado: amostra cliente/servidor lado a lado em `/wind get`, snapshots naturais/invocados persistidos, limite e telemetria de partículas, cap de cache, métricas de destruição por sistema, comparação CSV e documentos.
