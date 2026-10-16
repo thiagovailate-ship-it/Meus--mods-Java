@@ -6,8 +6,8 @@ DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa
 
 ## Branch e Commit Atual
 
-- **Branch**: `arena/696b4eb5-meus-mods-java`
-- **Commit mais recente**: `7f51f63` - feat: add UV texture mapping to TESRs
+- **Branch**: `arena/98cf32d5-meus-mods-java`
+- **Commit mais recente**: `ef26df6` - fix: construtor de ParticleIcons publico (+ HUD de tempestade e README)
 - **Repo**: https://github.com/thiagovailate-ship-it/Meus--mods-Java
 
 ## Build e CI
@@ -16,8 +16,12 @@ DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa
 - **JDK**: 25 (necessário para RFG 2.0.2)
 - **Gradle**: 9.2.0 (via wrapper incluído no repo)
 - **Build**: `./gradlew build --no-daemon --stacktrace`
-- **Status CI**: ✅ BUILD SUCCESSFUL (run 38830747771)
-- **Link CI**: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38830747771
+- **Status CI**: ✅ BUILD SUCCESSFUL (run 38838801206, com toda a expansão de tempestades)
+- **Link CI**: https://github.com/thiagovailate-ship-it/Meus--mods-Java/actions/runs/38838801206
+- **Leitura de falhas**: em run que falha, o workflow commita `build_head.log` na própria
+  branch (commit `ci: build head log [skip ci]`). Antes de ler o log, confira o status do
+  run: ele fica desatualizado depois do próximo build verde. Baixar o log pelo `gh` retorna
+  `EOF`, então o arquivo no repositório é o caminho confiável.
 
 ## Arquitetura do Mod
 
@@ -28,6 +32,62 @@ DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa
 - `client/` - Partículas, áudio, HUD, renderização, GUI
 - `content/` - Blocos, tile entities, receitas
 - `tools/` - Geradores reproduzíveis (texturas e prancha de prévia), Python puro
+
+### Tempestades severas (expansão)
+
+`core/` ganhou o subsistema de tempo severo, todo em Java puro: `StormKind` (tabelas por
+tipo), `VortexBalance` (perfil de Rankine modificado e o campo de pressão integrado do
+balanço do vento gradiente), `StormSystem` (um sistema com ciclo de vida, trajetória,
+inflow de Ekman, parede do olho e olho), `StormField` (naturais por seed + invocados em
+tempo de execução) e `SurfaceRoughness` (energia da superfície, que produz o landfall).
+
+Quatro tipos, na linha da escala Saffir-Simpson:
+
+| tipo | Vmax (m/s) | Rmax (blocos) | raio externo | duração | déficit central |
+|---|---|---|---|---|---|
+| vórtice | 28 | 9 | 150 | ~3 min | 10,4 hPa |
+| tempestade tropical | 24 | 55 | 260 | ~10 min | 7,9 hPa |
+| furacão | 46 | 85 | 400 | ~15 min | 29,3 hPa |
+| furacão maior | 72 | 130 | 560 | ~20 min | 71,8 hPa |
+
+Os testes de `StormPhysicsTest` são o contrato: pico do perfil e continuidade em `Rmax`,
+faixas de déficit por tipo, integral analítica conferida contra integração numérica de
+200 000 passos, continuidade do ciclo de vida, velocidade de deslocamento constante,
+olho calmo versus parede violenta, subsidiência versus ascendência, inversão de rotação por
+hemisfério, landfall, determinismo e ciclo de vida dos sistemas invocados.
+
+### Integração das tempestades
+
+- `StormWeather` - chuva, trovoada e relâmpagos comandados pelo sistema (o relâmpago só cai
+  na banda convectiva, nunca no olho). Sem sistema alcançando ninguém, o mod para de forçar
+  e o clima volta ao ciclo do jogo.
+- `DestructionHandler` - dano pesado sem tabela de raio: cada bloco é consultado no mesmo
+  campo de vento e quebra se passar de `v_critico = 9 + 24·dureza` m/s; troncos cedem em
+  cadeia, entidades expostas levam dano, baús/máquinas e o spawn são preservados.
+- `StormNetwork`/`PacketStormSync` - sistemas invocados são transmitidos levando só os
+  parâmetros de nascimento (a evolução é derivada deles mais o relógio); o handler apenas
+  enfileira, e a fila é drenada no tick do cliente para não correr com o VFX.
+- `EntityPushHandler` - separa vento de fundo (que pode ser ocluído por um muro) do vento
+  da tempestade (que vem de longe e não pode ser ocluído), com razão área/massa aproximada.
+- `/wind storm [list|spawn|clear]` e o **Cajado da Catástrofe** (`content/items/`), que
+  invoca o sistema escolhido; a escolha do tipo fica no NBT do item.
+
+### VFX das tempestades
+
+- `client/storm/StormClientState` - sistema dominante recalculado uma vez por tick, para
+  névoa, nuvem, som e partícula não pegarem instantes diferentes e tremerem entre si.
+- `client/storm/StormRenderer` - teto de nuvem em anel com o olho aberto, parede do olho em
+  cilindro duplo, funil inclinado para trás na direção da trajetória (vórtice) e bandas
+  espirais de chuva; desenho de trás para frente com escrita de profundidade desligada.
+- `client/storm/StormFogHandler` - névoa escurece e fecha dentro da tempestade, e o olho
+  reabre a visibilidade.
+- `client/audio/StormAudio` - ronco contínuo e trovões com volume e frequência tirados do
+  mesmo estado que alimenta o resto do VFX.
+- `client/particles/RainStreakParticle` - chuva inclinada pelo vento, lida do campo no
+  ponto de nascimento; no olho ela sai quase vertical, como deve.
+- `client/particles/ParticleIcons` - registra os sprites próprios no `TextureStitchEvent.Pre`.
+  Sem isso, toda partícula com `getFXLayer() == 1` desenhava um ícone qualquer do atlas de
+  itens: as texturas existiam e nunca apareciam.
 
 ### Renderização dos instrumentos (client/render/tesr/)
 - `AbstractBlockTESR` - base: matriz, estado de OpenGL, blending, brilho por nível de luz
@@ -104,6 +164,17 @@ DynamicWinds é um mod para Minecraft Java Edition 1.7.10 (Forge) que implementa
 
 ### Partículas
 - `textures/particle/leaf.png`, `pollen.png`, `dust.png`, `snowflake.png`, `raindrop.png`, `swirl.png`, `gust.png`, `rainsplash.png`, `tornado.png`, `debris.png`
+- Novas das tempestades: `storm_rain.png` (8x16, raja alongada) e `spray.png` (8x8, respingo)
+
+### Ambiente
+- `textures/environment/storm_clouds.png` (128x128, teto de nuvem repetível — o gerador
+  ganhou value noise periódico e fbm, porque ruído comum não repete e apareceriam emendas
+  retas atravessando o céu)
+- `textures/environment/storm_wall.png` (64x64, parede do olho / cortina de chuva)
+
+### Item
+- `textures/items/catastrophe_staff.png` (16x16, haste de obsidiana com enrolado e orbe em
+  espiral; a versão em anéis concêntricos lia como alvo de tiro, não como vórtice)
 
 ### Sons
 - `sounds.json` + `wind_ambience.ogg`, `wind_gust.ogg`, `anemometer_tick.ogg`, `windsock_flap.ogg`, `rain_wind.ogg`, `thunder_rumble.ogg`, `leaf_rustle.ogg`

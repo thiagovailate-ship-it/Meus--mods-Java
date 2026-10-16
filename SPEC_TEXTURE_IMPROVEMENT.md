@@ -222,3 +222,27 @@ As 10 texturas foram refeitas em paleta de Minecraft (folha lanceolada com
 nervura, floco de 6 pontas, gota, respingo, redemoinho em espiral, risco de
 rajada, graveto, speck de poeira, pólen e funil do tornado com alpha).
 
+
+## Atualização: texturas das tempestades
+
+A expansão de tempestades acrescentou três texturas ao mesmo gerador
+(`tools/gen_textures.py`), mantendo a regra de que `python3 tools/gen_textures.py` recria
+exatamente os mesmos bytes:
+
+- `items/catastrophe_staff.png` (16x16) — haste de obsidiana com enrolado no cabo e orbe
+  com espiral de raio crescente. A primeira tentativa usava anéis concêntricos e lia como
+  alvo de tiro; a espiral é o que faz o olho humano ler "vórtice" em 16 pixels.
+- `environment/storm_clouds.png` (128x128) — teto de nuvem. Precisa ser **repetível**: é
+  desenhado em várias repetições sobre o mesmo anel, e ruído comum não repete, então
+  apareceriam emendas retas atravessando o céu. O gerador ganhou `_tileable_noise` (value
+  noise periódico) e `_fbm` (soma de oitavas com período calculado por oitava).
+- `environment/storm_wall.png` (64x64) — parede do olho / cortina de chuva, densa embaixo e
+  rala em cima, com ruído esticado na vertical para virar raja de chuva em vez de mancha.
+
+Duas partículas novas seguem a convenção existente, e agora **com** registro de ícone:
+`storm_rain.png` (8x16) e `spray.png` (8x8). O registro é obrigatório porque no 1.7.10 uma
+partícula com `getFXLayer() == 1` é desenhada com o atlas de itens; sem
+`setParticleIcon` o jogo sorteia um sprite qualquer e a textura nunca aparece no jogo.
+
+`tools/preview_textures.py` ganhou uma faixa de céu que mostra o cajado ampliado, o teto de
+nuvem e a parede do olho (a parede sobre fundo escuro, que é como ela aparece em uso).
