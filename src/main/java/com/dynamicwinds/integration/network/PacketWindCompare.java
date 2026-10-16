@@ -95,7 +95,8 @@ public class PacketWindCompare implements IMessage {
                                 + "deltaMax=%.6f rounded@0.1=%s gust=(%.3f/%.3f)", packet.time,
                         packet.serverX, packet.serverY, packet.serverZ,
                         client.vector.x, client.vector.y, client.vector.z, maxDelta,
-                        roundedMatch ? "MATCH" : "DIFF", packet.serverGust, client.gust)));\n            }
+                        roundedMatch ? "MATCH" : "DIFF", packet.serverGust, client.gust)));
+            }
         }
     }
 
