@@ -174,7 +174,7 @@ com.dynamicwinds.integration.DynamicWindsData.captureWorld(world, field);
             if (!senderHasPermission(p)) return;
             int removed = field.dynamicCount();
             field.clearDynamic();
-            if (removed > 0) com.dynamicwinds.integration.DynamicWindsData.markWorldDirty(world);
+            if (removed > 0) com.dynamicwinds.integration.DynamicWindsData.captureWorld(world, field);
             StormNetwork.broadcastClear(world.provider.dimensionId);
             p.addChatMessage(new ChatComponentText("Sistemas invocados removidos: " + removed + "."));
             return;
