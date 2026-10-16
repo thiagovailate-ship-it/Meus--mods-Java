@@ -1,17 +1,26 @@
 package com.dynamicwinds.client.particles;
 
-import com.dynamicwinds.core.TornadoField;
+import com.dynamicwinds.api.Wind;
+import com.dynamicwinds.core.StormField;
+import com.dynamicwinds.core.StormKind;
+import com.dynamicwinds.core.StormSystem;
 import com.dynamicwinds.integration.WindConfig;
 import net.minecraft.client.Minecraft;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Random;
 
+/**
+ * Emissao de particulas dos sistemas de tempo severo.
+ *
+ * <p>Os parametros vem do proprio sistema (raio do vento maximo, intensidade,
+ * posicao do olho), e nao de numeros fixos: a particula nasce onde o modelo diz
+ * que o vento e forte. Assim, quando o sistema se intensifica ou se desloca, o
+ * efeito acompanha sem nenhum ajuste manual.</p>
+ */
 public final class TornadoVFX {
+
     private static final Random RND = new Random();
-    // cached fields per world seed to avoid per-tick allocation
-    private static final Map<Long, TornadoField> FIELDS = new HashMap<>();
 
     private TornadoVFX() {}
 
@@ -20,38 +29,61 @@ public final class TornadoVFX {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.theWorld == null || mc.thePlayer == null) return;
 
-        long seed = mc.theWorld.getSeed();
         long time = mc.theWorld.getTotalWorldTime();
+        StormField field = Wind.stormsFor(mc.theWorld);
+        List<StormSystem> active = field.activeAt(time);
+        if (active.isEmpty()) return;
 
-        TornadoField tf = FIELDS.computeIfAbsent(seed, TornadoField::new);
-        double[] c = tf.activeCenter(seed, time);
-        if (c == null) return;
-
-        double dist = Math.hypot(c[0] - mc.thePlayer.posX, c[2] - mc.thePlayer.posZ);
         double maxDist = WindConfig.tornadoMaxViewDistance();
-        if (dist > maxDist) return;
+        for (int i = 0; i < active.size(); i++) {
+            StormSystem system = active.get(i);
+            double cx = system.centerX(time);
+            double cz = system.centerZ(time);
+            double dist = Math.hypot(cx - mc.thePlayer.posX, cz - mc.thePlayer.posZ);
+            if (dist > maxDist + system.outerRadius()) continue;
+            emit(mc, system, time, cx, cz, dist, maxDist);
+        }
+    }
 
+    private static void emit(Minecraft mc, StormSystem system, long time,
+                             double cx, double cz, double dist, double maxDist) {
+        double intensity = system.intensityAt(time);
+        if (intensity <= 0.01) return;
+
+        double rmax = system.rmaxAt(time);
+        int groundY = mc.theWorld.getHeightValue((int) Math.floor(cx), (int) Math.floor(cz));
+
+        // taxa cai com a distancia, mas nunca chega a zero dentro do alcance
+        double falloff = maxDist <= 0.0 ? 1.0 : Math.max(0.15, 1.0 - dist / maxDist);
         int baseRate = WindConfig.tornadoParticleRate();
-        int rate = (int) (baseRate * Math.max(0.2, 1.0 - dist / maxDist));
-        rate = Math.max(1, Math.min(rate, 24));
+        int rate = (int) Math.round(baseRate * falloff * (0.4 + 0.6 * intensity));
+        if (rate < 1) rate = 1;
+        if (rate > 24) rate = 24;
+
+        // O vortice e estreito (particulas na parede); o ciclone tem olho grande
+        // e bandas, entao as particulas vao para a parede do olho e para fora.
+        boolean narrow = system.kind == StormKind.VORTEX;
+        double wallRadius = narrow ? rmax * 1.6 : rmax;
+        double spread = narrow ? 6.0 : rmax * 0.45;
+        double height = narrow ? 24.0 : StormKind.columnTop(system.kind) * 0.35;
 
         for (int i = 0; i < rate; i++) {
-            double ang = (2 * Math.PI * i) / rate + RND.nextDouble() * 0.3;
-            double rad = 2 + RND.nextDouble() * 6;
-            double x = c[0] + Math.cos(ang) * rad;
-            double z = c[2] + Math.sin(ang) * rad;
-            double y = c[1] + RND.nextDouble() * 20;
-            TornadoParticle p = new TornadoParticle(mc.theWorld, x, y, z, rad, ang);
+            double angle = (2.0 * Math.PI * i) / rate + RND.nextDouble() * 0.3;
+            double radius = wallRadius + RND.nextDouble() * spread;
+            double x = cx + Math.cos(angle) * radius;
+            double z = cz + Math.sin(angle) * radius;
+            double y = groundY + RND.nextDouble() * height;
+            TornadoParticle p = new TornadoParticle(mc.theWorld, x, y, z, radius, angle);
             mc.effectRenderer.addEffect(p);
         }
 
-        if (RND.nextDouble() < 0.15 * WindConfig.tornadoDebrisRate()) {
-            double ang = RND.nextDouble() * 2 * Math.PI;
-            double rad = RND.nextDouble() * 15;
-            double x = c[0] + Math.cos(ang) * rad;
-            double z = c[2] + Math.sin(ang) * rad;
-            DebrisParticle dp = new DebrisParticle(mc.theWorld, x, c[1] + RND.nextDouble() * 10, z);
-            mc.effectRenderer.addEffect(dp);
+        if (RND.nextDouble() < 0.15 * WindConfig.tornadoDebrisRate() * intensity) {
+            double angle = RND.nextDouble() * 2.0 * Math.PI;
+            double radius = RND.nextDouble() * wallRadius * 1.2;
+            double x = cx + Math.cos(angle) * radius;
+            double z = cz + Math.sin(angle) * radius;
+            double y = groundY + RND.nextDouble() * 10.0;
+            mc.effectRenderer.addEffect(new DebrisParticle(mc.theWorld, x, y, z));
         }
     }
 }

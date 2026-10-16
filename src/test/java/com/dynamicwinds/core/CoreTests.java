@@ -104,19 +104,19 @@ class CoreTests {
         assertTrue(b.speed >= a.speed);
     }
     @Test
-    void tornadoFieldFinite() {
-        TornadoField tf = new TornadoField(1L);
-        Vec3 v = tf.sample(1L, 10, 70, 10, 1000L);
+    void stormFieldIsFinite() {
+        StormField field = new StormField(1L);
+        Vec3 v = field.sampleWind(1000L, 10.0, 70.0, 10.0, 64, SurfaceRoughness.OPEN_WATER);
         assertTrue(Double.isFinite(v.x) && Double.isFinite(v.y) && Double.isFinite(v.z));
     }
 
     @Test
-    void tornadoActiveCenterLifecycle() {
-        TornadoField tf = new TornadoField(1L);
+    void stormFieldLifecycleProducesActiveSystems() {
+        StormField field = new StormField(1L);
         boolean found = false;
-        for (long t = 0; t < 12000; t += 100) {
-            if (tf.activeCenter(1L, t) != null) { found = true; break; }
+        for (long t = 0; t < 400000L && !found; t += 250L) {
+            found = !field.activeAt(t).isEmpty();
         }
-        assertTrue(found);
+        assertTrue(found, "nenhum sistema ativo encontrado em 400000 ticks");
     }
 }

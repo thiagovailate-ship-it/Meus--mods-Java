@@ -3,24 +3,59 @@ package com.dynamicwinds.core;
 /**
  * Pure, deterministic wind model: wind = f(seed, time, position).
  * Refinements: curl-based divergence-free field, log-law profile, rotating pressure
- * direction, diurnal cycle, storm factor, OU gusts.
+ * direction, diurnal cycle, storm factor, OU gusts, severe weather systems.
  */
 public final class WindModel {
     private final long seed;
     private final CurlNoise curl;
     private final PressureField pressure;
     private final OrnsteinUhlenbeck ou;
-    private final TornadoField tornado;
+    private final StormField storms;
 
+    /** Hemisferio norte com a chance padrao de geracao de sistemas. */
     public WindModel(long seed) {
+        this(seed, true, 0.35);
+    }
+
+    /**
+     * @param seed             seed do mundo
+     * @param north            hemisferio (define o sentido de rotacao dos ciclones)
+     * @param stormSpawnChance chance de nascer um sistema por janela (0 desliga)
+     */
+    public WindModel(long seed, boolean north, double stormSpawnChance) {
         this.seed = seed;
         this.curl = new CurlNoise(seed);
         this.pressure = new PressureField(seed);
         this.ou = new OrnsteinUhlenbeck(0.12, 0.0, 1.0, seed);
-        this.tornado = new TornadoField(seed);
+        this.storms = new StormField(seed, north, stormSpawnChance);
     }
 
+    /** Sistemas de tempo severo deste mundo (naturais e invocados). */
+    public StormField storms() {
+        return storms;
+    }
+
+    /**
+     * Vento no ponto dado, tratando a superficie como oceano (usado em testes e
+     * quando nao ha informacao de bioma disponivel).
+     */
     public WindSample compute(WorldContext ctx, double x, double y, double z) {
+        return compute(ctx, x, y, z, SurfaceRoughness.OPEN_WATER);
+    }
+
+    /**
+     * Vento no ponto dado.
+     *
+     * @param ctx       estado do mundo (seed, tempo, superficie, clima)
+     * @param x         posicao X
+     * @param y         posicao Y
+     * @param z         posicao Z
+     * @param roughness fator de energia da superficie sob os sistemas ativos
+     *                  (define landfall: tempestade sobre continente perde forca)
+     * @return amostra de vento (vento de fundo somado aos sistemas severos)
+     */
+    public WindSample compute(WorldContext ctx, double x, double y, double z,
+                              SurfaceRoughness roughness) {
         Vec3 c = curl.sample(seed, x, y, z, ctx.timeTicks);
 
         // slowly rotating dominant horizontal direction from pressure field
@@ -52,9 +87,13 @@ public final class WindModel {
         // dampen near ground already handled by log profile (z0)
         Vec3 vector = dir.mul(speed);
 
-        // tornado contribution
-        Vec3 t = tornado.sample(seed, x, y, z, ctx.timeTicks);
-        vector = vector.add(t);
+        // severe weather systems: vortices, tropical storms, hurricanes
+        if (roughness != null) {
+            Vec3 severe = storms.sampleWind(ctx.timeTicks, x, y, z, ctx.surfaceY, roughness);
+            if (severe != Vec3.ZERO) {
+                vector = vector.add(severe);
+            }
+        }
 
         return new WindSample(vector, vector.length(), gust);
     }
